@@ -12,11 +12,13 @@ export default function Home() {
           height={38}
           priority
         />
-    <div>Teu tio manda dms no Front</div>
+    <div>Teu tio manda dms no Front</div>   {/* Verdade Lindo*/}
 
 
       </main>
-      
+      <footer className="row-start-3">
+        <div>© 2025 Banco Malvader. Todos os direitos reservados.</div>
+      </footer>
     </div>
   );
 }
