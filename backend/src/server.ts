@@ -1,92 +1,35 @@
 import express from 'express';
+import { json } from 'body-parser';
 import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-import dotenv from 'dotenv';
-
-// Importar rotas
-import authRoutes from '@/routes/auth';
-import usuariosRoutes from '@/routes/usuarios';
-import contasRoutes from '@/routes/contas';
-import transacoesRoutes from '@/routes/transacoes';
-import agenciasRoutes from '@/routes/agencias';
-import funcionariosRoutes from '@/routes/funcionarios';
-import clientesRoutes from '@/routes/clientes';
-import relatoriosRoutes from '@/routes/relatorios';
-import dashboardRoutes from '@/routes/dashboard';
-
-// Middleware de erro
-import errorHandler from '@/middleware/errorHandler';
-
-// Configurar dotenv
-dotenv.config();
+import { createConnection } from './config/database';
+import routes from './routes/index';
+import errorHandler from './middleware/errorHandler';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 
-// Configuração de rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // Limite de 100 requests por windowMs
-  message: {
-    error: 'Muitas requisições desta origem, tente novamente mais tarde.'
-  }
-});
+// Middleware
+app.use(cors());
+app.use(json());
 
-// Middleware de segurança
-app.use(helmet());
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-  credentials: true
-}));
-app.use(limiter);
+// Routes
+app.use('/api', routes);
 
-// Middleware para parsing JSON
-app.use(express.json({ limit: '10mb' })); // aumentar para 25mb 
-app.use(express.urlencoded({ extended: true }));
-
-// Middleware para logs básicos
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-  next();
-});
-
-// Health check
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    version: '1.0.0'
-  });
-});
-
-// Rotas da API
-app.use('/api/auth', authRoutes);
-app.use('/api/usuarios', usuariosRoutes);
-app.use('/api/contas', contasRoutes);
-app.use('/api/transacoes', transacoesRoutes);
-app.use('/api/agencias', agenciasRoutes);
-app.use('/api/funcionarios', funcionariosRoutes);
-app.use('/api/clientes', clientesRoutes);
-app.use('/api/relatorios', relatoriosRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-
-// Rota 404
-app.use('*', (req, res) => {
-  res.status(404).json({
-    error: 'Rota não encontrada',
-    path: req.originalUrl
-  });
-});
-
-// Middleware de tratamento de erros
+// Error handling middleware
 app.use(errorHandler);
 
-// Iniciar servidor
-app.listen(PORT, () => {
-  console.log(` Servidor do Banco Malvader rodando na porta ${PORT}`);
-  console.log(` Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(` Health check: http://localhost:${PORT}/health`);
-});
+// Start the server
+const startServer = async () => {
+  try {
+    await createConnection();
+    app.listen(PORT, () => {
+      console.log(`✅ Server is running on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error('❌ Error starting the server:', error);
+  }
+};
+
+startServer();
 
 export default app;

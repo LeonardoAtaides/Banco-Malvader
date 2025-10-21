@@ -44,3 +44,5 @@ jest.config.js
 # Temporary folders
 tmp/
 temp/
+
+/src/generated/prisma

@@ -1,0 +1,245 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum TipoUsuario {
+  FUNCIONARIO
+  CLIENTE
+}
+
+enum TipoConta {
+  POUPANCA
+  CORRENTE
+  INVESTIMENTO
+}
+
+enum StatusConta {
+  ATIVA
+  INATIVA
+  ENCERRADA
+}
+
+enum CargoFuncionario {
+  ESTAGIARIO
+  ATENDENTE
+  GERENTE
+  ADMINISTRADOR
+}
+
+enum TipoTransacao {
+  DEPOSITO
+  SAQUE
+  TRANSFERENCIA
+  RENDIMENTO
+  TAXA
+}
+
+enum PerfilRisco {
+  BAIXO
+  MEDIO
+  ALTO
+}
+
+// ============= TABELAS PRINCIPAIS =============
+
+model Usuario {
+  id              Int       @id @default(autoincrement())
+  nome            String    @db.VarChar(100)
+  cpf             String    @unique @db.VarChar(11)
+  dataNascimento  DateTime  @map("data_nascimento") @db.Date
+  telefone        String    @db.VarChar(15)
+  tipoUsuario     TipoUsuario @map("tipo_usuario")
+  senhaHash       String    @map("senha_hash") @db.VarChar(255)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  funcionario     Funcionario?
+  cliente         Cliente?
+  enderecos       Endereco[]
+
+  @@map("usuario")
+}
+
+model Funcionario {
+  id                Int       @id @default(autoincrement())
+  idUsuario         Int       @unique @map("id_usuario")
+  codigoFuncionario String    @unique @map("codigo_funcionario") @db.VarChar(20)
+  cargo             CargoFuncionario
+  idSupervisor      Int?      @map("id_supervisor")
+  idAgencia         Int       @map("id_agencia")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  usuario           Usuario   @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+  supervisor        Funcionario? @relation("SupervisorSubordinado", fields: [idSupervisor], references: [id])
+  subordinados      Funcionario[] @relation("SupervisorSubordinado")
+  agencia           Agencia   @relation(fields: [idAgencia], references: [id])
+  relatorios        Relatorio[]
+
+  @@index([idAgencia])
+  @@map("funcionario")
+}
+
+model Cliente {
+  id              Int       @id @default(autoincrement())
+  idUsuario       Int       @unique @map("id_usuario")
+  scoreCredito    Int       @default(500) @map("score_credito")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  usuario         Usuario   @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+  contas          Conta[]
+
+  @@map("cliente")
+}
+
+model Endereco {
+  id          Int       @id @default(autoincrement())
+  idUsuario   Int       @map("id_usuario")
+  cep         String    @db.VarChar(8)
+  local       String    @db.VarChar(100)
+  numeroCasa  String    @map("numero_casa") @db.VarChar(10)
+  bairro      String    @db.VarChar(50)
+  cidade      String    @db.VarChar(50)
+  estado      String    @db.VarChar(2)
+  complemento String?   @db.VarChar(100)
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  usuario     Usuario   @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+
+  @@index([idUsuario])
+  @@map("endereco")
+}
+
+model Agencia {
+  id            Int       @id @default(autoincrement())
+  nome          String    @db.VarChar(100)
+  codigoAgencia String    @unique @map("codigo_agencia") @db.VarChar(10)
+  cep           String    @db.VarChar(8)
+  local         String    @db.VarChar(100)
+  numeroCasa    String    @map("numero_casa") @db.VarChar(10)
+  bairro        String    @db.VarChar(50)
+  cidade        String    @db.VarChar(50)
+  estado        String    @db.VarChar(2)
+  complemento   String?   @db.VarChar(100)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  contas        Conta[]
+  funcionarios  Funcionario[]
+
+  @@map("agencia")
+}
+
+// ============= CONTAS =============
+
+model Conta {
+  id            Int       @id @default(autoincrement())
+  numeroConta   String    @unique @map("numero_conta") @db.VarChar(20)
+  idAgencia     Int       @map("id_agencia")
+  saldo         Decimal   @default(0) @db.Decimal(15, 2)
+  tipoConta     TipoConta @map("tipo_conta")
+  idCliente     Int       @map("id_cliente")
+  dataAbertura  DateTime  @default(now()) @map("data_abertura")
+  status        StatusConta @default(ATIVA)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  agencia       Agencia   @relation(fields: [idAgencia], references: [id])
+  cliente       Cliente   @relation(fields: [idCliente], references: [id])
+  
+  contaPoupanca     ContaPoupanca?
+  contaCorrente     ContaCorrente?
+  contaInvestimento ContaInvestimento?
+
+  transacoesOrigem  Transacao[] @relation("ContaOrigem")
+  transacoesDestino Transacao[] @relation("ContaDestino")
+
+  @@index([idAgencia])
+  @@index([idCliente])
+  @@map("conta")
+}
+
+model ContaPoupanca {
+  id              Int       @id @default(autoincrement())
+  idConta         Int       @unique @map("id_conta")
+  taxaRendimento  Decimal   @map("taxa_rendimento") @db.Decimal(5, 4)
+  ultimoRendimento DateTime? @map("ultimo_rendimento")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  conta           Conta     @relation(fields: [idConta], references: [id], onDelete: Cascade)
+
+  @@map("conta_poupanca")
+}
+
+model ContaCorrente {
+  id              Int       @id @default(autoincrement())
+  idConta         Int       @unique @map("id_conta")
+  limite          Decimal   @db.Decimal(15, 2)
+  dataVencimento  DateTime  @map("data_vencimento") @db.Date
+  taxaManutencao  Decimal   @default(15.00) @map("taxa_manutencao") @db.Decimal(10, 2)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  conta           Conta     @relation(fields: [idConta], references: [id], onDelete: Cascade)
+
+  @@map("conta_corrente")
+}
+
+model ContaInvestimento {
+  id                    Int       @id @default(autoincrement())
+  idConta               Int       @unique @map("id_conta")
+  perfilRisco           PerfilRisco @map("perfil_risco")
+  valorMinimo           Decimal   @map("valor_minimo") @db.Decimal(15, 2)
+  taxaRendimentoBase    Decimal   @map("taxa_rendimento_base") @db.Decimal(5, 4)
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  conta                 Conta     @relation(fields: [idConta], references: [id], onDelete: Cascade)
+
+  @@map("conta_investimento")
+}
+
+// ============= TRANSAÇÕES =============
+
+model Transacao {
+  id              Int       @id @default(autoincrement())
+  idContaOrigem   Int?      @map("id_conta_origem")
+  idContaDestino  Int?      @map("id_conta_destino")
+  tipoTransacao   TipoTransacao @map("tipo_transacao")
+  valor           Decimal   @db.Decimal(15, 2)
+  dataHora        DateTime  @default(now()) @map("data_hora")
+  descricao       String?   @db.Text
+
+  contaOrigem     Conta?    @relation("ContaOrigem", fields: [idContaOrigem], references: [id])
+  contaDestino    Conta?    @relation("ContaDestino", fields: [idContaDestino], references: [id])
+
+  @@index([idContaOrigem])
+  @@index([idContaDestino])
+  @@index([dataHora])
+  @@map("transacao")
+}
+
+// ============= RELATÓRIOS E AUDITORIA =============
+
+model Relatorio {
+  id              Int       @id @default(autoincrement())
+  idFuncionario   Int       @map("id_funcionario")
+  tipoRelatorio   String    @map("tipo_relatorio") @db.VarChar(50)
+  dataGeracao     DateTime  @default(now()) @map("data_geracao")
+  conteudo        String    @db.Text
+
+  funcionario     Funcionario @relation(fields: [idFuncionario], references: [id])
+
+  @@index([idFuncionario])
+  @@map("relatorio")
+}DATABASE_URL="mysql://root:senha@localhost:3306/banco_malvader"
+PORT=3000
+JWT_SECRET=seu_secret_key_aqui
+NODE_ENV=development

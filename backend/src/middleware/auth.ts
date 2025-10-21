@@ -1,58 +1,81 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
-import { JWTPayload, AuthenticatedRequest } from '@/types/banco';
+import { verifyToken, extractTokenFromHeader } from '../utils/auth';
+import prisma from '../config/database';
 
-export const authenticateToken = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+export interface AuthRequest extends Request {
+  usuario?: {
+    id: number;
+    cpf: string;
+    tipoUsuario: 'FUNCIONARIO' | 'CLIENTE';
+    cargo?: string;
+  };
+}
+
+export const authenticate = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const authHeader = req.headers.authorization;
-    const token = extractTokenFromHeader(authHeader);
-    const decoded = verifyToken(token) as JWTPayload;
-    
-    req.user = decoded;
-    next();
-  } catch (error) {
-    res.status(401).json({
-      error: 'Token inválido ou não fornecido'
+    const token = extractTokenFromHeader(req.headers.authorization);
+    const decoded = verifyToken(token);
+
+    // Verificar se o usuário ainda existe
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: decoded.id },
+      include: {
+        funcionario: true,
+        cliente: true,
+      },
     });
+
+    if (!usuario) {
+      return res.status(401).json({ error: 'Usuário não encontrado' });
+    }
+
+    req.usuario = {
+      id: usuario.id,
+      cpf: usuario.cpf,
+      tipoUsuario: usuario.tipoUsuario,
+      cargo: usuario.funcionario?.cargo,
+    };
+
+    next();
+  } catch (error: any) {
+    return res.status(401).json({ error: error.message || 'Não autorizado' });
   }
 };
 
-export const requireRole = (roles: string[]) => {
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
-    if (!req.user) {
-      res.status(401).json({
-        error: 'Usuário não autenticado'
-      });
-      return;
-    }
+// Middleware para verificar se é funcionário
+export const requireFuncionario = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  if (req.usuario?.tipoUsuario !== 'FUNCIONARIO') {
+    return res.status(403).json({ error: 'Acesso restrito a funcionários' });
+  }
+  next();
+};
 
-    if (!roles.includes(req.user.tipo_usuario)) {
-      res.status(403).json({
-        error: 'Acesso negado'
-      });
-      return;
+// Middleware para verificar cargo específico
+export const requireCargo = (...cargos: string[]) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.usuario?.cargo || !cargos.includes(req.usuario.cargo)) {
+      return res.status(403).json({ error: 'Permissão insuficiente' });
     }
-
     next();
   };
 };
 
-export const requireCargo = (cargos: string[]) => {
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
-    if (!req.user) {
-      res.status(401).json({
-        error: 'Usuário não autenticado'
-      });
-      return;
-    }
-
-    if (req.user.tipo_usuario !== 'FUNCIONARIO' || !req.user.cargo || !cargos.includes(req.user.cargo)) {
-      res.status(403).json({
-        error: 'Cargo insuficiente para esta operação'
-      });
-      return;
-    }
-
-    next();
-  };
+// Middleware para verificar se é cliente
+export const requireCliente = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  if (req.usuario?.tipoUsuario !== 'CLIENTE') {
+    return res.status(403).json({ error: 'Acesso restrito a clientes' });
+  }
+  next();
 };
