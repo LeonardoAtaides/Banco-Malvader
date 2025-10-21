@@ -20,3 +20,6 @@ Lobo tirou a capa
 3. **Backend:** Execute cd backend && npm run dev
    **Frontend:** Execute cd frontend && npm run dev
 Acho lindo esse momento
+
+npx prisma db pull
+npx prisma generate
