@@ -194,7 +194,7 @@ export class ContaService {
 
     // Verificar se cliente existe e obter score de crédito
     const cliente = await prisma.cliente.findUnique({
-      where: { id: idCliente },
+      where: { idCliente: idCliente },
       include: { usuario: true },
     });
 
@@ -204,7 +204,8 @@ export class ContaService {
 
     // Verificar se agência existe
     const agencia = await prisma.agencia.findUnique({
-      where: { id: idAgencia },
+      where: { idAgencia: idAgencia }, 
+      include: { endereco: true }, 
     });
 
     if (!agencia) {
@@ -212,7 +213,8 @@ export class ContaService {
     }
 
     // Calcular limite dinâmico baseado no score
-    const limiteCalculado = limite || this.calcularLimiteDinamico(cliente.scoreCredito);
+    const scoreNumerico = parseFloat(cliente.scoreCredito.toString()); 
+    const limiteCalculado = limite || this.calcularLimiteDinamico(scoreNumerico);
 
     // Gerar número de conta único
     let numeroConta = this.gerarNumeroConta();
@@ -229,6 +231,10 @@ export class ContaService {
       tentativas++;
     }
 
+    if (tentativas === 10) { 
+      throw new Error('Erro ao gerar número de conta único');
+    }
+
     // Criar conta e conta corrente em transação
     const result = await prisma.$transaction(async (tx) => {
       const conta = await tx.conta.create({
@@ -240,7 +246,11 @@ export class ContaService {
           status: StatusConta.ATIVA,
         },
         include: {
-          agencia: true,
+          agencia: {
+            include: {
+              endereco: true, 
+            },
+          },
           cliente: {
             include: { usuario: true },
           },
@@ -249,7 +259,7 @@ export class ContaService {
 
       const contaCorrente = await tx.contaCorrente.create({
         data: {
-          idConta: conta.id,
+          idConta: conta.idConta, 
           limite: new Decimal(limiteCalculado),
           dataVencimento: new Date(dataVencimento),
           taxaManutencao: new Decimal(taxaManutencao),
@@ -260,7 +270,7 @@ export class ContaService {
     });
 
     return {
-      id: result.conta.id,
+      id: result.conta.idConta, 
       numeroConta: result.conta.numeroConta,
       tipoConta: result.conta.tipoConta,
       saldo: result.conta.saldo,
@@ -290,7 +300,7 @@ export class ContaService {
 
     // Verificar se cliente existe
     const cliente = await prisma.cliente.findUnique({
-      where: { id: idCliente },
+      where: { idCliente: idCliente }, 
       include: { usuario: true },
     });
 
@@ -300,7 +310,8 @@ export class ContaService {
 
     // Verificar se agência existe
     const agencia = await prisma.agencia.findUnique({
-      where: { id: idAgencia },
+      where: { idAgencia: idAgencia }, 
+      include: { endereco: true }, 
     });
 
     if (!agencia) {
@@ -335,6 +346,10 @@ export class ContaService {
       tentativas++;
     }
 
+    if (tentativas === 10) { // ✅ ADICIONADO
+      throw new Error('Erro ao gerar número de conta único');
+    }
+
     // Criar conta e conta investimento em transação
     const result = await prisma.$transaction(async (tx) => {
       const conta = await tx.conta.create({
@@ -346,7 +361,11 @@ export class ContaService {
           status: StatusConta.ATIVA,
         },
         include: {
-          agencia: true,
+          agencia: {
+            include: {
+              endereco: true, 
+            },
+          },
           cliente: {
             include: { usuario: true },
           },
@@ -355,7 +374,7 @@ export class ContaService {
 
       const contaInvestimento = await tx.contaInvestimento.create({
         data: {
-          idConta: conta.id,
+          idConta: conta.idConta, 
           perfilRisco,
           valorMinimo: new Decimal(valorMinimo),
           taxaRendimentoBase: new Decimal(taxaRendimentoBase),
@@ -366,7 +385,7 @@ export class ContaService {
     });
 
     return {
-      id: result.conta.id,
+      id: result.conta.idConta, 
       numeroConta: result.conta.numeroConta,
       tipoConta: result.conta.tipoConta,
       saldo: result.conta.saldo,

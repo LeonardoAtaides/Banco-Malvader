@@ -1,6 +1,6 @@
 import prisma from '../config/database';
 import { hashPassword, comparePassword, generateToken, validatePasswordStrength } from '../utils/auth';
-import { TipoUsuario } from '@prisma/client';
+import { TipoUsuario, CargoFuncionario, Prisma } from '@prisma/client';
 
 interface LoginInput {
   cpf: string;
@@ -25,7 +25,7 @@ interface RegisterClienteInput {
 }
 
 interface RegisterFuncionarioInput extends RegisterClienteInput {
-  cargo: 'ESTAGIARIO' | 'ATENDENTE' | 'GERENTE' | 'ADMINISTRADOR';
+  cargo: CargoFuncionario;
   idAgencia: number;
   idSupervisor?: number;
 }
@@ -120,7 +120,7 @@ export class AuthService {
     const senhaHash = await hashPassword(senha);
 
     // Criar usuário, cliente e endereço em transação
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Criar usuário
       const usuario = await tx.usuario.create({
         data: {
@@ -208,7 +208,7 @@ export class AuthService {
 
     // Verificar se agência existe
     const agencia = await prisma.agencia.findUnique({
-      where: { id: idAgencia },
+      where: { idAgencia },
     });
 
     if (!agencia) {
@@ -222,7 +222,7 @@ export class AuthService {
     const codigoFuncionario = `FUNC${Date.now()}${Math.floor(Math.random() * 1000)}`;
 
     // Criar usuário, funcionário e endereço em transação
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Criar usuário
       const usuario = await tx.usuario.create({
         data: {
@@ -238,22 +238,32 @@ export class AuthService {
       // Criar funcionário
       const funcionario = await tx.funcionario.create({
         data: {
-          idUsuario: usuario.id,
+          idUsuario: usuario.idUsuario, 
           codigoFuncionario,
           cargo,
           idAgencia,
           idSupervisor,
         },
         include: {
-          agencia: true,
+          agencia: {
+            include: {
+              endereco: true, 
+            },
+          },
         },
       });
 
       // Criar endereço
-      await tx.endereco.create({
+      await tx.enderecoUsuario.create({ 
         data: {
-          idUsuario: usuario.id,
-          ...endereco,
+          idUsuario: usuario.idUsuario, 
+          cep: endereco.cep,
+          local: endereco.local,
+          numeroCasa: parseInt(endereco.numeroCasa), 
+          bairro: endereco.bairro,
+          cidade: endereco.cidade,
+          estado: endereco.estado,
+          complemento: endereco.complemento,
         },
       });
 
@@ -262,13 +272,13 @@ export class AuthService {
 
     return {
       usuario: {
-        id: result.usuario.id,
+        id: result.usuario.idUsuario, 
         nome: result.usuario.nome,
         cpf: result.usuario.cpf,
         tipoUsuario: result.usuario.tipoUsuario,
       },
       funcionario: {
-        id: result.funcionario.id,
+        id: result.funcionario.idFuncionario, 
         codigoFuncionario: result.funcionario.codigoFuncionario,
         cargo: result.funcionario.cargo,
         agencia: result.funcionario.agencia,
@@ -281,13 +291,13 @@ export class AuthService {
    */
   async obterPerfil(usuarioId: number) {
     const usuario = await prisma.usuario.findUnique({
-      where: { idUsuario: usuarioId }, // ✅ CORRIGIDO
+      where: { idUsuario: usuarioId }, 
       include: {
         funcionario: {
           include: {
             agencia: {
               include: {
-                endereco: true, // ✅ CORRIGIDO
+                endereco: true, 
               },
             },
             supervisor: {
@@ -330,7 +340,7 @@ export class AuthService {
   async alterarSenha(usuarioId: number, senhaAtual: string, novaSenha: string) {
     // Buscar usuário
     const usuario = await prisma.usuario.findUnique({
-      where: { idUsuario: usuarioId }, // ✅ CORRIGIDO
+      where: { idUsuario: usuarioId }, 
     });
 
     if (!usuario) {
