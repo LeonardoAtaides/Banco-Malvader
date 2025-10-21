@@ -43,7 +43,11 @@ export class AuthService {
       include: {
         funcionario: {
           include: {
-            agencia: true,
+            agencia: {
+              include: {
+                endereco: true, 
+              },
+            },
           },
         },
         cliente: true,
@@ -62,7 +66,7 @@ export class AuthService {
 
     // Gerar token JWT
     const token = generateToken({
-      id: usuario.id,
+      id: usuario.idUsuario, 
       cpf: usuario.cpf,
       tipoUsuario: usuario.tipoUsuario,
       cargo: usuario.funcionario?.cargo,
@@ -72,18 +76,18 @@ export class AuthService {
     return {
       token,
       usuario: {
-        id: usuario.id,
+        id: usuario.idUsuario, 
         nome: usuario.nome,
         cpf: usuario.cpf,
         tipoUsuario: usuario.tipoUsuario,
         funcionario: usuario.funcionario ? {
-          id: usuario.funcionario.id,
+          id: usuario.funcionario.idFuncionario, 
           codigoFuncionario: usuario.funcionario.codigoFuncionario,
           cargo: usuario.funcionario.cargo,
           agencia: usuario.funcionario.agencia,
         } : undefined,
         cliente: usuario.cliente ? {
-          id: usuario.cliente.id,
+          id: usuario.cliente.idCliente, 
           scoreCredito: usuario.cliente.scoreCredito,
         } : undefined,
       },
@@ -132,15 +136,21 @@ export class AuthService {
       // Criar cliente
       const cliente = await tx.cliente.create({
         data: {
-          idUsuario: usuario.id,
+          idUsuario: usuario.idUsuario, 
         },
       });
 
       // Criar endereço
-      await tx.endereco.create({
+      await tx.enderecoUsuario.create({ 
         data: {
-          idUsuario: usuario.id,
-          ...endereco,
+          idUsuario: usuario.idUsuario, 
+          cep: endereco.cep,
+          local: endereco.local,
+          numeroCasa: parseInt(endereco.numeroCasa), 
+          bairro: endereco.bairro,
+          cidade: endereco.cidade,
+          estado: endereco.estado,
+          complemento: endereco.complemento,
         },
       });
 
@@ -149,7 +159,7 @@ export class AuthService {
 
     // Gerar token
     const token = generateToken({
-      id: result.usuario.id,
+      id: result.usuario.idUsuario, 
       cpf: result.usuario.cpf,
       tipoUsuario: result.usuario.tipoUsuario,
     });
@@ -157,7 +167,7 @@ export class AuthService {
     return {
       token,
       usuario: {
-        id: result.usuario.id,
+        id: result.usuario.idUsuario, 
         nome: result.usuario.nome,
         cpf: result.usuario.cpf,
         tipoUsuario: result.usuario.tipoUsuario,
@@ -271,11 +281,15 @@ export class AuthService {
    */
   async obterPerfil(usuarioId: number) {
     const usuario = await prisma.usuario.findUnique({
-      where: { id: usuarioId },
+      where: { idUsuario: usuarioId }, // ✅ CORRIGIDO
       include: {
         funcionario: {
           include: {
-            agencia: true,
+            agencia: {
+              include: {
+                endereco: true, // ✅ CORRIGIDO
+              },
+            },
             supervisor: {
               include: {
                 usuario: {
@@ -316,7 +330,7 @@ export class AuthService {
   async alterarSenha(usuarioId: number, senhaAtual: string, novaSenha: string) {
     // Buscar usuário
     const usuario = await prisma.usuario.findUnique({
-      where: { id: usuarioId },
+      where: { idUsuario: usuarioId }, // ✅ CORRIGIDO
     });
 
     if (!usuario) {
@@ -341,7 +355,7 @@ export class AuthService {
 
     // Atualizar senha
     await prisma.usuario.update({
-      where: { id: usuarioId },
+      where: { idUsuario: usuarioId }, 
       data: { senhaHash: novaSenhaHash },
     });
 
