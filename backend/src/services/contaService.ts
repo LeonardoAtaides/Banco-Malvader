@@ -96,7 +96,7 @@ export class ContaService {
 
     // Verificar se cliente existe
     const cliente = await prisma.cliente.findUnique({
-      where: { id: idCliente },
+      where: { idCliente: idCliente }, 
       include: { usuario: true },
     });
 
@@ -106,7 +106,8 @@ export class ContaService {
 
     // Verificar se agência existe
     const agencia = await prisma.agencia.findUnique({
-      where: { id: idAgencia },
+      where: { idAgencia: idAgencia }, 
+      include: { endereco: true }, 
     });
 
     if (!agencia) {
@@ -143,7 +144,11 @@ export class ContaService {
           status: StatusConta.ATIVA,
         },
         include: {
-          agencia: true,
+          agencia: {
+            include: {
+              endereco: true, 
+            },
+          },
           cliente: {
             include: { usuario: true },
           },
@@ -152,7 +157,7 @@ export class ContaService {
 
       const contaPoupanca = await tx.contaPoupanca.create({
         data: {
-          idConta: conta.id,
+          idConta: conta.idConta, 
           taxaRendimento: new Decimal(taxaRendimento),
         },
       });
@@ -161,7 +166,7 @@ export class ContaService {
     });
 
     return {
-      id: result.conta.id,
+      id: result.conta.idConta, 
       numeroConta: result.conta.numeroConta,
       tipoConta: result.conta.tipoConta,
       saldo: result.conta.saldo,
@@ -390,7 +395,11 @@ export class ContaService {
     const conta = await prisma.conta.findUnique({
       where: { numeroConta },
       include: {
-        agencia: true,
+        agencia: {
+          include: {
+            endereco: true, 
+          },
+        },
         cliente: {
           include: { usuario: true },
         },
@@ -405,7 +414,7 @@ export class ContaService {
     }
 
     return {
-      id: conta.id,
+      id: conta.idConta, 
       numeroConta: conta.numeroConta,
       tipoConta: conta.tipoConta,
       saldo: conta.saldo,
@@ -414,7 +423,9 @@ export class ContaService {
       agencia: {
         nome: conta.agencia.nome,
         codigoAgencia: conta.agencia.codigoAgencia,
-        endereco: `${conta.agencia.local}, ${conta.agencia.numeroCasa} - ${conta.agencia.bairro}, ${conta.agencia.cidade}/${conta.agencia.estado}`,
+        endereco: conta.agencia.endereco
+          ? `${conta.agencia.endereco.local}, ${conta.agencia.endereco.numero} - ${conta.agencia.endereco.bairro}, ${conta.agencia.endereco.cidade}/${conta.agencia.endereco.estado}`
+          : 'Endereço não disponível', 
       },
       cliente: {
         nome: conta.cliente.usuario.nome,
@@ -447,7 +458,7 @@ export class ContaService {
     });
 
     return contas.map((conta) => ({
-      id: conta.id,
+      id: conta.idConta, 
       numeroConta: conta.numeroConta,
       tipoConta: conta.tipoConta,
       saldo: conta.saldo,
@@ -468,7 +479,7 @@ export class ContaService {
    */
   async alterarConta(idConta: number, data: AlterarContaInput) {
     const conta = await prisma.conta.findUnique({
-      where: { id: idConta },
+      where: { idConta: idConta }, 
       include: {
         contaCorrente: true,
         contaPoupanca: true,
@@ -494,7 +505,7 @@ export class ContaService {
       }
 
       await prisma.contaCorrente.update({
-        where: { idConta },
+        where: { idConta }, 
         data: updates,
       });
     }
@@ -503,7 +514,7 @@ export class ContaService {
     if (conta.tipoConta === TipoConta.POUPANCA && conta.contaPoupanca) {
       if (data.taxaRendimento !== undefined) {
         await prisma.contaPoupanca.update({
-          where: { idConta },
+          where: { idConta }, 
           data: { taxaRendimento: new Decimal(data.taxaRendimento) },
         });
       }
@@ -517,7 +528,7 @@ export class ContaService {
    */
   async encerrarConta(idConta: number, motivo: string) {
     const conta = await prisma.conta.findUnique({
-      where: { id: idConta },
+      where: { idConta: idConta },
     });
 
     if (!conta) {
@@ -534,7 +545,7 @@ export class ContaService {
     }
 
     await prisma.conta.update({
-      where: { id: idConta },
+      where: { idConta: idConta }, 
       data: { status: StatusConta.ENCERRADA },
     });
 
