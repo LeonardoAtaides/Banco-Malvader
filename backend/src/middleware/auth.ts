@@ -22,7 +22,7 @@ export const authenticate = async (
 
     // Verificar se o usuário ainda existe
     const usuario = await prisma.usuario.findUnique({
-      where: { id: decoded.id },
+      where: { idUsuario: decoded.id }, 
       include: {
         funcionario: true,
         cliente: true,
@@ -34,7 +34,7 @@ export const authenticate = async (
     }
 
     req.usuario = {
-      id: usuario.id,
+      id: usuario.idUsuario, 
       cpf: usuario.cpf,
       tipoUsuario: usuario.tipoUsuario,
       cargo: usuario.funcionario?.cargo,
