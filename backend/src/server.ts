@@ -2,7 +2,7 @@ import express from 'express';
 import { json } from 'body-parser';
 import cors from 'cors';
 import { createConnection } from './config/database';
-import routes from './routes/index';
+import routes from './types/index';
 import errorHandler from './middleware/errorHandler';
 
 const app = express();
