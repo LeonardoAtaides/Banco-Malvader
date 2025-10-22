@@ -1,35 +1,32 @@
 import express from 'express';
-import { json } from 'body-parser';
 import cors from 'cors';
-import { createConnection } from './config/database';
-import routes from './types/index';
-import errorHandler from './middleware/errorHandler';
+import dotenv from 'dotenv';
+import routes from './routes';
+
+// Carregar variáveis de ambiente
+dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
-app.use(json());
+app.use(express.json());
 
 // Routes
 app.use('/api', routes);
 
-// Error handling middleware
-app.use(errorHandler);
+// Error handling middleware básico
+app.use((err: any, req: any, res: any, next: any) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Algo deu errado!' });
+});
 
 // Start the server
-const startServer = async () => {
-  try {
-    await createConnection();
-    app.listen(PORT, () => {
-      console.log(`✅ Server is running on http://localhost:${PORT}`);
-    });
-  } catch (error) {
-    console.error('❌ Error starting the server:', error);
-  }
-};
-
-startServer();
+app.listen(PORT, () => {
+  console.log(`🚀 Banco Malvader API rodando na porta ${PORT}`);
+  console.log(`🌐 Health check: http://localhost:${PORT}/api/health`);
+  console.log(`📋 Test endpoint: http://localhost:${PORT}/api/test`);
+});
 
 export default app;
