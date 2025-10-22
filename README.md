@@ -19,6 +19,7 @@ Acho lindo esse momento
 
 3. **Banco de dados**:
    ```bash
+   cd backend
    npx prisma db pull
    npx prisma generate
    ```
