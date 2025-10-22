@@ -17,9 +17,18 @@ Lobo tirou a capa
    npm run dev
    ```
 
-3. **Backend:** Execute cd backend && npm run dev
-   **Frontend:** Execute cd frontend && npm run dev
-Acho lindo esse momento
-
+3. **Backend**: 
+  ```bash
+ cd backend 
+ npm run dev
+ ```
+**Frontend**: 
+  ```bash   
+cd frontend 
+npm run dev
+```
+4. **Banco de dados**:
+  ```bash
 npx prisma db pull
 npx prisma generate
+```
