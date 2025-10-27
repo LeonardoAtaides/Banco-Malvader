@@ -207,6 +207,21 @@ class ApiClient {
     const queryString = limite ? `?limite=${limite}` : '';
     return this.makeRequest(`${API_ROUTES.DASHBOARD_MOVEMENTS}${queryString}`);
   }
+
+  // Adicione dentro da classe ApiClient
+
+async createUser(userData: any) {
+  return this.makeRequest(API_ROUTES.USERS, {
+    method: 'POST',
+    body: JSON.stringify(userData),
+  });
+}
+
+async deleteUser(id: number) {
+  return this.makeRequest(API_ROUTES.USER_BY_ID(id), {
+    method: 'DELETE',
+  });
+}
 }
 
 // Instância única do cliente
