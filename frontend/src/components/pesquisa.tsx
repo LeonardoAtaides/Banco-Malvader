@@ -1,9 +1,15 @@
+// components/pesquisa.tsx
 "use client";
 
 import React, { useState } from "react";
-import { Search, Calendar, Funnel, Trash2, Check } from "lucide-react";
+import { Search, Funnel, Trash2, Check } from "lucide-react";
 
-const ExtratoSearch: React.FC = () => {
+type Props = {
+  onSearch?: (searchTerm: string, startDate: string, endDate: string) => void;
+  onClear?: () => void;
+};
+
+const ExtratoSearch: React.FC<Props> = ({ onSearch, onClear }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -13,10 +19,17 @@ const ExtratoSearch: React.FC = () => {
     setSearchTerm("");
     setStartDate("");
     setEndDate("");
+    if (onClear) onClear();
   };
 
   const handleSearch = () => {
-    console.log("Pesquisar:", { searchTerm, startDate, endDate });
+    if (onSearch) onSearch(searchTerm, startDate, endDate);
+    else console.log("Pesquisar:", { searchTerm, startDate, endDate });
+  };
+
+  // permite buscar ao apertar Enter no campo de texto
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") handleSearch();
   };
 
   return (
@@ -29,6 +42,7 @@ const ExtratoSearch: React.FC = () => {
             type="text"
             placeholder="Buscar"
             value={searchTerm}
+            onKeyDown={handleKeyDown}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full focus:outline-none"
           />
@@ -67,23 +81,23 @@ const ExtratoSearch: React.FC = () => {
           {/* Botões de ação */}
           <button
             onClick={handleClear}
-            className="bg-red-500 hover:bg-red-600 p-2 rounded-lg flex items-center justify-center"
+            className="bg-[#D04141] hover:bg-red-600 p-2 rounded-lg flex items-center justify-center"
           >
             <Trash2 className="w-4 h-4 text-white" />
           </button>
           <button
             onClick={handleSearch}
-            className="bg-green-500 hover:bg-green-600 p-2 rounded-lg flex items-center justify-center"
+            className="bg-[#42D23A] hover:bg-green-600 p-2 rounded-lg flex items-center justify-center"
           >
             <Check className="w-4 h-4 text-white" />
           </button>
         </div>
       )}
 
-      {/* CSS para o ícone do input date */}
+      {/* CSS para o ícone do input date (se você já tem, ok) */}
       <style jsx>{`
         input[type="date"]::-webkit-calendar-picker-indicator {
-          filter: invert(1); /* deixa o ícone branco */
+          filter: invert(1);
         }
       `}</style>
     </div>

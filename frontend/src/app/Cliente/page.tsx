@@ -30,8 +30,8 @@ export default function Cliente() {
     router.push("/Login");
     };
 
-      const goToDevs = () => {
-    router.push("/Cliente/Devs");
+      const OpenExtrato = () => {
+    router.push("/Cliente/Extrato");
   };
 
         const goToInvestimentos = () => {
@@ -48,6 +48,9 @@ export default function Cliente() {
     router.push("/Termos");
   };
 
+      const goToDevs = () => {
+    router.push("/Cliente/Devs");
+  };
 
   return ( 
     <main className="bg-white min-h-screen text-[14px] font-bold pb-18 ">
@@ -98,7 +101,7 @@ export default function Cliente() {
     <div className="flex gap-5 px-4 py-4 min-w-max">
 
          {/* EXTARTO */}
-        <button className="flex flex-col items-center flex-shrink-0">
+        <button onClick={OpenExtrato} className="flex flex-col items-center flex-shrink-0">
         <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
             <FileChartColumn className="w-9 h-9 text-white" />
         </div>
