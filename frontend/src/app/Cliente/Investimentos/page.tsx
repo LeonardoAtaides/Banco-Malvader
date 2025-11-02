@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Titulo from "@/components/titles";
 
-const InvitePage: React.FC = () => {
+const Investimentos: React.FC = () => {
   const router = useRouter();
 
   const handleBack = () => {
@@ -77,4 +77,4 @@ const InvitePage: React.FC = () => {
   );
 };
 
-export default InvitePage;
+export default Investimentos;
