@@ -1,6 +1,6 @@
 "use client";
 
-import { Wrench, MenuSquare, ChartPie } from "lucide-react";
+import { Wrench, MessagesSquare, ChartPie } from "lucide-react";
 import { ReactElement } from "react";
 
 interface TituloItem {
@@ -15,12 +15,12 @@ interface TituloProps {
 export default function Titulo({ tipo }: TituloProps) {
   const titulos: Record<TituloProps["tipo"], TituloItem> = {
     1: {
-      icone: <Wrench className="text-[#012E4B] w-5 h-5 mr-2" />,
+      icone: <Wrench className="text-[#012E4B] w-[18px] h-[18px] mr-2" />,
       texto: "Serviços",
     },
     2: {
-      icone: <MenuSquare className="text-[#012E4B] text-xl mr-2" />,
-      texto: "Dicas",
+      icone: <MessagesSquare className="text-[#012E4B] text-xl mr-2" />,
+      texto: "Dicas Malvader",
     },
     3: {
       icone: <ChartPie className="text-[#012E4B] text-xl mr-2" />,
@@ -35,9 +35,9 @@ export default function Titulo({ tipo }: TituloProps) {
   }
 
   return (
-    <div className="flex items-center mx-5">
+    <div className="flex items-center pt-4 mx-5">
       {item.icone}
-      <h1 className="text-xl font-semibold text-gray-900">{item.texto}</h1>
+      <h1 className="text-[16px] font-semibold text-[#012E4B]">{item.texto}</h1>
     </div>
   );
 }
