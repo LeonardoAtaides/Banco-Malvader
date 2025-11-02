@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Eye, LogOut, FileChartColumn, BanknoteArrowUp, BanknoteArrowDown, ArrowLeftRight, ChartCandlestick } from "lucide-react";
+import { Eye, LogOut, FileChartColumn, BanknoteArrowUp, BanknoteArrowDown, ArrowLeftRight, ChartCandlestick, ChevronRight} from "lucide-react";
 import { useRouter } from "next/navigation";
 import Titulo from "@/components/titles";
 import { useEffect, useState } from "react";
@@ -142,6 +142,29 @@ export default function Cliente() {
         ))}
       </div>
     </div>
+
+    <Titulo tipo={3} /> 
+
+    <div className="flex justify-center text-[12px]">
+        <button className=" flex justify-between items-center w-90 text-center mt-2 bg-[#012E4B] py-8 px-5 rounded-[10px]">
+            <div className="flex justify-center gap-20">
+                <div className="flex-col text-center">
+                    <h2>Saldo total Investido</h2>
+                    <p>R$ 1200,00</p>
+                </div>
+
+                <div className="flex-col text-center">
+                    <h2>Rendimento</h2>
+                    <p className="text-[#42D23A]">+ R$ 52,50</p>
+                </div>                
+            </div>
+        
+        <ChevronRight  className="w-5 h-5"/>
+        </button> 
+    </div>
+
+    <Titulo tipo={3} />  
+
 
     </main>
   );
