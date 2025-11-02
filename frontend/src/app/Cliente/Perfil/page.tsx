@@ -33,9 +33,9 @@ export default function Cliente() {
           <img src="/assets/Logo.png" alt="logo" className="w-8 h-8" />
           <h2 className="text-white">Nome do Fulano</h2>
           {/* Linha passando por baixo de tudo */}
-          <div className="absolute bottom-0 left-13 w-74 border-b border-white/50"></div>
+          <div className="absolute bottom-0 left-13 w-75 border-b border-white/50"></div>
         </div>
-        <div className=" flex text-center gap-5">
+        <div className=" flex text-center gap-4">
             <h2>Ag. <span>0123-4</span></h2>
             <h2>Cc. <span>1234-5</span></h2>
         </div>
