@@ -45,6 +45,10 @@ export default function Cliente() {
     const OpenTransferir = () => {
     router.push("/Cliente/Transferir");
   };
+
+    const OpenLimite = () => {
+    router.push("/Cliente/Limite");
+  };
     const goToInvestimentos = () => {
     router.push("/Cliente/Investimentos");
   };
@@ -143,7 +147,7 @@ export default function Cliente() {
         </button>
 
         {/* LIMITE */}
-        <button className="flex flex-col items-center flex-shrink-0">
+        <button onClick={OpenLimite} className="flex flex-col items-center flex-shrink-0">
         <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
             <ChartCandlestick className="w-9 h-9 text-white" />
         </div>
