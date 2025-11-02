@@ -34,6 +34,11 @@ export default function Cliente() {
     router.push("/Cliente/Devs");
   };
 
+        const goToConvidar = () => {
+    router.push("/Cliente/Convidar");
+  };
+
+
         const goToTermos = () => {
     router.push("/Termos");
   };
@@ -176,7 +181,7 @@ export default function Cliente() {
     <div className="w-full overflow-x-auto">
     <div className="flex gap-5 px-4 py-4 min-w-max">
         {/* Card */}
-        <button className="relative w-54 h-40 rounded-[10px] overflow-hidden shadow-lg">
+        <button onClick={goToConvidar} className="relative w-54 h-40 rounded-[10px] overflow-hidden shadow-lg">
         {/* Imagem de fundo */}
         <img
             src="assets/Indicar.png"
