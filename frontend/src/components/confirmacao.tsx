@@ -6,7 +6,7 @@ import { Check } from "lucide-react";
 interface ConfirmacaoProps {
   mensagemLoading?: string;
   mensagemSuccess?: string;
-  tempoLoading?: number; // em ms
+  tempoLoading?: number; 
   onComplete?: () => void;
 }
 
@@ -25,7 +25,7 @@ const Confirmacao: React.FC<ConfirmacaoProps> = ({
 
     const completeTimer = setTimeout(() => {
       if (onComplete) onComplete();
-    }, tempoLoading + 1500); // 1.5s depois do sucesso
+    }, tempoLoading + 1500); // 1.0 depois do sucesso
 
     return () => {
       clearTimeout(timer);
