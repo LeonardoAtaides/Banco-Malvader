@@ -4,10 +4,12 @@ import { useState } from "react";
 import Intro from "@/components/intro";
 import { User, Users, LogOut } from "lucide-react";
 
+
 export default function LoginFuncionario() {
   const [showIntro, setShowIntro] = useState(true);
   const [showLogin, setShowLogin] = useState(false);
   const [loginType, setLoginType] = useState<"cliente" | "funcionario" | null>(null);
+const [active, setActive] = useState<"cliente" | "funcionario" | "sair" | null>(null);
 
   const handleIntroFinish = () => setShowIntro(false);
 
@@ -143,8 +145,10 @@ export default function LoginFuncionario() {
             onClick={() => {
               setShowLogin(true);
               setLoginType("cliente");
+              setActive("cliente")
             }}
-            className="w-[110px] h-[90px] border border-white/50 rounded-[10px] flex flex-col items-center justify-center text-center"
+            className={`w-[110px] h-[90px] border border-white/50 rounded-[10px] flex flex-col items-center justify-center text-center
+          ${active === "cliente" ? "bg-white/10" : ""}`}
           >
             <User className="w-8 h-8 mb-2" />
             <p className="text-[14px]">Cliente</p>
@@ -154,9 +158,11 @@ export default function LoginFuncionario() {
             onClick={() => {
               setShowLogin(true);
               setLoginType("funcionario");
+              setActive("funcionario")
             }}
-            className="w-[110px] h-[90px] border border-white/50 rounded-[10px] flex flex-col items-center justify-center text-center"
-          >
+           className={`w-[110px] h-[90px] border border-white/50 rounded-[10px] flex flex-col items-center justify-center text-center
+          ${active === "funcionario" ? "bg-white/10" : ""}`}
+      >
             <Users className="w-8 h-8 mb-2" />
             <p className="text-[14px]">Funcionário</p>
           </button>
@@ -165,8 +171,10 @@ export default function LoginFuncionario() {
             onClick={() => {
               setShowLogin(false);
               setLoginType(null);
+              setActive(null)
+              setShowIntro(true)
             }}
-            className="w-[110px] h-[90px] border border-white/50 rounded-[10px] flex flex-col items-center justify-center text-center"
+            className="w-[110px] h-[90px] border border-white/50 rounded-[10px] flex flex-col items-center justify-center text-center hover:bg-white/10"
           >
             <LogOut className="w-8 h-8 mb-2" />
             <p className="text-[14px]">Sair</p>
