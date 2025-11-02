@@ -41,15 +41,18 @@ export default function Cliente() {
     const OpenSacar = () => {
     router.push("/Cliente/Sacar");
   };
+
+    const OpenTransferir = () => {
+    router.push("/Cliente/Transferir");
+  };
     const goToInvestimentos = () => {
     router.push("/Cliente/Investimentos");
   };
-
+  
 
     const goToConvidar = () => {
     router.push("/Cliente/Convidar");
   };
-
 
     const goToTermos = () => {
     router.push("/Termos");
@@ -132,7 +135,7 @@ export default function Cliente() {
         </button>
 
         {/* TRANSFERIR */}
-        <button className="flex flex-col items-center flex-shrink-0">
+        <button onClick={OpenTransferir} className="flex flex-col items-center flex-shrink-0">
         <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
             <ArrowLeftRight className="w-9 h-9 text-white" />
         </div>
