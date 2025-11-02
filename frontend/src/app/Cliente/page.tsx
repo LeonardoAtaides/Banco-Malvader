@@ -25,30 +25,33 @@ export default function Cliente() {
     }, [dicas.length]);
     const router = useRouter();
 
-      const handleLogout = () => {
+    const handleLogout = () => {
     localStorage.removeItem("token"); 
     router.push("/Login");
     };
 
-      const OpenExtrato = () => {
+    const OpenExtrato = () => {
     router.push("/Cliente/Extrato");
   };
 
-        const goToInvestimentos = () => {
+    const OpenDepositar = () => {
+    router.push("/Cliente/Depositar");
+  };
+    const goToInvestimentos = () => {
     router.push("/Cliente/Investimentos");
   };
 
 
-        const goToConvidar = () => {
+    const goToConvidar = () => {
     router.push("/Cliente/Convidar");
   };
 
 
-        const goToTermos = () => {
+    const goToTermos = () => {
     router.push("/Termos");
   };
 
-      const goToDevs = () => {
+    const goToDevs = () => {
     router.push("/Cliente/Devs");
   };
 
@@ -100,7 +103,7 @@ export default function Cliente() {
     <div className="w-full overflow-x-auto">
     <div className="flex gap-5 px-4 py-4 min-w-max">
 
-         {/* EXTARTO */}
+         {/* EXTRATO */}
         <button onClick={OpenExtrato} className="flex flex-col items-center flex-shrink-0">
         <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
             <FileChartColumn className="w-9 h-9 text-white" />
@@ -109,7 +112,7 @@ export default function Cliente() {
         </button>
 
         {/* DEPOSITAR */}
-        <button className="flex flex-col items-center flex-shrink-0">
+        <button onClick={OpenDepositar} className="flex flex-col items-center flex-shrink-0">
         <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
             <BanknoteArrowUp className="w-9 h-9 text-white" />
         </div>
