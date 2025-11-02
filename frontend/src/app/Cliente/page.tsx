@@ -37,6 +37,10 @@ export default function Cliente() {
     const OpenDepositar = () => {
     router.push("/Cliente/Depositar");
   };
+
+    const OpenSacar = () => {
+    router.push("/Cliente/Sacar");
+  };
     const goToInvestimentos = () => {
     router.push("/Cliente/Investimentos");
   };
@@ -120,7 +124,7 @@ export default function Cliente() {
         </button>
 
         {/* SACAR */}
-        <button className="flex flex-col items-center flex-shrink-0">
+        <button onClick={OpenSacar} className="flex flex-col items-center flex-shrink-0">
         <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
             <BanknoteArrowDown className="w-9 h-9 text-white" />
         </div>
