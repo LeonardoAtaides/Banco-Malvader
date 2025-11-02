@@ -1,6 +1,6 @@
 "use client";
 
-import { Wrench, MessagesSquare, ChartPie } from "lucide-react";
+import { Wrench, MessagesSquare, ChartNoAxesCombined, CirclePlus } from "lucide-react";
 import { ReactElement } from "react";
 
 interface TituloItem {
@@ -9,7 +9,7 @@ interface TituloItem {
 }
 
 interface TituloProps {
-  tipo: 1 | 2 | 3; // define os tipos possíveis (você pode adicionar mais)
+  tipo: 1 | 2 | 3 | 4; // define os tipos possíveis (você pode adicionar mais)
 }
 
 export default function Titulo({ tipo }: TituloProps) {
@@ -23,8 +23,12 @@ export default function Titulo({ tipo }: TituloProps) {
       texto: "Dicas Malvader",
     },
     3: {
-      icone: <ChartPie className="text-[#012E4B] text-xl mr-2" />,
+      icone: <ChartNoAxesCombined className="text-[#012E4B] text-xl mr-2" />,
       texto: "Investimentos",
+    },
+    4: {
+      icone: <CirclePlus className="text-[#012E4B] text-xl mr-2" />,
+      texto: "Conheça Mais",
     },
   };
 
