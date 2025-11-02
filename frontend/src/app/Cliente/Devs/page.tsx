@@ -52,20 +52,19 @@ const DevsPage: React.FC = () => {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#012E4B] to-[#064F75] text-white ">
-        <div className="px-5 py-8">
-
+        <div className="px-5 py-5">
         
       {/* Header */}
-      <div className="flex  mb-2">
-        <button
-          className="mr-2  hover:text-white/70 transition"
-          onClick={handleBack}
-        >
-          <ChevronLeft className="w-8 h-8" />
-        </button>
-
+      <div className="relative">
+      <button
+      className="absolute top-0 left-0 hover:text-white/70 transition"
+      onClick={handleBack}
+      >
+      <ChevronLeft className="w-8 h-8" />
+      </button>
       </div>
-      <h1 className="flex-1 text-center text-2xl font-bold">
+
+      <h1 className=" pt-12 flex-1 text-center text-2xl font-bold">
           Nossos <br/>Desenvolvedores
         </h1>
 
@@ -104,7 +103,7 @@ const DevsPage: React.FC = () => {
 
     </div>        
     {/*waves*/ }
-    <div className="w-full flex justify-center ">
+    <div className="w-full pt-2 flex justify-center ">
         <img 
         src="/assets/Wave_white.png" 
         alt="wave" 
