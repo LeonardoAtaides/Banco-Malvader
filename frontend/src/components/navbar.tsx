@@ -5,24 +5,32 @@ export default function BottomNav() {
   const MenuPerfil = () => {
   router.push("/Cliente/Perfil");
   };
+    const MenuHome = () => {
+  router.push("/Cliente");
+  };
+
+     const OpenMenu = () => {
+  router.push("/Cliente/Menu");
+  };
+
 
 
   return (
-    <nav onClick={MenuPerfil} className="fixed bottom-0 left-0 right-0 bg-[#012E4B] flex justify-around items-center py-3 text-white shadow-t z-50">
+    <nav  className="fixed bottom-0 left-0 right-0 bg-[#012E4B] flex justify-around items-center py-3 text-white shadow-t z-50">
       {/* Perfil */}
-      <button className="flex flex-col items-center text-xs">
+      <button onClick={MenuPerfil} className="flex flex-col items-center text-xs">
         <User className="w-6 h-6 mb-1" />
         Perfil
       </button>
 
       {/* Home */}
-      <button className="flex flex-col items-center text-xs">
+      <button onClick={MenuHome} className="flex flex-col items-center text-xs">
         <Home className="w-6 h-6 mb-1" />
         Home
       </button>
 
       {/* Menu */}
-      <button className="flex flex-col items-center text-xs">
+      <button onClick={OpenMenu} className="flex flex-col items-center text-xs">
         <Menu className="w-6 h-6 mb-1" />
         Menu
       </button>
