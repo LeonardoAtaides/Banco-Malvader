@@ -25,13 +25,17 @@ export default function Cliente() {
     }, [dicas.length]);
     const router = useRouter();
 
-  const handleLogout = () => {
+      const handleLogout = () => {
     localStorage.removeItem("token"); 
     router.push("/Login");
+    };
+
+      const goToDevs = () => {
+    router.push("/Cliente/Devs");
   };
 
 
-  return (
+  return ( 
     <main className="bg-white min-h-screen text-[14px] font-bold pb-18 ">
     <div className="bg-[#012E4B] pt-2 flex-col justify-center px-5 w h-[110px] z-50 bg-wave bg-no-repeat bg-bottom bg-cover"
     
@@ -212,7 +216,7 @@ export default function Cliente() {
         </button>
 
         {/* Card  3*/}
-        <button className="relative w-54 h-40 rounded-[10px] overflow-hidden shadow-lg">
+        <button onClick={goToDevs} className="relative w-54 h-40 rounded-[10px] overflow-hidden shadow-lg">
         {/* Imagem de fundo */}
         <img
             src="assets/Devs.png"
