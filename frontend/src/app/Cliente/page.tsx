@@ -163,7 +163,76 @@ export default function Cliente() {
         </button> 
     </div>
 
-    <Titulo tipo={3} />  
+    <Titulo tipo={4} /> 
+    <div className="w-full overflow-x-auto">
+    <div className="flex gap-5 px-4 py-4 min-w-max">
+        {/* Card */}
+        <button className="relative w-54 h-40 rounded-[10px] overflow-hidden shadow-lg">
+        {/* Imagem de fundo */}
+        <img
+            src="assets/Indicar.png"
+            alt="indicar"
+            className="w-full h-full object-cover center"
+        />
+        {/* Gradiente azul */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0274B6]/50 to-transparent"></div>
+        {/* Texto */}
+        <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
+            <div className="flex justify-between items-center">
+            <h1 className="font-semibold">Indique para Amigos</h1>
+            <ChevronRight className="w-5 h-5" />
+            </div>
+            <p className="text-[10px] mt-1">
+            Mostre como é bom fazer parte do nosso banco, com o que oferecemos
+            </p>
+        </div>
+        </button>
+
+        {/* Card 2*/}
+        <button className="relative w-54 h-40 rounded-[10px] overflow-hidden shadow-lg">
+        {/* Imagem de fundo */}
+        <img
+            src="assets/Banco.png"
+            alt="indicar"
+            className="w-full h-full object-cover center"
+        />
+        {/* Gradiente azul */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0274B6]/50 to-transparent"></div>
+        {/* Texto */}
+        <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
+            <div className="flex justify-between items-center">
+            <h1 className="font-semibold">Termos de Uso</h1>
+            <ChevronRight className="w-5 h-5" />
+            </div>
+            <p className="text-[10px] mt-1">
+            Saiba mais sobre nossos termos de uso e como realmente trabalhamos
+            </p>
+        </div>
+        </button>
+
+        {/* Card  3*/}
+        <button className="relative w-54 h-40 rounded-[10px] overflow-hidden shadow-lg">
+        {/* Imagem de fundo */}
+        <img
+            src="assets/Devs.png"
+            alt="indicar"
+            className="w-full h-full object-cover center"
+        />
+        {/* Gradiente azul */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0274B6]/50 to-transparent"></div>
+        {/* Texto */}
+        <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
+            <div className="flex justify-between items-center">
+            <h1 className="font-semibold">Nossos Devs</h1>
+            <ChevronRight className="w-5 h-5" />
+            </div>
+            <p className="text-[10px] mt-1">
+            Conheça o nossos desenvolvedores, que deram vida ao nosso banco
+            </p>
+        </div>
+        </button>
+    </div>
+    </div>
 
 
     </main>
