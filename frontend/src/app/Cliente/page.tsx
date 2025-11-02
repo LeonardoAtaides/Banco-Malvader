@@ -3,8 +3,9 @@
 import React from "react";
 import { Eye, LogOut, FileChartColumn, BanknoteArrowUp, BanknoteArrowDown, ArrowLeftRight, ChartCandlestick, ChevronRight} from "lucide-react";
 import { useRouter } from "next/navigation";
-import Titulo from "@/components/titles";
 import { useEffect, useState } from "react";
+import Titulo from "@/components/titles";
+import Navbar from "@/components/navbar";
 
 export default function Cliente() {
     const dicas = [
@@ -31,7 +32,7 @@ export default function Cliente() {
 
 
   return (
-    <main className="bg-white min-h-screen text-[14px] font-bold  ">
+    <main className="bg-white min-h-screen text-[14px] font-bold pb-18 ">
     <div className="bg-[#012E4B] pt-2 flex-col justify-center px-5 w h-[110px] z-50 bg-wave bg-no-repeat bg-bottom bg-cover"
     
     >
@@ -233,6 +234,8 @@ export default function Cliente() {
         </button>
     </div>
     </div>
+
+    <Navbar />
 
 
     </main>
