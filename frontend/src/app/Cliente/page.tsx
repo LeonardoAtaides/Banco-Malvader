@@ -34,6 +34,11 @@ export default function Cliente() {
     router.push("/Cliente/Devs");
   };
 
+        const goToInvestimentos = () => {
+    router.push("/Cliente/investimentos");
+  };
+
+
         const goToConvidar = () => {
     router.push("/Cliente/Convidar");
   };
@@ -160,7 +165,7 @@ export default function Cliente() {
     <Titulo tipo={3} /> 
 
     <div className="flex justify-center text-[12px]">
-        <button className=" flex justify-between items-center w-90 text-center mt-2 bg-[#012E4B] py-8 px-5 rounded-[10px]">
+        <button onClick={goToInvestimentos} className=" flex justify-between items-center w-90 text-center mt-2 bg-[#012E4B] py-8 px-5 rounded-[10px]">
             <div className="flex justify-center gap-20">
                 <div className="flex-col text-center">
                     <h2>Saldo total Investido</h2>
