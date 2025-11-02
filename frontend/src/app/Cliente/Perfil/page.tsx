@@ -11,6 +11,9 @@ export default function Cliente() {
     
     const router = useRouter();
 
+   const OpenAjuda = () => {
+  router.push("/Cliente/Ajuda");
+  };
     const OpenSobre = () => {
   router.push("/Cliente/Devs");
   };
@@ -74,7 +77,7 @@ export default function Cliente() {
     <Titulo tipo={0}/>
 
         <div className="flex justify-center text-[12px] mt-2">
-        <button  className=" flex justify-between items-center w-90 text-center mt-2 bg-[#012E4B] py-3 px-5 rounded-[10px]">
+        <button onClick={OpenAjuda} className=" flex justify-between items-center w-90 text-center mt-2 bg-[#012E4B] py-3 px-5 rounded-[10px]">
             <div className="flex justify-center items-center gap-5">
                 <HandHelping />
                 Ajuda
