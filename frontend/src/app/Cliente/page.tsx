@@ -34,6 +34,10 @@ export default function Cliente() {
     router.push("/Cliente/Devs");
   };
 
+        const goToTermos = () => {
+    router.push("/Termos");
+  };
+
 
   return ( 
     <main className="bg-white min-h-screen text-[14px] font-bold pb-18 ">
@@ -194,7 +198,7 @@ export default function Cliente() {
         </button>
 
         {/* Card 2*/}
-        <button className="relative w-54 h-40 rounded-[10px] overflow-hidden shadow-lg">
+        <button onClick={goToTermos} className="relative w-54 h-40 rounded-[10px] overflow-hidden shadow-lg">
         {/* Imagem de fundo */}
         <img
             src="assets/Banco.png"
