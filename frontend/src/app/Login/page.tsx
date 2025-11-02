@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Intro from "@/components/intro";
 import { User, Users, LogOut } from "lucide-react";
-
+import { useRouter } from "next/navigation";
 
 export default function LoginFuncionario() {
   const [showIntro, setShowIntro] = useState(true);
@@ -12,6 +12,7 @@ export default function LoginFuncionario() {
 const [active, setActive] = useState<"cliente" | "funcionario" | "sair" | null>(null);
 
   const handleIntroFinish = () => setShowIntro(false);
+  const router = useRouter();
 
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   let value = e.target.value.replace(/\D/g, ""); // remove tudo que não é número
@@ -27,6 +28,34 @@ const [active, setActive] = useState<"cliente" | "funcionario" | "sair" | null>(
 
   e.target.value = value;
 };
+
+  const handleClienteSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const cpf = formData.get("cpf") as string;
+    const senha = formData.get("senha") as string;
+
+    // CPF genérico e senha fixa
+    if (cpf === "000.000.000-00" && senha === "123") {
+      router.push("/Cliente"); // página Cliente
+    } else {
+      alert("CPF ou senha incorretos!");
+    }
+  };
+
+    const handleFuncionarioSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const cpf = formData.get("cpf") as string;
+    const senha = formData.get("senha") as string;
+
+    // CPF genérico e senha fixa
+    if (cpf === "000.000.000-00" && senha === "321") {
+      router.push("/Funcionario"); // página Funcionario
+    } else {
+      alert("CPF ou senha incorretos!");
+    }
+  };
 
 
   return (
@@ -62,7 +91,7 @@ const [active, setActive] = useState<"cliente" | "funcionario" | "sair" | null>(
               </p>
             </>
           ) : loginType === "cliente" ? (
-            <form className="pt-14 w-[80%] max-w-xs flex flex-col gap-6 text-white">
+            <form onSubmit={handleClienteSubmit} className="pt-14 w-[80%] max-w-xs flex flex-col gap-6 text-white">
 
             <div className="justify-center flex mb-10 font-bold">
               <h2 className="w-50">Acesse e conheça tudo que podemos oferecer</h2>
@@ -71,6 +100,7 @@ const [active, setActive] = useState<"cliente" | "funcionario" | "sair" | null>(
               <div className="relative w-full">
                 <input
                   type="text"
+                  name="cpf"
                   id="cpf"
                   placeholder=" "
                   required
@@ -90,6 +120,7 @@ const [active, setActive] = useState<"cliente" | "funcionario" | "sair" | null>(
               <div className="relative w-full">
                 <input
                   type="password"
+                  name="senha"
                   id="senha"
                   placeholder=" "
                   required
@@ -111,7 +142,7 @@ const [active, setActive] = useState<"cliente" | "funcionario" | "sair" | null>(
               </button>
             </form>
           ) : loginType === "funcionario" ? (
-            <form className="pt-14 w-[80%] max-w-xs flex flex-col gap-6 text-white">
+            <form  onSubmit={handleFuncionarioSubmit}  className="pt-14 w-[80%] max-w-xs flex flex-col gap-6 text-white">
 
               <div className="justify-center flex mb-10 font-bold">
                 <h2 className="w-70 text-center">Olá Prezado, que ótimo ter você de volta, bom expediente!</h2>
@@ -121,6 +152,7 @@ const [active, setActive] = useState<"cliente" | "funcionario" | "sair" | null>(
                 <input
                   type="text"
                   id="cpf"
+                  name="cpf"
                   placeholder=" "
                   required
                   className="peer w-full bg-transparent border-b border-white/50 p-2 text-white outline-none focus:border-white"
@@ -140,6 +172,7 @@ const [active, setActive] = useState<"cliente" | "funcionario" | "sair" | null>(
                 <input
                   type="password"
                   id="senha"
+                  name="senha"
                   placeholder=" "
                   required
                   className="peer w-full bg-transparent border-b border-white/50 p-2 text-white outline-none focus:border-white"
