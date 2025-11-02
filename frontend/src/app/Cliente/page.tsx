@@ -48,14 +48,17 @@ export default function Cliente() {
         </div>
         
       </div>
-<div className="w-full flex justify-center mt-2">
-  <img 
-    src="/assets/Wave.png" 
-    alt="wave" 
-    className="w-full max-w-[600px] h-auto object-cover"
-  />
-</div>
-      </div>
+    </div>
+
+    {/*waves*/ }
+    <div className="w-full flex justify-center mt-0">
+        <img 
+        src="/assets/Wave.png" 
+        alt="wave" 
+        className="w-full max-w-[600px] h-auto object-cover repeat-y" 
+        />
+    </div>
+
     </main>
   );
 }
