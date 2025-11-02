@@ -49,6 +49,7 @@ export default function Cliente() {
     const OpenLimite = () => {
     router.push("/Cliente/Limite");
   };
+
     const goToInvestimentos = () => {
     router.push("/Cliente/Investimentos");
   };
