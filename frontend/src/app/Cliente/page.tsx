@@ -77,6 +77,8 @@ export default function Cliente() {
 
     <div className="w-full overflow-x-auto">
     <div className="flex gap-5 px-4 py-4 min-w-max">
+
+         {/* EXTARTO */}
         <button className="flex flex-col items-center flex-shrink-0">
         <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
             <FileChartColumn className="w-9 h-9 text-white" />
@@ -84,6 +86,7 @@ export default function Cliente() {
         <h1 className="text-center text-[#012E4B] pt-1">Extrato</h1>
         </button>
 
+        {/* DEPOSITAR */}
         <button className="flex flex-col items-center flex-shrink-0">
         <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
             <BanknoteArrowUp className="w-9 h-9 text-white" />
@@ -91,6 +94,7 @@ export default function Cliente() {
         <h1 className="text-center text-[#012E4B] pt-1">Depositar</h1>
         </button>
 
+        {/* SACAR */}
         <button className="flex flex-col items-center flex-shrink-0">
         <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
             <BanknoteArrowDown className="w-9 h-9 text-white" />
@@ -98,6 +102,7 @@ export default function Cliente() {
         <h1 className="text-center text-[#012E4B] pt-1">Sacar</h1>
         </button>
 
+        {/* TRANSFERIR */}
         <button className="flex flex-col items-center flex-shrink-0">
         <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
             <ArrowLeftRight className="w-9 h-9 text-white" />
@@ -105,6 +110,7 @@ export default function Cliente() {
         <h1 className="text-center text-[#012E4B] pt-1">Transferir</h1>
         </button>
 
+        {/* LIMITE */}
         <button className="flex flex-col items-center flex-shrink-0">
         <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
             <ChartCandlestick className="w-9 h-9 text-white" />
@@ -124,7 +130,7 @@ export default function Cliente() {
         </p>
       </div>
 
-      {/* Indicadores (os pontinhos) */}
+      {/* Indicadores */}
       <div className="flex justify-center mt-2 space-x-2">
         {dicas.map((_, i) => (
           <span
@@ -136,9 +142,6 @@ export default function Cliente() {
         ))}
       </div>
     </div>
-
-
-
 
     </main>
   );
