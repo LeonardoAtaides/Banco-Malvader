@@ -22,7 +22,7 @@ export default function LoginFuncionario() {
       <main className="bg-gradient-to-b from-[#012E4B] to-[#064F75] min-h-screen w-full flex flex-col justify-between">
         {/* Conteúdo do topo */}
         <div className="flex flex-col items-center pt-10">
-          <img src="/assets/Logo.png" alt="Logo" className="w-10 h-10" />
+          <img src="/assets/Logo.png" alt="Logo" className="w-8 h-8" />
 
           {!showLogin ? (
             <>
@@ -66,7 +66,7 @@ export default function LoginFuncionario() {
 
               <button
                 type="submit"
-                className="border border-white/60 rounded-[10px] py-2 mt-6 font-bold hover:bg-white hover:text-[#012E4B] transition"
+                className="border border-white/60 bg-white/10 rounded-[10px] py-2 mt-6 font-bold hover:bg-white/90 hover:text-[#012E4B] transition"
               >
                 Acessar
               </button>
@@ -98,7 +98,7 @@ export default function LoginFuncionario() {
 
               <button
                 type="submit"
-                className="border border-white/60 rounded-[10px] py-2 mt-6 font-bold hover:bg-white hover:text-[#012E4B] transition"
+                className="border border-white/60 bg-white/10 rounded-[10px] py-2 mt-6 font-bold hover:bg-white/90 hover:text-[#012E4B] transition"
               >
                 Acessar
               </button>
