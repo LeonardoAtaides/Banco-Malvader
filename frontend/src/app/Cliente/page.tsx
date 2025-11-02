@@ -35,7 +35,7 @@ export default function Cliente() {
   };
 
         const goToInvestimentos = () => {
-    router.push("/Cliente/investimentos");
+    router.push("/Cliente/Investimentos");
   };
 
 
