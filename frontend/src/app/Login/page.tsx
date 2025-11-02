@@ -13,6 +13,22 @@ const [active, setActive] = useState<"cliente" | "funcionario" | "sair" | null>(
 
   const handleIntroFinish = () => setShowIntro(false);
 
+  const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  let value = e.target.value.replace(/\D/g, ""); // remove tudo que não é número
+
+  // Aplica a máscara
+  if (value.length > 9) {
+    value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2}).*/, "$1.$2.$3-$4");
+  } else if (value.length > 6) {
+    value = value.replace(/^(\d{3})(\d{3})(\d{0,3}).*/, "$1.$2.$3");
+  } else if (value.length > 3) {
+    value = value.replace(/^(\d{3})(\d{0,3}).*/, "$1.$2");
+  }
+
+  e.target.value = value;
+};
+
+
   return (
     <>
       {showIntro && (
@@ -24,7 +40,7 @@ const [active, setActive] = useState<"cliente" | "funcionario" | "sair" | null>(
       <main className="bg-gradient-to-b from-[#012E4B] to-[#064F75] min-h-screen w-full flex flex-col justify-between">
         {/* Conteúdo do topo */}
         <div className="flex flex-col items-center pt-10">
-          <img src="/assets/Logo.png" alt="Logo" className="w-8 h-8" />
+          <img src="/assets/Logo.png" alt="Logo" className="w-10 h-10" />
 
           {!showLogin ? (
             <>
@@ -55,6 +71,8 @@ const [active, setActive] = useState<"cliente" | "funcionario" | "sair" | null>(
                   placeholder=" "
                   required
                   className="peer w-full bg-transparent border-b border-white/50 p-2 text-white outline-none focus:border-white"
+                  maxLength={14}
+                  onChange={handleCPFChange}
                 />
                 <label
                   htmlFor="cpf"
@@ -92,7 +110,7 @@ const [active, setActive] = useState<"cliente" | "funcionario" | "sair" | null>(
             <form className="pt-14 w-[80%] max-w-xs flex flex-col gap-6 text-white">
 
               <div className="justify-center flex mb-10 font-bold">
-                <h2 className="w-70 text-center">Olá Prezado, bem vindo de volta! Bom expediente</h2>
+                <h2 className="w-70 text-center">Olá Prezado, que ótimo ter você de volta, bom expediente!</h2>
               </div>
 
               <div className="relative w-full">
@@ -102,6 +120,8 @@ const [active, setActive] = useState<"cliente" | "funcionario" | "sair" | null>(
                   placeholder=" "
                   required
                   className="peer w-full bg-transparent border-b border-white/50 p-2 text-white outline-none focus:border-white"
+                  maxLength={14}
+                  onChange={handleCPFChange}
                 />
                 <label
                   htmlFor="cpf"
