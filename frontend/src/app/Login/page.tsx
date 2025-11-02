@@ -46,29 +46,44 @@ export default function LoginFuncionario() {
               <h2 className="w-50">Acesse e conheça tudo que podemos oferecer</h2>
             </div>
 
-              <div>
-                <label className="block text-sm mb-1">CPF</label>
+              <div className="relative w-full">
                 <input
                   type="text"
-                  className="w-full bg-transparent border-b border-white/50 outline-none p-2"
-                  placeholder="Digite seu CPF"
+                  id="cpf"
+                  placeholder=" "
+                  required
+                  className="peer w-full bg-transparent border-b border-white/50 p-2 text-white outline-none focus:border-white"
                 />
+                <label
+                  htmlFor="cpf"
+                  className="absolute left-2 top-2 text-white text-sm transition-all peer-placeholder-shown:top-2 peer-placeholder-shown:text-white/50 peer-placeholder-shown:text-base peer-focus:-top-4 peer-focus:text-white peer-focus:text-sm peer-valid:-top-4 peer-valid:text-white peer-valid:text-sm"
+                >
+                CPF
+                </label>
               </div>
 
-              <div>
-                <label className="block text-sm mb-1">Senha</label>
+
+              <div className="relative w-full">
                 <input
                   type="password"
-                  className="w-full bg-transparent border-b border-white/50 outline-none p-2"
-                  placeholder="Digite sua senha"
+                  id="senha"
+                  placeholder=" "
+                  required
+                  className="peer w-full bg-transparent border-b border-white/50 p-2 text-white outline-none focus:border-white"
                 />
+                <label
+                  htmlFor="senha"
+                  className="absolute left-2 top-2 text-white text-sm transition-all peer-placeholder-shown:top-2 peer-placeholder-shown:text-white/50 peer-placeholder-shown:text-base peer-focus:-top-4 peer-focus:text-white peer-focus:text-sm peer-valid:-top-4 peer-valid:text-white peer-valid:text-sm"
+                >
+                Senha
+                </label>
               </div>
 
               <button
                 type="submit"
                 className="border border-white/60 bg-white/10 rounded-[10px] py-2 mt-6 font-bold hover:bg-white/90 hover:text-[#012E4B] transition"
               >
-                Acessar
+              Acessar
               </button>
             </form>
           ) : loginType === "funcionario" ? (
@@ -78,29 +93,45 @@ export default function LoginFuncionario() {
                 <h2 className="w-70 text-center">Olá Prezado, bem vindo de volta! Bom expediente</h2>
               </div>
 
-              <div>
-                <label className="block text-sm mb-1">CPF</label>
+              <div className="relative w-full">
                 <input
                   type="text"
-                  className="w-full bg-transparent border-b border-white/50 outline-none p-2"
-                  placeholder="Digite seu CPF"
+                  id="cpf"
+                  placeholder=" "
+                  required
+                  className="peer w-full bg-transparent border-b border-white/50 p-2 text-white outline-none focus:border-white"
                 />
+                <label
+                  htmlFor="cpf"
+                  className="absolute left-2 top-2 text-white text-sm transition-all peer-placeholder-shown:top-2 peer-placeholder-shown:text-white/50 peer-placeholder-shown:text-base peer-focus:-top-4 peer-focus:text-white peer-focus:text-sm peer-valid:-top-4 peer-valid:text-white peer-valid:text-sm"
+                >
+                CPF
+                </label>
               </div>
 
-              <div>
-                <label className="block text-sm mb-1">Senha</label>
+
+              <div className="relative w-full">
                 <input
                   type="password"
-                  className="w-full bg-transparent border-b border-white/50 outline-none p-2"
-                  placeholder="Digite sua senha"
+                  id="senha"
+                  placeholder=" "
+                  required
+                  className="peer w-full bg-transparent border-b border-white/50 p-2 text-white outline-none focus:border-white"
                 />
+                <label
+                  htmlFor="senha"
+                  className="absolute left-2 top-2 text-white text-sm transition-all peer-placeholder-shown:top-2 peer-placeholder-shown:text-white/50 peer-placeholder-shown:text-base peer-focus:-top-4 peer-focus:text-white peer-focus:text-sm peer-valid:-top-4 peer-valid:text-white peer-valid:text-sm"
+                >
+                Senha
+                </label>
               </div>
+
 
               <button
                 type="submit"
                 className="border border-white/60 bg-white/10 rounded-[10px] py-2 mt-6 font-bold hover:bg-white/90 hover:text-[#012E4B] transition"
               >
-                Acessar
+              Acessar
               </button>
             </form>
           ) : null}
