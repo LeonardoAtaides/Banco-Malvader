@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { X, ChevronRight, Check } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Confirmacao from "@/components/confirmacao";
 
@@ -52,12 +52,10 @@ const Depositar: React.FC = () => {
         alert("Senha incorreta.");
         return;
       }
-      // Aqui abrimos o componente de confirmação
       setConfirmacaoAberta(true);
     }
   };
 
-  // Se o componente de confirmação está aberto, renderiza apenas ele
   if (confirmacaoAberta) {
     return (
       <Confirmacao
@@ -78,7 +76,7 @@ const Depositar: React.FC = () => {
             className="absolute top-0 left-0 hover:text-white/70 transition"
             onClick={handleBack}
           >
-            <ChevronLeft className="w-8 h-8" />
+            <X className="w-8 h-8" />
           </button>
         </div>
 
