@@ -1,6 +1,6 @@
 "use client";
 
-import { Wrench, MessagesSquare, ChartNoAxesCombined, CirclePlus } from "lucide-react";
+import { Wrench, MessagesSquare, ChartNoAxesCombined, CirclePlus, PiggyBank } from "lucide-react";
 import { ReactElement } from "react";
 
 interface TituloItem {
@@ -9,7 +9,7 @@ interface TituloItem {
 }
 
 interface TituloProps {
-  tipo: 1 | 2 | 3 | 4; // define os tipos possíveis (você pode adicionar mais)
+  tipo: 1 | 2 | 3 | 4 | 5 | 6; // define os tipos possíveis (você pode adicionar mais)
 }
 
 export default function Titulo({ tipo }: TituloProps) {
@@ -29,6 +29,14 @@ export default function Titulo({ tipo }: TituloProps) {
     4: {
       icone: <CirclePlus className="text-[#012E4B] text-xl mr-2" />,
       texto: "Conheça Mais",
+    },
+    5: {
+      icone: <PiggyBank className="text-[#012E4B] text-xl mr-2" />,
+      texto: "Conta Poupança",
+    },
+    6: {
+      icone: <ChartNoAxesCombined className="text-[#012E4B] text-xl mr-2" />,
+      texto: "Conta Investimento",
     },
   };
 
