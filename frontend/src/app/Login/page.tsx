@@ -40,7 +40,7 @@ const [active, setActive] = useState<"cliente" | "funcionario" | "sair" | null>(
       <main className="bg-gradient-to-b from-[#012E4B] to-[#064F75] min-h-screen w-full flex flex-col justify-between">
         {/* Conteúdo do topo */}
 
-        <div className="flex flex-col justify-between w-full min-h-screen md:min-h-[70vh] md:w-[80%] md:max-w-2xl md:bg-white/5 md:border md:border-white/50 md:rounded-2xl  md:mx-auto md:my-auto">
+        <div className="flex flex-col justify-between w-full min-h-screen sm:min-h-[70vh] sm:w-[80%] sm:max-w-2xl sm:bg-white/5 sm:border sm:border-white/50 sm:rounded-2xl  sm:mx-auto sm:my-auto">
 
         
         <div className="flex flex-col items-center pt-10">
@@ -164,7 +164,7 @@ const [active, setActive] = useState<"cliente" | "funcionario" | "sair" | null>(
         </div>
 
         {/* Menu fixado no rodapé */}
-        <div className="flex justify-center gap-5 pb-2 md:pb-8">
+        <div className="flex justify-center gap-5 pb-2 sm:pb-8">
           <button
             onClick={() => {
               setShowLogin(true);
