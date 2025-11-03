@@ -1,0 +1,230 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model agencia {
+  id_agencia       Int              @id @default(autoincrement())
+  nome             String           @db.VarChar(50)
+  codigo_agencia   String           @unique(map: "codigo_agencia") @db.VarChar(10)
+  endereco_id      Int
+  endereco_agencia endereco_agencia @relation(fields: [endereco_id], references: [id_endereco_agencia], onDelete: NoAction, onUpdate: NoAction, map: "agencia_ibfk_1")
+  conta            conta[]
+  funcionario      funcionario[]
+
+  @@index([endereco_id], map: "endereco_id")
+}
+
+model auditoria_abertura_conta {
+  id_auditoria   Int          @id @default(autoincrement())
+  id_conta       Int
+  id_funcionario Int?
+  data_hora      DateTime     @default(now()) @db.Timestamp(0)
+  observacao     String?      @db.VarChar(200)
+  conta          conta        @relation(fields: [id_conta], references: [id_conta], onDelete: NoAction, onUpdate: NoAction, map: "auditoria_abertura_conta_ibfk_1")
+  funcionario    funcionario? @relation(fields: [id_funcionario], references: [id_funcionario], onDelete: NoAction, onUpdate: NoAction, map: "auditoria_abertura_conta_ibfk_2")
+
+  @@index([id_conta], map: "id_conta")
+  @@index([id_funcionario], map: "id_funcionario")
+}
+
+model cliente {
+  id_cliente    Int     @id @default(autoincrement())
+  id_usuario    Int
+  score_credito Decimal @default(0.00) @db.Decimal(5, 2)
+  usuario       usuario @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "cliente_ibfk_1")
+  conta         conta[]
+
+  @@index([id_usuario], map: "id_usuario")
+}
+
+model conta {
+  id_conta                                    Int                        @id @default(autoincrement())
+  numero_conta                                String                     @unique(map: "numero_conta") @db.VarChar(20)
+  id_agencia                                  Int
+  saldo                                       Decimal                    @default(0.00) @db.Decimal(15, 2)
+  tipo_conta                                  conta_tipo_conta
+  id_cliente                                  Int
+  data_abertura                               DateTime                   @default(now()) @db.DateTime(0)
+  status                                      conta_status               @default(ATIVA)
+  auditoria_abertura_conta                    auditoria_abertura_conta[]
+  agencia                                     agencia                    @relation(fields: [id_agencia], references: [id_agencia], onDelete: NoAction, onUpdate: NoAction, map: "conta_ibfk_1")
+  cliente                                     cliente                    @relation(fields: [id_cliente], references: [id_cliente], onDelete: NoAction, onUpdate: NoAction, map: "conta_ibfk_2")
+  conta_corrente                              conta_corrente?
+  conta_investimento                          conta_investimento?
+  conta_poupanca                              conta_poupanca?
+  historico_encerramento                      historico_encerramento[]
+  transacao_transacao_id_conta_origemToconta  transacao[]                @relation("transacao_id_conta_origemToconta")
+  transacao_transacao_id_conta_destinoToconta transacao[]                @relation("transacao_id_conta_destinoToconta")
+
+  @@index([id_agencia], map: "id_agencia")
+  @@index([id_cliente], map: "idx_conta_cliente")
+  @@index([numero_conta], map: "idx_conta_numero")
+}
+
+model conta_corrente {
+  id_conta_corrente Int      @id @default(autoincrement())
+  id_conta          Int      @unique(map: "id_conta")
+  limite            Decimal  @default(0.00) @db.Decimal(15, 2)
+  data_vencimento   DateTime @db.Date
+  taxa_manutencao   Decimal  @default(0.00) @db.Decimal(5, 2)
+  conta             conta    @relation(fields: [id_conta], references: [id_conta], onDelete: NoAction, onUpdate: NoAction, map: "conta_corrente_ibfk_1")
+}
+
+model conta_investimento {
+  id_conta_investimento Int                             @id @default(autoincrement())
+  id_conta              Int                             @unique(map: "id_conta")
+  perfil_risco          conta_investimento_perfil_risco
+  valor_minimo          Decimal                         @db.Decimal(15, 2)
+  taxa_rendimento_base  Decimal                         @db.Decimal(5, 2)
+  conta                 conta                           @relation(fields: [id_conta], references: [id_conta], onDelete: NoAction, onUpdate: NoAction, map: "conta_investimento_ibfk_1")
+}
+
+model conta_poupanca {
+  id_conta_poupanca Int       @id @default(autoincrement())
+  id_conta          Int       @unique(map: "id_conta")
+  taxa_rendimento   Decimal   @db.Decimal(5, 2)
+  ultimo_rendimento DateTime? @db.DateTime(0)
+  conta             conta     @relation(fields: [id_conta], references: [id_conta], onDelete: NoAction, onUpdate: NoAction, map: "conta_poupanca_ibfk_1")
+}
+
+model endereco_agencia {
+  id_endereco_agencia Int       @id @default(autoincrement())
+  cep                 String    @db.VarChar(10)
+  local               String    @db.VarChar(100)
+  numero              Int
+  bairro              String    @db.VarChar(50)
+  cidade              String    @db.VarChar(50)
+  estado              String    @db.Char(2)
+  complemento         String?   @db.VarChar(50)
+  agencia             agencia[]
+}
+
+model endereco_usuario {
+  id_endereco Int     @id @default(autoincrement())
+  id_usuario  Int
+  cep         String  @db.VarChar(10)
+  local       String  @db.VarChar(100)
+  numero_casa Int
+  bairro      String  @db.VarChar(50)
+  cidade      String  @db.VarChar(50)
+  estado      String  @db.Char(2)
+  complemento String? @db.VarChar(50)
+  usuario     usuario @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "endereco_usuario_ibfk_1")
+
+  @@index([cep], map: "cep")
+  @@index([id_usuario], map: "id_usuario")
+}
+
+model funcionario {
+  id_funcionario           Int                        @id @default(autoincrement())
+  id_usuario               Int
+  id_agencia               Int
+  codigo_funcionario       String                     @unique(map: "codigo_funcionario") @db.VarChar(20)
+  cargo                    funcionario_cargo
+  id_supervisor            Int?
+  auditoria_abertura_conta auditoria_abertura_conta[]
+  usuario                  usuario                    @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "funcionario_ibfk_1")
+  agencia                  agencia                    @relation(fields: [id_agencia], references: [id_agencia], onDelete: NoAction, onUpdate: NoAction, map: "funcionario_ibfk_2")
+  funcionario              funcionario?               @relation("funcionarioTofuncionario", fields: [id_supervisor], references: [id_funcionario], onDelete: NoAction, onUpdate: NoAction, map: "funcionario_ibfk_3")
+  other_funcionario        funcionario[]              @relation("funcionarioTofuncionario")
+  relatorio                relatorio[]
+
+  @@index([id_supervisor], map: "id_supervisor")
+  @@index([id_usuario], map: "id_usuario")
+  @@index([id_agencia], map: "idx_funcionario_agencia")
+}
+
+model historico_encerramento {
+  id_hist   Int      @id @default(autoincrement())
+  id_conta  Int
+  motivo    String   @db.VarChar(200)
+  data_hora DateTime @default(now()) @db.Timestamp(0)
+  conta     conta    @relation(fields: [id_conta], references: [id_conta], onDelete: NoAction, onUpdate: NoAction, map: "historico_encerramento_ibfk_1")
+
+  @@index([id_conta], map: "id_conta")
+}
+
+model relatorio {
+  id_relatorio   Int         @id @default(autoincrement())
+  id_funcionario Int
+  tipo_relatorio String      @db.VarChar(50)
+  data_geracao   DateTime    @default(now()) @db.Timestamp(0)
+  conteudo       Json
+  funcionario    funcionario @relation(fields: [id_funcionario], references: [id_funcionario], onDelete: NoAction, onUpdate: NoAction, map: "relatorio_ibfk_1")
+
+  @@index([id_funcionario], map: "id_funcionario")
+}
+
+model transacao {
+  id_transacao                            Int                      @id @default(autoincrement())
+  id_conta_origem                         Int?
+  id_conta_destino                        Int?
+  tipo_transacao                          transacao_tipo_transacao
+  valor                                   Decimal                  @db.Decimal(15, 2)
+  data_hora                               DateTime                 @default(now()) @db.Timestamp(0)
+  descricao                               String?                  @db.VarChar(100)
+  conta_transacao_id_conta_origemToconta  conta?                   @relation("transacao_id_conta_origemToconta", fields: [id_conta_origem], references: [id_conta], onDelete: NoAction, onUpdate: NoAction, map: "transacao_ibfk_1")
+  conta_transacao_id_conta_destinoToconta conta?                   @relation("transacao_id_conta_destinoToconta", fields: [id_conta_destino], references: [id_conta], onDelete: NoAction, onUpdate: NoAction, map: "transacao_ibfk_2")
+
+  @@index([id_conta_destino], map: "id_conta_destino")
+  @@index([id_conta_origem], map: "id_conta_origem")
+  @@index([data_hora], map: "idx_tx_data")
+  @@index([tipo_transacao, data_hora], map: "idx_tx_tipo_data")
+}
+
+model usuario {
+  id_usuario       Int                  @id @default(autoincrement())
+  nome             String               @db.VarChar(100)
+  cpf              String               @unique(map: "cpf") @db.VarChar(11)
+  data_nascimento  DateTime             @db.Date
+  telefone         String               @db.VarChar(15)
+  tipo_usuario     usuario_tipo_usuario
+  senha_hash       String               @db.Char(32)
+  cliente          cliente[]
+  endereco_usuario endereco_usuario[]
+  funcionario      funcionario[]
+
+  @@index([cpf], map: "idx_usuario_cpf")
+}
+
+enum conta_investimento_perfil_risco {
+  BAIXO
+  MEDIO
+  ALTO
+}
+
+enum transacao_tipo_transacao {
+  DEPOSITO
+  SAQUE
+  TRANSFERENCIA
+  TAXA
+  RENDIMENTO
+}
+
+enum conta_tipo_conta {
+  POUPANCA
+  CORRENTE
+  INVESTIMENTO
+}
+
+enum funcionario_cargo {
+  ESTAGIARIO
+  ATENDENTE
+  GERENTE
+}
+
+enum usuario_tipo_usuario {
+  FUNCIONARIO
+  CLIENTE
+}
+
+enum conta_status {
+  ATIVA
+  ENCERRADA
+  BLOQUEADA
+}
