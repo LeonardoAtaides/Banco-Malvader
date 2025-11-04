@@ -184,7 +184,7 @@ model usuario {
   data_nascimento  DateTime             @db.Date
   telefone         String               @db.VarChar(15)
   tipo_usuario     usuario_tipo_usuario
-  senha_hash       String               @db.Char(32)
+  senha_hash       String               @db.VarChar(255)
   cliente          cliente[]
   endereco_usuario endereco_usuario[]
   funcionario      funcionario[]

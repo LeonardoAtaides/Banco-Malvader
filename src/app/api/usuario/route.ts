@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { usuarioSchema } from "@/lib/validations";
-import { ZodError } from "zod";
+import { usuarioSchema, validarSenhaForte } from "@/lib/validations";
+import { hashSenha } from "@/lib/auth";
 
 function getErrorMessage(error: unknown) {
   if (error instanceof Error) return error.message;
@@ -17,29 +17,77 @@ export async function GET() {
   return NextResponse.json(usuarios);
 }
 
-// POST cria usuário
-export async function POST(request: Request) {
+/**
+ * POST /api/usuario
+ * Cadastra um novo usuário
+ */
+export async function POST(request: NextRequest) {
   try {
-    const json = await request.json();
-    const body = usuarioSchema.parse(json);
+    const body = await request.json();
 
-    const novo = await prisma.usuario.create({
+   // Validar entrada
+       const validation = usuarioSchema.safeParse(body);
+       if (!validation.success) {
+         return NextResponse.json(
+           { error: "Dados inválidos", details: validation.error.issues },
+           { status: 400 }
+         );
+       }
+
+    const { nome, cpf, data_nascimento, telefone, tipo_usuario, senha_hash: senha } = validation.data;
+
+    // Validar força da senha
+    const senhaValidacao = validarSenhaForte(senha);
+    if (!senhaValidacao.valida) {
+      return NextResponse.json(
+        { error: senhaValidacao.mensagem },
+        { status: 400 }
+      );
+    }
+
+    // Verificar se CPF já existe
+    const usuarioExistente = await prisma.usuario.findUnique({
+      where: { cpf },
+    });
+
+    if (usuarioExistente) {
+      return NextResponse.json(
+        { error: "CPF já cadastrado" },
+        { status: 400 }
+      );
+    }
+
+    // Hash da senha usando bcrypt
+    const senhaHash = await hashSenha(senha);
+
+    // Criar usuário
+    const novoUsuario = await prisma.usuario.create({
       data: {
-        nome: body.nome,
-        cpf: body.cpf,
-        data_nascimento: new Date(body.data_nascimento),
-        telefone: body.telefone,
-        tipo_usuario: body.tipo_usuario,
-        senha_hash: body.senha_hash,
+        nome,
+        cpf,
+        data_nascimento: new Date(data_nascimento),
+        telefone,
+        tipo_usuario,
+        senha_hash: senhaHash,
+      },
+      select: {
+        id_usuario: true,
+        nome: true,
+        cpf: true,
+        data_nascimento: true,
+        telefone: true,
+        tipo_usuario: true,
+        // NÃO retornar senha_hash
       },
     });
 
-    return NextResponse.json(novo, { status: 201 });
-  } catch (error: unknown) {
-    if (error instanceof ZodError) {
-      return NextResponse.json({ error: error.issues }, { status: 400 });
-    }
-    const msg = getErrorMessage(error);
-    return NextResponse.json({ error: msg }, { status: 400 });
+    return NextResponse.json(novoUsuario, { status: 201 });
+
+  } catch (error) {
+    console.error("Erro ao criar usuário:", error);
+    return NextResponse.json(
+      { error: "Erro ao criar usuário" },
+      { status: 500 }
+    );
   }
 }

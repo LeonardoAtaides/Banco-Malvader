@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { loginSchema } from "@/lib/validations";
-import { createHash } from "crypto";
+import { verificarSenha, gerarToken } from "@/lib/auth";
 
 /**
  * POST /api/auth
@@ -21,9 +21,6 @@ export async function POST(request: NextRequest) {
     }
 
     const { cpf, senha } = validation.data;
-    
-    // Gerar hash MD5 da senha
-    const senhaHash = createHash("md5").update(senha).digest("hex");
 
     // Buscar usuário
     const usuario = await prisma.usuario.findUnique({
@@ -37,7 +34,18 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    if (!usuario || usuario.senha_hash !== senhaHash) {
+    if (!usuario) {
+      // Retornar erro genérico por segurança
+      return NextResponse.json(
+        { error: "CPF ou senha incorretos" },
+        { status: 401 }
+      );
+    }
+
+    // Verificar senha usando bcrypt
+    const senhaValida = await verificarSenha(senha, usuario.senha_hash);
+
+    if (!senhaValida) {
       return NextResponse.json(
         { error: "CPF ou senha incorretos" },
         { status: 401 }
@@ -47,9 +55,16 @@ export async function POST(request: NextRequest) {
     // Remover senha do retorno
     const { senha_hash, ...usuarioSemSenha } = usuario;
 
+    // Gerar token (em produção, use JWT)
+    const token = gerarToken({
+      id_usuario: usuario.id_usuario,
+      tipo_usuario: usuario.tipo_usuario,
+    });
+
     return NextResponse.json({
       message: "Login realizado com sucesso",
       usuario: usuarioSemSenha,
+      token, // Enviar token para o frontend armazenar
     });
 
   } catch (error) {

@@ -126,6 +126,9 @@ export function validarSenhaForte(senha: string): { valida: boolean; mensagem?: 
   if (!/[A-Z]/.test(senha)) {
     return { valida: false, mensagem: "Senha deve conter ao menos uma letra maiúscula" };
   }
+  if (!/[a-z]/.test(senha)) {
+    return { valida: false, mensagem: "Senha deve conter ao menos uma letra minúscula" };
+  }
   if (!/[0-9]/.test(senha)) {
     return { valida: false, mensagem: "Senha deve conter ao menos um número" };
   }
