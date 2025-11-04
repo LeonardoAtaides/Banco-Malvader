@@ -26,7 +26,7 @@ export async function verificarSenha(senha: string, hash: string): Promise<boole
 }
 
 /**
- * Gera um token JWT simples (você pode usar jsonwebtoken para algo mais robusto)
+ * Gera um token JWT simples 
  */
 export function gerarToken(payload: any): string {
   // Implementação simplificada
