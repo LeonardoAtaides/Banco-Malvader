@@ -1,93 +1,62 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { usuarioSchema, validarSenhaForte } from "@/lib/validations";
 import { hashSenha } from "@/lib/auth";
+import { z } from "zod";
 
-function getErrorMessage(error: unknown) {
-  if (error instanceof Error) return error.message;
-  return String(error);
-}
-
-// GET todos usuários
-export async function GET() {
-  const usuarios = await prisma.usuario.findMany({
-    include: { endereco_usuario: true },
-    orderBy: { id_usuario: "asc" },
-  });
-  return NextResponse.json(usuarios);
-}
+/**
+ * Schema de validação de criação de usuário
+ */
+const usuarioCreateSchema = z.object({
+  nome: z.string().min(3),
+  cpf: z.string().min(11).max(11),
+  data_nascimento: z.string().transform((d) => new Date(d)), // formato: "2000-01-01"
+  telefone: z.string().min(8),
+  tipo_usuario: z.enum(["CLIENTE", "FUNCIONARIO"]),
+  senha: z.string().min(6),
+});
 
 /**
  * POST /api/usuario
- * Cadastra um novo usuário
+ * Cria um novo usuário (para testes ou cadastro real)
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-   // Validar entrada
-       const validation = usuarioSchema.safeParse(body);
-       if (!validation.success) {
-         return NextResponse.json(
-           { error: "Dados inválidos", details: validation.error.issues },
-           { status: 400 }
-         );
-       }
+    // Validar dados de entrada
+    const parsed = usuarioCreateSchema.parse(body);
 
-    const { nome, cpf, data_nascimento, telefone, tipo_usuario, senha_hash: senha } = validation.data;
+    // Gerar hash seguro da senha
+    const senha_hash = await hashSenha(parsed.senha);
 
-    // Validar força da senha
-    const senhaValidacao = validarSenhaForte(senha);
-    if (!senhaValidacao.valida) {
-      return NextResponse.json(
-        { error: senhaValidacao.mensagem },
-        { status: 400 }
-      );
-    }
-
-    // Verificar se CPF já existe
-    const usuarioExistente = await prisma.usuario.findUnique({
-      where: { cpf },
-    });
-
-    if (usuarioExistente) {
-      return NextResponse.json(
-        { error: "CPF já cadastrado" },
-        { status: 400 }
-      );
-    }
-
-    // Hash da senha usando bcrypt
-    const senhaHash = await hashSenha(senha);
-
-    // Criar usuário
-    const novoUsuario = await prisma.usuario.create({
+    // Inserir no banco
+    const usuario = await prisma.usuario.create({
       data: {
-        nome,
-        cpf,
-        data_nascimento: new Date(data_nascimento),
-        telefone,
-        tipo_usuario,
-        senha_hash: senhaHash,
+        nome: parsed.nome,
+        cpf: parsed.cpf,
+        data_nascimento: parsed.data_nascimento,
+        telefone: parsed.telefone,
+        tipo_usuario: parsed.tipo_usuario,
+        senha_hash,
       },
       select: {
         id_usuario: true,
         nome: true,
         cpf: true,
-        data_nascimento: true,
-        telefone: true,
         tipo_usuario: true,
-        // NÃO retornar senha_hash
       },
     });
 
-    return NextResponse.json(novoUsuario, { status: 201 });
-
+    return NextResponse.json({
+      message: "Usuário criado com sucesso",
+      usuario,
+    });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.issues }, { status: 400 });
+    }
+
     console.error("Erro ao criar usuário:", error);
-    return NextResponse.json(
-      { error: "Erro ao criar usuário" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: String(error) }, { status: 400 });
   }
 }

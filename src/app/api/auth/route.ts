@@ -10,8 +10,8 @@ import { verificarSenha, gerarToken } from "@/lib/auth";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
-    // Validar entrada
+
+    // 1️⃣ Validar entrada com Zod
     const validation = loginSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
@@ -22,29 +22,29 @@ export async function POST(request: NextRequest) {
 
     const { cpf, senha } = validation.data;
 
-    // Buscar usuário
+    // 2️⃣ Buscar usuário + possíveis vínculos
     const usuario = await prisma.usuario.findUnique({
       where: { cpf },
       select: {
         id_usuario: true,
         nome: true,
-        cpf: true,
         tipo_usuario: true,
         senha_hash: true,
+        cliente: { select: { id_cliente: true } },
+        funcionario: { select: { id_funcionario: true } },
       },
     });
 
+    // 3️⃣ Caso não exista, erro genérico
     if (!usuario) {
-      // Retornar erro genérico por segurança
       return NextResponse.json(
         { error: "CPF ou senha incorretos" },
         { status: 401 }
       );
     }
 
-    // Verificar senha usando bcrypt
+    // 4️⃣ Validar senha
     const senhaValida = await verificarSenha(senha, usuario.senha_hash);
-
     if (!senhaValida) {
       return NextResponse.json(
         { error: "CPF ou senha incorretos" },
@@ -52,23 +52,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Remover senha do retorno
-    const { senha_hash, ...usuarioSemSenha } = usuario;
-
-    // Gerar token (em produção, use JWT)
-    const token = gerarToken({
+    // 5️⃣ Montar payload JWT
+    const payload = {
       id_usuario: usuario.id_usuario,
+      nome: usuario.nome,
       tipo_usuario: usuario.tipo_usuario,
-    });
+      id_cliente: usuario.cliente?.[0]?.id_cliente ?? null,
+      id_funcionario: usuario.funcionario?.[0]?.id_funcionario ?? null,
+    };
+
+    // 6️⃣ Gerar token
+    const token = gerarToken(payload);
+
+    // 7️⃣ Montar resposta limpa (sem senha)
+    const { senha_hash, ...usuarioSemSenha } = usuario;
 
     return NextResponse.json({
       message: "Login realizado com sucesso",
       usuario: usuarioSemSenha,
-      token, // Enviar token para o frontend armazenar
+      token,
     });
-
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Erro no login:", error);
+
+    // 8️⃣ Resposta segura, sem vazar stack trace
     return NextResponse.json(
       { error: "Erro interno no servidor" },
       { status: 500 }
