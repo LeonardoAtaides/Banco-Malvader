@@ -1,6 +1,6 @@
 "use client";
 
-import { Wrench, MessagesSquare, ChartNoAxesCombined, CirclePlus, PiggyBank, Plus} from "lucide-react";
+import { Wrench, MessagesSquare, ChartNoAxesCombined, CirclePlus, PiggyBank, Plus, User, FileChartColumn} from "lucide-react";
 import { ReactElement } from "react";
 
 interface TituloItem {
@@ -9,7 +9,7 @@ interface TituloItem {
 }
 
 interface TituloProps {
-  tipo: 0 | 1 | 2 | 3 | 4 | 5 | 6; // tipos possíveis
+  tipo: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9; // tipos possíveis
 }
 
 export default function Titulo({ tipo }: TituloProps) {
@@ -21,6 +21,9 @@ export default function Titulo({ tipo }: TituloProps) {
     4: { icone: <CirclePlus className="text-[#012E4B] text-xl mr-2" />, texto: "Conheça Mais" },
     5: { icone: <PiggyBank className="text-white text-xl mr-2" />, texto: "Conta Poupança" },
     6: { icone: <ChartNoAxesCombined className="text-white text-xl mr-2" />, texto: "Conta Investimento" },
+    7: { icone: <Wrench className="text-[#012E4B] text-xl mr-2" />, texto: "Ações Rápidas" },
+    8: { icone: <User className="text-[#012E4B] text-xl mr-2" />, texto: "Últimas Contas Abertas" },
+    9: { icone: <FileChartColumn className="text-[#012E4B] text-xl mr-2" />, texto: "Atividades Recentes" },
   };
 
   const item = titulos[tipo];
@@ -30,7 +33,7 @@ export default function Titulo({ tipo }: TituloProps) {
   }
 
   // Definir cor do texto: branco a partir do tipo 5, caso contrário azul escuro
-  const textoCor = tipo >= 5 ? "text-white" : "text-[#012E4B]";
+  const textoCor = tipo == 5 || tipo == 6 ? "text-white" : "text-[#012E4B]";
 
   return (
     <div className="flex items-center pt-4 mx-5">
