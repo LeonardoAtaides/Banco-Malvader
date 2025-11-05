@@ -13,10 +13,11 @@ import {
   User,
   ChartNoAxesCombined,
   Users,
+  Import,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Titulo from "@/components/titles";
-import Navbar from "@/components/navbarfunc";
+import FuncNavBar from "@/components/funcnavbar" 
 
 export default function Cliente() {
   const [ocultar, setOcultar] = useState(false);
@@ -207,7 +208,7 @@ export default function Cliente() {
         </div>
       </div>
 
-      <Navbar />
+      <FuncNavBar />
     </main>
   );
 }
