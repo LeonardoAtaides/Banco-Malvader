@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
         senha_hash: true,
         cliente: { select: { id_cliente: true } },
         funcionario: { select: { id_funcionario: true } },
+        chat_sessions: true,
       },
     });
 

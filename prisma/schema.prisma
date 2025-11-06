@@ -188,8 +188,36 @@ model usuario {
   cliente          cliente[]
   endereco_usuario endereco_usuario[]
   funcionario      funcionario[]
+  chat_sessions    chat_session[]
 
   @@index([cpf], map: "idx_usuario_cpf")
+}
+
+model chat_session {
+  id_session    String                  @id @default(uuid())
+  id_usuario    Int
+  titulo        String?                 @db.VarChar(200)
+  criado_em     DateTime                @default(now()) @db.Timestamp(0)
+  atualizado_em DateTime                @default(now()) @updatedAt @db.Timestamp(0)
+  status        chat_session_status     @default(ATIVA)
+  usuario       usuario                 @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+  mensagens     chat_message[]
+
+  @@index([id_usuario])
+  @@index([criado_em])
+}
+
+model chat_message {
+  id_message String            @id @default(uuid())
+  id_session String
+  role       chat_message_role
+  conteudo   String            @db.Text
+  criado_em  DateTime          @default(now()) @db.Timestamp(0)
+  metadados  Json?
+  session    chat_session      @relation(fields: [id_session], references: [id_session], onDelete: Cascade)
+
+  @@index([id_session])
+  @@index([criado_em])
 }
 
 enum conta_investimento_perfil_risco {
@@ -227,4 +255,16 @@ enum conta_status {
   ATIVA
   ENCERRADA
   BLOQUEADA
+}
+
+enum chat_session_status {
+  ATIVA
+  ENCERRADA
+  ESCALADA_PARA_ATENDENTE
+}
+
+enum chat_message_role {
+  USER
+  ASSISTANT
+  SYSTEM
 }

@@ -13,13 +13,31 @@ import {
   BanknoteArrowUp,
   FileChartColumn,
   Search,
+  MessageCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/navbar";
+import AIChat from "@/components/ai-chat";
 
 export default function Cliente() {
   const router = useRouter();
   const [search, setSearch] = useState("");
+  const [showChat, setShowChat] = useState(false);
+
+  // Pegar token do localStorage (ajuste conforme seu sistema de auth)
+  const getToken = () => {
+    if (typeof window !== "undefined") {
+      // Tenta pegar do localStorage
+      const token = localStorage.getItem("authToken");
+      if (token) return token;
+      
+      // FALLBACK TEMPORÁRIO: gera um token fake para teste
+      // TODO: Remover isso quando integrar auth real
+      console.warn("⚠️ Usando token fake para teste. Implemente auth real!");
+      return "fake-token-for-testing";
+    }
+    return "";
+  };
 
   // Lista de opções com rotas correspondentes
   const opcoes = [
@@ -133,6 +151,24 @@ export default function Cliente() {
       </div>
 
       <Navbar />
+
+      {/* Botão flutuante do chat IA */}
+      {!showChat && (
+        <button
+          onClick={() => setShowChat(true)}
+          className="fixed bottom-24 right-6 bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200 z-50 animate-pulse"
+          title="Assistente Virtual"
+        >
+          <MessageCircle className="w-6 h-6" />
+        </button>
+      )}
+
+      {/* Modal do chat */}
+      {showChat && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <AIChat token={getToken()} onClose={() => setShowChat(false)} />
+        </div>
+      )}
     </main>
   );
 }
