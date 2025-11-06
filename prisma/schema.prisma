@@ -12,7 +12,7 @@ model agencia {
   nome             String           @db.VarChar(50)
   codigo_agencia   String           @unique(map: "codigo_agencia") @db.VarChar(10)
   endereco_id      Int
-  endereco_agencia endereco_agencia @relation(fields: [endereco_id], references: [id_endereco_agencia], onDelete: NoAction, onUpdate: NoAction, map: "agencia_ibfk_1")
+  endereco_agencia endereco_agencia @relation(fields: [endereco_id], references: [id_endereco_agencia], onUpdate: Restrict, map: "agencia_ibfk_1")
   conta            conta[]
   funcionario      funcionario[]
 
@@ -25,8 +25,8 @@ model auditoria_abertura_conta {
   id_funcionario Int?
   data_hora      DateTime     @default(now()) @db.Timestamp(0)
   observacao     String?      @db.VarChar(200)
-  conta          conta        @relation(fields: [id_conta], references: [id_conta], onDelete: NoAction, onUpdate: NoAction, map: "auditoria_abertura_conta_ibfk_1")
-  funcionario    funcionario? @relation(fields: [id_funcionario], references: [id_funcionario], onDelete: NoAction, onUpdate: NoAction, map: "auditoria_abertura_conta_ibfk_2")
+  conta          conta        @relation(fields: [id_conta], references: [id_conta], onUpdate: Restrict, map: "auditoria_abertura_conta_ibfk_1")
+  funcionario    funcionario? @relation(fields: [id_funcionario], references: [id_funcionario], onDelete: Restrict, onUpdate: Restrict, map: "auditoria_abertura_conta_ibfk_2")
 
   @@index([id_conta], map: "id_conta")
   @@index([id_funcionario], map: "id_funcionario")
@@ -36,7 +36,7 @@ model cliente {
   id_cliente    Int     @id @default(autoincrement())
   id_usuario    Int
   score_credito Decimal @default(0.00) @db.Decimal(5, 2)
-  usuario       usuario @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "cliente_ibfk_1")
+  usuario       usuario @relation(fields: [id_usuario], references: [id_usuario], onUpdate: Restrict, map: "cliente_ibfk_1")
   conta         conta[]
 
   @@index([id_usuario], map: "id_usuario")
@@ -52,8 +52,8 @@ model conta {
   data_abertura                               DateTime                   @default(now()) @db.DateTime(0)
   status                                      conta_status               @default(ATIVA)
   auditoria_abertura_conta                    auditoria_abertura_conta[]
-  agencia                                     agencia                    @relation(fields: [id_agencia], references: [id_agencia], onDelete: NoAction, onUpdate: NoAction, map: "conta_ibfk_1")
-  cliente                                     cliente                    @relation(fields: [id_cliente], references: [id_cliente], onDelete: NoAction, onUpdate: NoAction, map: "conta_ibfk_2")
+  agencia                                     agencia                    @relation(fields: [id_agencia], references: [id_agencia], onUpdate: Restrict, map: "conta_ibfk_1")
+  cliente                                     cliente                    @relation(fields: [id_cliente], references: [id_cliente], onUpdate: Restrict, map: "conta_ibfk_2")
   conta_corrente                              conta_corrente?
   conta_investimento                          conta_investimento?
   conta_poupanca                              conta_poupanca?
@@ -72,7 +72,7 @@ model conta_corrente {
   limite            Decimal  @default(0.00) @db.Decimal(15, 2)
   data_vencimento   DateTime @db.Date
   taxa_manutencao   Decimal  @default(0.00) @db.Decimal(5, 2)
-  conta             conta    @relation(fields: [id_conta], references: [id_conta], onDelete: NoAction, onUpdate: NoAction, map: "conta_corrente_ibfk_1")
+  conta             conta    @relation(fields: [id_conta], references: [id_conta], onUpdate: Restrict, map: "conta_corrente_ibfk_1")
 }
 
 model conta_investimento {
@@ -81,7 +81,7 @@ model conta_investimento {
   perfil_risco          conta_investimento_perfil_risco
   valor_minimo          Decimal                         @db.Decimal(15, 2)
   taxa_rendimento_base  Decimal                         @db.Decimal(5, 2)
-  conta                 conta                           @relation(fields: [id_conta], references: [id_conta], onDelete: NoAction, onUpdate: NoAction, map: "conta_investimento_ibfk_1")
+  conta                 conta                           @relation(fields: [id_conta], references: [id_conta], onUpdate: Restrict, map: "conta_investimento_ibfk_1")
 }
 
 model conta_poupanca {
@@ -89,7 +89,7 @@ model conta_poupanca {
   id_conta          Int       @unique(map: "id_conta")
   taxa_rendimento   Decimal   @db.Decimal(5, 2)
   ultimo_rendimento DateTime? @db.DateTime(0)
-  conta             conta     @relation(fields: [id_conta], references: [id_conta], onDelete: NoAction, onUpdate: NoAction, map: "conta_poupanca_ibfk_1")
+  conta             conta     @relation(fields: [id_conta], references: [id_conta], onUpdate: Restrict, map: "conta_poupanca_ibfk_1")
 }
 
 model endereco_agencia {
@@ -114,7 +114,7 @@ model endereco_usuario {
   cidade      String  @db.VarChar(50)
   estado      String  @db.Char(2)
   complemento String? @db.VarChar(50)
-  usuario     usuario @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "endereco_usuario_ibfk_1")
+  usuario     usuario @relation(fields: [id_usuario], references: [id_usuario], onUpdate: Restrict, map: "endereco_usuario_ibfk_1")
 
   @@index([cep], map: "cep")
   @@index([id_usuario], map: "id_usuario")
@@ -128,9 +128,9 @@ model funcionario {
   cargo                    funcionario_cargo
   id_supervisor            Int?
   auditoria_abertura_conta auditoria_abertura_conta[]
-  usuario                  usuario                    @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "funcionario_ibfk_1")
-  agencia                  agencia                    @relation(fields: [id_agencia], references: [id_agencia], onDelete: NoAction, onUpdate: NoAction, map: "funcionario_ibfk_2")
-  funcionario              funcionario?               @relation("funcionarioTofuncionario", fields: [id_supervisor], references: [id_funcionario], onDelete: NoAction, onUpdate: NoAction, map: "funcionario_ibfk_3")
+  usuario                  usuario                    @relation(fields: [id_usuario], references: [id_usuario], onUpdate: Restrict, map: "funcionario_ibfk_1")
+  agencia                  agencia                    @relation(fields: [id_agencia], references: [id_agencia], onUpdate: Restrict, map: "funcionario_ibfk_2")
+  funcionario              funcionario?               @relation("funcionarioTofuncionario", fields: [id_supervisor], references: [id_funcionario], onDelete: Restrict, onUpdate: Restrict, map: "funcionario_ibfk_3")
   other_funcionario        funcionario[]              @relation("funcionarioTofuncionario")
   relatorio                relatorio[]
 
@@ -144,7 +144,7 @@ model historico_encerramento {
   id_conta  Int
   motivo    String   @db.VarChar(200)
   data_hora DateTime @default(now()) @db.Timestamp(0)
-  conta     conta    @relation(fields: [id_conta], references: [id_conta], onDelete: NoAction, onUpdate: NoAction, map: "historico_encerramento_ibfk_1")
+  conta     conta    @relation(fields: [id_conta], references: [id_conta], onUpdate: Restrict, map: "historico_encerramento_ibfk_1")
 
   @@index([id_conta], map: "id_conta")
 }
@@ -154,8 +154,8 @@ model relatorio {
   id_funcionario Int
   tipo_relatorio String      @db.VarChar(50)
   data_geracao   DateTime    @default(now()) @db.Timestamp(0)
-  conteudo       Json
-  funcionario    funcionario @relation(fields: [id_funcionario], references: [id_funcionario], onDelete: NoAction, onUpdate: NoAction, map: "relatorio_ibfk_1")
+  conteudo       String      @db.LongText
+  funcionario    funcionario @relation(fields: [id_funcionario], references: [id_funcionario], onUpdate: Restrict, map: "relatorio_ibfk_1")
 
   @@index([id_funcionario], map: "id_funcionario")
 }
@@ -168,8 +168,8 @@ model transacao {
   valor                                   Decimal                  @db.Decimal(15, 2)
   data_hora                               DateTime                 @default(now()) @db.Timestamp(0)
   descricao                               String?                  @db.VarChar(100)
-  conta_transacao_id_conta_origemToconta  conta?                   @relation("transacao_id_conta_origemToconta", fields: [id_conta_origem], references: [id_conta], onDelete: NoAction, onUpdate: NoAction, map: "transacao_ibfk_1")
-  conta_transacao_id_conta_destinoToconta conta?                   @relation("transacao_id_conta_destinoToconta", fields: [id_conta_destino], references: [id_conta], onDelete: NoAction, onUpdate: NoAction, map: "transacao_ibfk_2")
+  conta_transacao_id_conta_origemToconta  conta?                   @relation("transacao_id_conta_origemToconta", fields: [id_conta_origem], references: [id_conta], onDelete: Restrict, onUpdate: Restrict, map: "transacao_ibfk_1")
+  conta_transacao_id_conta_destinoToconta conta?                   @relation("transacao_id_conta_destinoToconta", fields: [id_conta_destino], references: [id_conta], onDelete: Restrict, onUpdate: Restrict, map: "transacao_ibfk_2")
 
   @@index([id_conta_destino], map: "id_conta_destino")
   @@index([id_conta_origem], map: "id_conta_origem")
@@ -185,39 +185,37 @@ model usuario {
   telefone         String               @db.VarChar(15)
   tipo_usuario     usuario_tipo_usuario
   senha_hash       String               @db.VarChar(255)
+  chat_sessions    chat_session[]
   cliente          cliente[]
   endereco_usuario endereco_usuario[]
   funcionario      funcionario[]
-  chat_sessions    chat_session[]
 
   @@index([cpf], map: "idx_usuario_cpf")
 }
 
 model chat_session {
-  id_session    String                  @id @default(uuid())
+  uuid          String               @id @db.VarChar(36)
   id_usuario    Int
-  titulo        String?                 @db.VarChar(200)
-  criado_em     DateTime                @default(now()) @db.Timestamp(0)
-  atualizado_em DateTime                @default(now()) @updatedAt @db.Timestamp(0)
-  status        chat_session_status     @default(ATIVA)
-  usuario       usuario                 @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
-  mensagens     chat_message[]
+  titulo        String               @db.VarChar(200)
+  status        chat_session_status? @default(ativo)
+  criado_em     DateTime             @default(now()) @db.Timestamp(0)
+  atualizado_em DateTime             @default(now()) @updatedAt @db.Timestamp(0)
+  chat_message  chat_message[]
+  usuario       usuario              @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade, onUpdate: Restrict, map: "chat_session_ibfk_1")
 
-  @@index([id_usuario])
-  @@index([criado_em])
+  @@index([id_usuario], map: "idx_chat_session_usuario")
 }
 
 model chat_message {
-  id_message String            @id @default(uuid())
-  id_session String
-  role       chat_message_role
-  conteudo   String            @db.Text
-  criado_em  DateTime          @default(now()) @db.Timestamp(0)
-  metadados  Json?
-  session    chat_session      @relation(fields: [id_session], references: [id_session], onDelete: Cascade)
+  uuid         String            @id @db.VarChar(36)
+  session_uuid String            @db.VarChar(36)
+  role         chat_message_role
+  conteudo     String            @db.Text
+  metadados    String?           @db.LongText
+  criado_em    DateTime          @default(now()) @db.Timestamp(0)
+  chat_session chat_session      @relation(fields: [session_uuid], references: [uuid], onDelete: Cascade, onUpdate: Restrict, map: "chat_message_ibfk_1")
 
-  @@index([id_session])
-  @@index([criado_em])
+  @@index([session_uuid], map: "idx_chat_message_session")
 }
 
 enum conta_investimento_perfil_risco {
@@ -257,14 +255,14 @@ enum conta_status {
   BLOQUEADA
 }
 
-enum chat_session_status {
-  ATIVA
-  ENCERRADA
-  ESCALADA_PARA_ATENDENTE
+enum chat_message_role {
+  user
+  assistant
+  system
 }
 
-enum chat_message_role {
-  USER
-  ASSISTANT
-  SYSTEM
+enum chat_session_status {
+  ativo
+  encerrado
+  arquivado
 }

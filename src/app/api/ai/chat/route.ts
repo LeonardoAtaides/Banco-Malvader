@@ -8,6 +8,7 @@ import {
   type AIChatMessage,
 } from "@/lib/ai/client";
 import { z } from "zod";
+import { randomUUID } from "crypto";
 
 /**
  * Schema de validação da requisição
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
     
     if (sessionId) {
       session = await prisma.chat_session.findUnique({
-        where: { id_session: sessionId, id_usuario: payload.id_usuario },
+        where: { uuid: sessionId },
         include: { mensagens: { orderBy: { criado_em: "asc" } } },
       });
 
@@ -111,6 +112,7 @@ export async function POST(request: NextRequest) {
       // Criar nova sessão
       session = await prisma.chat_session.create({
         data: {
+          uuid: randomUUID(),
           id_usuario: payload.id_usuario,
           titulo: message.substring(0, 50), // Primeiras palavras como título
         },
@@ -120,8 +122,9 @@ export async function POST(request: NextRequest) {
     // 5️⃣ Salvar mensagem do usuário
     await prisma.chat_message.create({
       data: {
-        id_session: session.id_session,
-        role: "USER",
+        uuid: randomUUID(),
+        session_uuid: session.uuid,
+        role: "user",
         conteudo: message,
       },
     });
@@ -169,8 +172,9 @@ export async function POST(request: NextRequest) {
     // 8️⃣ Salvar resposta da IA
     const assistantMessage = await prisma.chat_message.create({
       data: {
-        id_session: session.id_session,
-        role: "ASSISTANT",
+        uuid: randomUUID(),
+        session_uuid: session.uuid,
+        role: "assistant",
         conteudo: aiResponse.text,
         metadados: {
           model: aiResponse.model,
@@ -182,15 +186,15 @@ export async function POST(request: NextRequest) {
 
     // 9️⃣ Atualizar timestamp da sessão
     await prisma.chat_session.update({
-      where: { id_session: session.id_session },
+      where: { uuid: session.uuid },
       data: { atualizado_em: new Date() },
     });
 
     // 🔟 Retornar resposta
     return NextResponse.json({
-      sessionId: session.id_session,
+      sessionId: session.uuid,
       message: {
-        id: assistantMessage.id_message,
+        id: assistantMessage.uuid,
         content: aiResponse.text,
         role: "assistant",
         timestamp: assistantMessage.criado_em,
@@ -257,7 +261,7 @@ export async function GET(request: NextRequest) {
         orderBy: { atualizado_em: "desc" },
         take: 20,
         select: {
-          id_session: true,
+          uuid: true,
           titulo: true,
           status: true,
           criado_em: true,
@@ -271,12 +275,12 @@ export async function GET(request: NextRequest) {
 
     // Buscar sessão específica com mensagens
     const session = await prisma.chat_session.findUnique({
-      where: { id_session: sessionId, id_usuario: payload.id_usuario },
+      where: { uuid: sessionId },
       include: {
         mensagens: {
           orderBy: { criado_em: "asc" },
           select: {
-            id_message: true,
+            uuid: true,
             role: true,
             conteudo: true,
             criado_em: true,
