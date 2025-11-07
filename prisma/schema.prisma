@@ -198,10 +198,17 @@ model chat_session {
   id_usuario    Int
   titulo        String               @db.VarChar(200)
   status        chat_session_status? @default(ativo)
+<<<<<<< HEAD
   criado_em     DateTime?            @default(now()) @db.Timestamp(0)
   atualizado_em DateTime?            @default(now()) @updatedAt @db.Timestamp(0)
   chat_message  chat_message[]
   usuario       usuario              @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction, map: "chat_session_ibfk_1")
+=======
+  criado_em     DateTime             @default(now()) @db.Timestamp(0)
+  atualizado_em DateTime             @default(now()) @updatedAt @db.Timestamp(0)
+  mensagens     chat_message[]
+  usuario       usuario              @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade, onUpdate: Restrict, map: "chat_session_ibfk_1")
+>>>>>>> cdab3b73e4fd9609f115b53fd880bab8c8a96b3f
 
   @@index([id_usuario], map: "idx_chat_session_usuario")
 }
@@ -212,8 +219,13 @@ model chat_message {
   role         chat_message_role
   conteudo     String            @db.Text
   metadados    Json?
+<<<<<<< HEAD
   criado_em    DateTime?         @default(now()) @db.Timestamp(0)
   chat_session chat_session      @relation(fields: [session_uuid], references: [uuid], onDelete: Cascade, onUpdate: NoAction, map: "chat_message_ibfk_1")
+=======
+  criado_em    DateTime          @default(now()) @db.Timestamp(0)
+  chat_session chat_session      @relation(fields: [session_uuid], references: [uuid], onDelete: Cascade, onUpdate: Restrict, map: "chat_message_ibfk_1")
+>>>>>>> cdab3b73e4fd9609f115b53fd880bab8c8a96b3f
 
   @@index([session_uuid], map: "idx_chat_message_session")
 }
