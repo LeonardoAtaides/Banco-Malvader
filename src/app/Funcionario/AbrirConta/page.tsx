@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, ChevronRight, Check, ChevronDown } from "lucide-react";
+import { X, ChevronRight, Check, ChevronDown, ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function AberturaConta() {
@@ -46,16 +46,32 @@ export default function AberturaConta() {
       <div className="px-5 py-5">
         <button
           className="absolute top-5 left-5 hover:text-white/70 transition"
-          onClick={() => router.back()}
+          onClick={() => {
+            if (step === "senha") {
+              setStep("dados");
+            } else {
+              router.back();
+            }
+          }}
         >
-          <X className="w-7 h-7" />
+          {step === "senha" ? (
+            <ChevronLeft className="w-7 h-7" />
+          ) : (
+            <X className="w-7 h-7" />
+          )}
         </button>
 
         <h1 className="pt-12 text-center text-2xl font-bold">
-          Abertura de Conta
+          {step === "dados" ? "Abertura de Conta" : "Confirme sua senha"}
         </h1>
 
-        {/* ETAPA 1 */}
+        {step === "senha" && (
+          <h2 className="text-center text-xs font-bold text-white/70">
+            digite sua senha para validar a abertura da conta
+          </h2>
+        )}
+
+        {/* FORMULÁRIO DE DADOS */}
         {step === "dados" && (
           <div className="px-3 mt-8 flex flex-col gap-4 mb-28">
             {/* Nome */}
@@ -76,16 +92,16 @@ export default function AberturaConta() {
                 type="date"
                 value={formData.nascimento}
                 onChange={(e) => handleChange("nascimento", e.target.value)}
-                className="w-full border-b border-white/50 p-2 outline-none text-white bg-transparent"
+                className="w-full border-b border-white/50 outline-none text-white bg-transparent"
                 style={{ colorScheme: "dark" }}
               />
             </div>
 
-            {/* Tipo de conta (custom select) */}
+            {/* Tipo de conta */}
             <div className="relative">
               <label className="block text-sm text-white/70">Tipo de Conta</label>
               <div
-                className="w-full border-b border-white/50 p-2 flex justify-between items-center cursor-pointer"
+                className="w-full border-b border-white/50 flex justify-between items-center cursor-pointer"
                 onClick={() =>
                   setOpenSelect(openSelect === "tipoConta" ? null : "tipoConta")
                 }
@@ -127,6 +143,7 @@ export default function AberturaConta() {
               <label className="block text-sm text-white/70">Agência</label>
               <input
                 type="text"
+                required
                 value={formData.agencia}
                 onChange={(e) => handleChange("agencia", e.target.value)}
                 className="w-full bg-transparent border-b border-white/50 text-white outline-none"
@@ -138,6 +155,7 @@ export default function AberturaConta() {
               <label className="block text-sm text-white/70">CPF</label>
               <input
                 type="text"
+                required
                 value={formData.cpf}
                 maxLength={14}
                 onChange={(e) => handleChange("cpf", e.target.value)}
@@ -150,17 +168,18 @@ export default function AberturaConta() {
               <label className="block text-sm text-white/70">Telefone</label>
               <input
                 type="text"
+                required
                 value={formData.telefone}
                 onChange={(e) => handleChange("telefone", e.target.value)}
                 className="w-full bg-transparent border-b border-white/50 text-white outline-none"
               />
             </div>
 
-            {/* Vencimento (custom select) */}
+            {/* Vencimento */}
             <div className="relative">
               <label className="block text-sm text-white/70">Data de Vencimento</label>
               <div
-                className="w-full border-b border-white/50 p-2 flex justify-between items-center cursor-pointer"
+                className="w-full border-b border-white/50 flex justify-between items-center cursor-pointer"
                 onClick={() =>
                   setOpenSelect(openSelect === "vencimento" ? null : "vencimento")
                 }
@@ -200,7 +219,7 @@ export default function AberturaConta() {
                 type="text"
                 value={formData.manutencao}
                 onChange={(e) => handleChange("manutencao", e.target.value)}
-                className="w-full bg-transparent border-b border-white/50 p-2 text-white outline-none"
+                className="w-full bg-transparent border-b border-white/50 text-white outline-none"
               />
             </div>
 
@@ -212,27 +231,36 @@ export default function AberturaConta() {
                 placeholder="Rua, número, complemento..."
                 value={formData.endereco}
                 onChange={(e) => handleChange("endereco", e.target.value)}
-                className="w-full bg-transparent border-b border-white/50 p-2 text-white outline-none"
+                className="w-full bg-transparent border-b border-white/50 text-white outline-none"
               />
             </div>
           </div>
         )}
-
-        {/* ETAPA 2 */}
+        {/* SENHA DE CONFIRMAÇÃO*/}
         {step === "senha" && (
-          <div className="flex flex-col items-center justify-center mt-24 px-5">
-            <div className="w-full max-w-xs">
-              <label className="block text-sm text-white/70 mb-2 text-center">
-                Digite sua Senha
-              </label>
-              <input
+        <div className="flex justify-center mt-8 w-full px-5">
+            <div className="relative w-full max-w-xs">
+            <input
                 type="password"
+                id="senha"
+                name="senha"
+                placeholder=" "
+                required
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
-                className="w-full bg-transparent border-b border-white/50 p-2 text-white outline-none text-center"
-              />
+                className="peer w-full bg-transparent border-b border-white/50  text-white outline-none focus:border-white"
+            />
+            <label
+                htmlFor="senha"
+                className="absolute left-2 to text-white text-sm transition-all
+                        peer-placeholder-shown:to peer-placeholder-shown:text-white/50 peer-placeholder-shown:text-base
+                        peer-focus:-top-4 peer-focus:text-white peer-focus:text-sm
+                        peer-valid:-top-4 peer-valid:text-white peer-valid:text-sm"
+            >
+                Senha
+            </label>
             </div>
-          </div>
+        </div>
         )}
       </div>
 
@@ -247,11 +275,6 @@ export default function AberturaConta() {
           <Check className="w-6 h-6 text-white" />
         )}
       </button>
-
-{/* CSS para o ícone do input date (se você já tem, ok) */}
-      <style jsx>{`
-        input[type="date"]::-webkit-calendar-picker-indicator  }
-      `}</style>
     </main>
   );
 }
