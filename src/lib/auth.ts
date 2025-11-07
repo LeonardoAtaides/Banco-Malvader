@@ -47,7 +47,7 @@ export async function verificarSenha(
 
 /**
  * Gera um token JWT simples (codificado em Base64)
- * ⚠️ Em produção use jsonwebtoken ou next-auth
+ *  Em produção use jsonwebtoken ou next-auth
  */
 export function gerarToken(payload: TokenPayload): string {
   tokenPayloadSchema.parse(payload); // valida o formato

@@ -37,7 +37,7 @@ Mantenha respostas curtas e diretas (máximo 3-4 frases).`;
  */
 export async function POST(request: NextRequest) {
   try {
-    // 1️⃣ Validar autenticação
+    //  Validar autenticação
     const authHeader = request.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return NextResponse.json(
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
-    // 2️⃣ Validar entrada
+    //  Validar entrada
     const body = await request.json();
     const validation = chatRequestSchema.safeParse(body);
 
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
 
     const { sessionId, message, allowSensitiveData } = validation.data;
 
-    // 3️⃣ Verificar dados sensíveis
+    //  Verificar dados sensíveis
     if (!allowSensitiveData && containsSensitiveData(message)) {
       return NextResponse.json(
         {
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4️⃣ Criar ou buscar sessão
+    //  Criar ou buscar sessão
     let session;
     let previousMessages: any[] = [];
     
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 5️⃣ Salvar mensagem do usuário
+    //  Salvar mensagem do usuário
     await prisma.chat_message.create({
       data: {
         uuid: randomUUID(),
@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // 6️⃣ Preparar contexto (últimas mensagens)
+    //  Preparar contexto (últimas mensagens)
     const conversationHistory: AIChatMessage[] = [
       { role: "system", content: SYSTEM_PROMPT },
     ];
@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
     // Adicionar mensagem atual
     conversationHistory.push({ role: "user", content: message });
 
-    // 7️⃣ Chamar Ollama
+    // Chamar Ollama
     const aiClient = new OllamaClient();
 
     // Verificar se Ollama está rodando
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
 
     const aiResponse = await aiClient.chat(safeHistory);
 
-    // 8️⃣ Salvar resposta da IA
+    //  Salvar resposta da IA
     const assistantMessage = await prisma.chat_message.create({
       data: {
         uuid: randomUUID(),
@@ -184,13 +184,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // 9️⃣ Atualizar timestamp da sessão
+    //  Atualizar timestamp da sessão
     await prisma.chat_session.update({
       where: { uuid: session.uuid },
       data: { atualizado_em: new Date() },
     });
 
-    // 🔟 Retornar resposta
+    //  Retornar resposta
     return NextResponse.json({
       sessionId: session.uuid,
       message: {

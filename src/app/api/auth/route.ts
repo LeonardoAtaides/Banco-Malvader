@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
     const { cpf, senha } = validation.data;
 
-    // 2️⃣ Buscar usuário + possíveis vínculos
+    //  Buscar usuário + possíveis vínculos
     const usuario = await prisma.usuario.findUnique({
       where: { cpf },
       select: {
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // 3️⃣ Caso não exista, erro genérico
+    //  Caso não exista, erro genérico
     if (!usuario) {
       return NextResponse.json(
         { error: "CPF ou senha incorretos" },
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4️⃣ Validar senha
+    //  Validar senha
     const senhaValida = await verificarSenha(senha, usuario.senha_hash);
     if (!senhaValida) {
       return NextResponse.json(
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 5️⃣ Montar payload JWT
+    //  Montar payload JWT
     const payload = {
       id_usuario: usuario.id_usuario,
       nome: usuario.nome,
@@ -62,10 +62,10 @@ export async function POST(request: NextRequest) {
       id_funcionario: usuario.funcionario?.[0]?.id_funcionario ?? null,
     };
 
-    // 6️⃣ Gerar token
+    //  Gerar token
     const token = gerarToken(payload);
 
-    // 7️⃣ Montar resposta limpa (sem senha)
+    //  Montar resposta limpa (sem senha)
     const { senha_hash, ...usuarioSemSenha } = usuario;
 
     return NextResponse.json({
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     console.error("Erro no login:", error);
 
-    // 8️⃣ Resposta segura, sem vazar stack trace
+    //  Resposta segura, sem vazar stack trace
     return NextResponse.json(
       { error: "Erro interno no servidor" },
       { status: 500 }

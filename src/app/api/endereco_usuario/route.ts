@@ -19,7 +19,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const json = await request.json();
-    const body = enderecoSchema.parse(json); // validação com Zod ✅
+    const body = enderecoSchema.parse(json); // validação com Zod 
 
     const novo = await prisma.endereco_usuario.create({ data: body });
     return NextResponse.json(novo, { status: 201 });

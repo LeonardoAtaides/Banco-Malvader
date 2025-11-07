@@ -1,10 +1,10 @@
-# 🏦 Banco Malvader
+#  Banco Malvader
 
 Sistema bancário completo com chat IA integrado.
 
 ---
 
-## 🚀 Instalação Rápida
+##  Instalação Rápida
 
 ```bash
 # 1. Instalar dependências
@@ -39,7 +39,7 @@ Acesse: http://localhost:3000
 
 ---
 
-## 📋 Comandos Úteis
+##  Comandos Úteis
 
 ```bash
 # Banco de dados
@@ -63,7 +63,7 @@ ollama rm [modelo]               # Remover modelo
 
 ---
 
-## 💾 Estrutura do Banco
+##  Estrutura do Banco
 
 O banco está usando **SQL nativo** com:
 - ✅ Triggers automáticos (saldo, validações)
@@ -76,7 +76,7 @@ O banco está usando **SQL nativo** com:
 
 ---
 
-## 🗂️ Estrutura
+##  Estrutura
 
 ```
 ├── prisma/
@@ -99,7 +99,7 @@ O banco está usando **SQL nativo** com:
 
 ---
 
-## 🤖 Chat IA
+##  Chat IA
 
 Ver instruções completas em: **[AI_SETUP.md](./AI_SETUP.md)**
 
@@ -108,7 +108,7 @@ Ver instruções completas em: **[AI_SETUP.md](./AI_SETUP.md)**
 
 ---
 
-## 🔧 Troubleshooting
+##  Troubleshooting
 
 **Erro: "Table doesn't exist"**
 ```bash
@@ -161,7 +161,7 @@ PORT=3001 npm run dev
 
 ---
 
-## 🤖 Chat IA
+##  Chat IA
 
 O sistema possui um assistente virtual inteligente que funciona **100% localmente** (sem enviar dados para fora).
 
@@ -200,9 +200,9 @@ ollama pull llama3.2:1b
 npm run dev
 ```
 
-📖 **Mais detalhes**: Veja [AI_SETUP.md](AI_SETUP.md)
+ **Mais detalhes**: Veja [AI_SETUP.md](AI_SETUP.md)
 
 ---
 
-## 📝 Licença
+##  Licença
 

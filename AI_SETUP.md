@@ -1,12 +1,12 @@
-# 🤖 Chat IA - Banco Malvader
+#  Chat IA - Banco Malvader
 
 Assistente virtual inteligente que responde dúvidas dos clientes **100% localmente** (sem enviar dados para fora).
 
 ---
 
-## 🚀 Instalação Rápida (5 minutos)
+##  Instalação Rápida (5 minutos)
 
-### 1️⃣ Instalar Ollama
+### 1️ Instalar Ollama
 
 Abra o PowerShell e execute:
 
@@ -14,28 +14,28 @@ Abra o PowerShell e execute:
 winget install Ollama.Ollama
 ```
 
-### 2️⃣ Baixar o Modelo de IA
+### 2️ Baixar o Modelo de IA
 
 **Para PCs com pouca RAM (4-8GB):**
 ```powershell
 ollama pull tinyllama
 ```
-> ⏱️ **Aguarde 1-2 minutos** - Download de ~637MB
+>  **Aguarde 1-2 minutos** - Download de ~637MB
 
 **Para PCs com mais RAM (8GB+):**
 ```powershell
 ollama pull llama3.2:1b
 ```
-> ⏱️ **Aguarde 2-3 minutos** - Download de ~1.3GB (melhor qualidade)
+>  **Aguarde 2-3 minutos** - Download de ~1.3GB (melhor qualidade)
 
-### 3️⃣ Configurar Banco de Dados
+### 3️ Configurar Banco de Dados
 
 ```powershell
 npx prisma migrate dev
 npx prisma generate
 ```
 
-### 4️⃣ Pronto! Testar
+### 4️ Pronto! Testar
 
 ```powershell
 npm run dev
@@ -45,9 +45,9 @@ Acesse: http://localhost:3000/Cliente/Menu e clique no botão 💬 no canto infe
 
 ---
 
-## ❓ Problemas Comuns
+##  Problemas Comuns
 
-### ⚠️ Erro: "Model requires more system memory"
+###  Erro: "Model requires more system memory"
 
 **Causa**: Pouca RAM disponível
 
@@ -82,7 +82,7 @@ Start-Process "ollama"
 
 ---
 
-### 🐌 Chat muito lento
+###  Chat muito lento
 
 **Normal!** Primeira mensagem demora 10-30 segundos (modelo carregando na memória).
 
@@ -90,7 +90,7 @@ Próximas mensagens: 3-5 segundos.
 
 ---
 
-## 📊 Comparação de Modelos
+##  Comparação de Modelos
 
 | Modelo | Tamanho | RAM Necessária | Qualidade | Recomendado Para |
 |--------|---------|----------------|-----------|------------------|
@@ -112,7 +112,7 @@ ollama pull llama3.2:1b
 
 ---
 
-## 🔐 Funcionalidades
+##  Funcionalidades
 
 ✅ **Privacidade**: Roda 100% local (nada enviado para internet)  
 ✅ **Segurança**: Detecta e bloqueia dados sensíveis (CPF, senhas)  
@@ -121,7 +121,7 @@ ollama pull llama3.2:1b
 
 ---
 
-## 📊 Modelos Disponíveis
+##  Modelos Disponíveis
 
 | Modelo | RAM Necessária | Velocidade | Qualidade | Instalar |
 |--------|----------------|------------|-----------|----------|
@@ -129,11 +129,11 @@ ollama pull llama3.2:1b
 | qwen2.5:3b | 8GB | Médio | ⭐⭐⭐⭐ | `ollama pull qwen2.5:3b` |
 | mistral:7b | 16GB | Lento | ⭐⭐⭐⭐⭐ | `ollama pull mistral:7b` |
 
-> 💡 **Padrão**: llama3.2:1b (funciona em qualquer PC básico)
+>  **Padrão**: llama3.2:1b (funciona em qualquer PC básico)
 
 ---
 
-## �️ Como Funciona (Técnico)
+##  Como Funciona (Técnico)
 
 ```
 Usuário digita mensagem
@@ -159,7 +159,7 @@ Salvo no banco (prisma: chat_session/chat_message)
 
 ---
 
-## 📝 Uso no Código
+##  Uso no Código
 
 ```tsx
 import AIChat from "@/components/ai-chat";
@@ -178,7 +178,7 @@ return (
 
 ---
 
-## � Atualizar Modelo
+##  Atualizar Modelo
 
 ```powershell
 # Ver modelos instalados
@@ -198,7 +198,7 @@ OLLAMA_MODEL="qwen2.5:3b"
 
 ---
 
-## ⚙️ Configurações Avançadas (Opcional)
+##  Configurações Avançadas (Opcional)
 
 Edite `.env`:
 
@@ -222,7 +222,7 @@ options: {
 
 ---
 
-## 📞 Suporte
+##  Suporte
 
 - **Erro de instalação**: Verifique se tem 4GB+ RAM livre
 - **Ollama não inicia**: Reinicie o PC (instala como serviço Windows)
