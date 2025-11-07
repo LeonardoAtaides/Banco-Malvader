@@ -26,7 +26,10 @@ npx prisma generate
 
 # 4. Instalar Ollama (Chat IA - opcional)
 winget install Ollama.Ollama
-ollama pull llama3.2:1b
+# Escolha o modelo conforme sua RAM:
+ollama pull tinyllama          # Leve: 637MB (requer ~1-1.5GB RAM)
+# OU
+ollama pull llama3.2:1b        # Melhor: 1.3GB (requer ~2-3GB RAM)
 
 # 5. Rodar projeto
 npm run dev
@@ -50,9 +53,12 @@ npm run dev                  # Servidor desenvolvimento
 npm run build               # Build produção
 npm start                   # Rodar produção
 
-# Chat IA
-ollama list                 # Ver modelos instalados
-ollama pull [modelo]        # Baixar modelo
+# Chat IA (Ollama)
+ollama list                      # Ver modelos instalados
+ollama pull tinyllama            # Baixar modelo leve (637MB)
+ollama pull llama3.2:1b          # Baixar modelo melhor (1.3GB)
+ollama run tinyllama "teste"     # Testar modelo
+ollama rm [modelo]               # Remover modelo
 ```
 
 ---
@@ -121,12 +127,22 @@ npx prisma generate
 ```
 
 **Erro: "Model requires more memory" (Chat IA)**
+**Solução 1: Use modelo mais leve**
 ```bash
-# Feche programas pesados e tente novamente
-# Ou force CPU-only:
-$env:OLLAMA_NUM_GPU = "0"
-ollama serve
+ollama pull tinyllama
+# Atualizar .env: OLLAMA_MODEL="tinyllama"
 ```
+
+**Solução 2: Force CPU-only**
+```bash
+Stop-Process -Name ollama -Force
+[System.Environment]::SetEnvironmentVariable('OLLAMA_NUM_GPU', '0', 'User')
+Start-Process "ollama"
+```
+
+**Solução 3: Libere memória**
+- Feche Chrome/Edge e outros programas pesados
+- Reinicie o computador
 
 **Porta 3000 em uso**
 ```bash
@@ -137,9 +153,54 @@ PORT=3001 npm run dev
 ```bash
 npx prisma generate
 ```
+
+**Porta 3000 em uso**
 ```bash
 PORT=3001 npm run dev
 ```
+
+---
+
+## 🤖 Chat IA
+
+O sistema possui um assistente virtual inteligente que funciona **100% localmente** (sem enviar dados para fora).
+
+### Modelos Disponíveis
+
+| Modelo | Tamanho | RAM | Qualidade | Comando |
+|--------|---------|-----|-----------|---------|
+| **tinyllama** ⭐ | 637MB | 1-1.5GB | Razoável | `ollama pull tinyllama` |
+| **llama3.2:1b** | 1.3GB | 2-3GB | Boa | `ollama pull llama3.2:1b` |
+| **phi3:mini** | 2.2GB | 3-4GB | Excelente | `ollama pull phi3:mini` |
+
+⭐ = Recomendado para PCs com pouca RAM
+
+### Como usar
+
+1. **Acesse o Menu do Cliente**: http://localhost:3000/Cliente/Menu
+2. **Clique no ícone 💬** no canto inferior direito
+3. **Digite sua dúvida** sobre o banco
+
+### Trocar de modelo
+
+```bash
+# Ver modelos instalados
+ollama list
+
+# Remover modelo atual
+ollama rm tinyllama
+
+# Instalar novo modelo
+ollama pull llama3.2:1b
+
+# Atualizar .env
+# OLLAMA_MODEL="llama3.2:1b"
+
+# Reiniciar servidor
+npm run dev
+```
+
+📖 **Mais detalhes**: Veja [AI_SETUP.md](AI_SETUP.md)
 
 ---
 
