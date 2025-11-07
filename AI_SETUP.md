@@ -16,11 +16,17 @@ winget install Ollama.Ollama
 
 ### 2️⃣ Baixar o Modelo de IA
 
+**Para PCs com pouca RAM (4-8GB):**
+```powershell
+ollama pull tinyllama
+```
+> ⏱️ **Aguarde 1-2 minutos** - Download de ~637MB
+
+**Para PCs com mais RAM (8GB+):**
 ```powershell
 ollama pull llama3.2:1b
 ```
-
-> ⏱️ **Aguarde 2-3 minutos** - Download de ~1GB
+> ⏱️ **Aguarde 2-3 minutos** - Download de ~1.3GB (melhor qualidade)
 
 ### 3️⃣ Configurar Banco de Dados
 
@@ -43,20 +49,36 @@ Acesse: http://localhost:3000/Cliente/Menu e clique no botão 💬 no canto infe
 
 ### ⚠️ Erro: "Model requires more system memory"
 
-**Causa**: Pouca RAM disponível (modelo precisa de ~4GB)
+**Causa**: Pouca RAM disponível
 
-**Solução**:
+**Solução 1 - Usar modelo mais leve (RECOMENDADO):**
+```powershell
+ollama pull tinyllama
+```
+
+Depois altere em `.env`:
+```
+OLLAMA_MODEL="tinyllama"
+```
+
+Reinicie o servidor Next.js.
+
+**Solução 2 - Forçar modo CPU-only:**
+```powershell
+# Feche o Ollama atual (ícone da bandeja)
+Stop-Process -Name ollama -Force -ErrorAction SilentlyContinue
+
+# Configurar CPU-only permanentemente:
+[System.Environment]::SetEnvironmentVariable('OLLAMA_NUM_GPU', '0', 'User')
+
+# Reiniciar Ollama
+Start-Process "ollama"
+```
+
+**Solução 3 - Liberar memória:**
 1. Feche Chrome/Edge e outros programas pesados
 2. Reinicie o computador
 3. Tente novamente
-
-Se ainda der erro, force uso de CPU apenas:
-```powershell
-# Feche o Ollama atual (ícone da bandeja)
-# Abra PowerShell como Administrador:
-$env:OLLAMA_NUM_GPU = "0"
-ollama serve
-```
 
 ---
 
@@ -66,14 +88,26 @@ ollama serve
 
 Próximas mensagens: 3-5 segundos.
 
-**Dica**: Use modelo maior se tiver 8GB+ RAM:
-```powershell
-ollama pull qwen2.5:3b
-```
+---
 
-Depois altere em `.env`:
-```
-OLLAMA_MODEL="qwen2.5:3b"
+## 📊 Comparação de Modelos
+
+| Modelo | Tamanho | RAM Necessária | Qualidade | Recomendado Para |
+|--------|---------|----------------|-----------|------------------|
+| `tinyllama` | 637MB | 1-1.5GB | ⭐⭐⭐ Razoável | PCs com 4-6GB RAM |
+| `llama3.2:1b` | 1.3GB | 2-3GB | ⭐⭐⭐⭐ Boa | PCs com 8GB+ RAM |
+| `phi3:mini` | 2.2GB | 3-4GB | ⭐⭐⭐⭐⭐ Excelente | PCs com 16GB+ RAM |
+
+**Para trocar de modelo:**
+```powershell
+# Remover modelo atual
+ollama rm tinyllama
+
+# Instalar novo modelo
+ollama pull llama3.2:1b
+
+# Atualizar .env
+# OLLAMA_MODEL="llama3.2:1b"
 ```
 
 ---
