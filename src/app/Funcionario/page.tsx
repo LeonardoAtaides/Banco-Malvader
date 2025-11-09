@@ -5,15 +5,17 @@ import {
   Eye,
   EyeOff,
   LogOut,
-  FileChartColumn,
-  BanknoteArrowUp,
-  BanknoteArrowDown,
-  ArrowLeftRight,
-  ChartCandlestick,
+  UserPlus,
+  UserSearch,
+  Settings2,
+  IdCardLanyard,
+  FileSpreadsheet,
   User,
   ChartNoAxesCombined,
   Users,
-  Import,
+  UserX,
+
+
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Titulo from "@/components/titles";
@@ -119,42 +121,42 @@ export default function Cliente() {
         <div className="flex gap-5 px-4 py-4 min-w-max">
           <button onClick={AbrirConta} className="flex flex-col items-center flex-shrink-0">
             <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
-              <FileChartColumn className="w-9 h-9 text-white" />
+              <UserPlus className="w-9 h-9 text-white" />
             </div>
             <h1 className="text-center w-20 text-[#012E4B] pt-1">Abrir Conta</h1>
           </button>
 
           <button onClick={ConsultarDados} className="flex flex-col items-center flex-shrink-0">
             <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
-              <BanknoteArrowUp className="w-9 h-9 text-white" />
+              <UserSearch className="w-9 h-9 text-white" />
             </div>
             <h1 className="text-center w-20 text-[#012E4B] pt-1">Consultar Dados</h1>
           </button>
 
           <button onClick={AlterarLimite} className="flex flex-col items-center flex-shrink-0">
             <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
-              <BanknoteArrowDown className="w-9 h-9 text-white" />
+              <Settings2 className="w-9 h-9 text-white" />
             </div>
             <h1 className="text-center w-20 text-[#012E4B] pt-1">Alterar Limite</h1>
           </button>
 
           <button onClick={NovoFuncionario} className="flex flex-col items-center flex-shrink-0">
             <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
-              <ArrowLeftRight className="w-9 h-9 text-white" />
+              <IdCardLanyard strokeWidth={1.5} className="w-11 h-11 text-white" />
             </div>
             <h1 className="text-center w-20 text-[#012E4B] pt-1">Novo Funcionário</h1>
           </button>
 
           <button onClick={GerarRelatorios} className="flex flex-col items-center flex-shrink-0">
             <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
-              <ChartCandlestick className="w-9 h-9 text-white" />
+              <FileSpreadsheet className="w-9 h-9 text-white" />
             </div>
             <h1 className="text-center w-20 text-[#012E4B] pt-1">Gerar Relatórios</h1>
           </button>
 
           <button onClick={EncerrarConta} className="flex flex-col items-center flex-shrink-0">
             <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
-              <ChartCandlestick className="w-9 h-9 text-white" />
+              <UserX className="w-9 h-9 text-white" />
             </div>
             <h1 className="text-center w-20 text-[#012E4B] pt-1">Encerrar Conta</h1>
           </button>
