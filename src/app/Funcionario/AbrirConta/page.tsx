@@ -8,6 +8,10 @@ export default function AberturaConta() {
   const router = useRouter();
   const [step, setStep] = useState<"dados" | "senha">("dados");
   const [senha, setSenha] = useState("");
+  const [agencia, setAgencia] = useState("");
+  const [CPF, setCPF] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [taxa, setTaxa] = useState("");
   const [openSelect, setOpenSelect] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
@@ -39,6 +43,84 @@ export default function AberturaConta() {
       }
     }
   };
+
+    // Máscara para o Input de Agência
+    const handleContaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      let input = e.target.value.replace(/\D/g, ""); // remove tudo que não é número
+  
+      if (input.length > 6) input = input.slice(0, 6); // limita a 6 números
+  
+      // adiciona o hífen automaticamente
+      if (input.length > 5) {
+        input = input.slice(0, 5) + "-" + input.slice(5);
+      }
+  
+      setAgencia(input);
+    };
+
+    // Máscara para o Input de CPF
+    const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  let value = e.target.value.replace(/\D/g, ""); 
+
+  // Aplica a máscara
+  if (value.length > 9) {
+    value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2}).*/, "$1.$2.$3-$4");
+  } else if (value.length > 6) {
+    value = value.replace(/^(\d{3})(\d{3})(\d{0,3}).*/, "$1.$2.$3");
+  } else if (value.length > 3) {
+    value = value.replace(/^(\d{3})(\d{0,3}).*/, "$1.$2");
+  }
+
+  setCPF(value);
+};
+
+// Máscara para o Input de Telefone
+const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  let value = e.target.value.replace(/\D/g, ""); // Remove tudo que não for número
+
+  // Aplica a máscara dinamicamente
+  if (value.length > 10) {
+    // (99) 99999-9999
+    value = value.replace(/^(\d{2})(\d{5})(\d{4}).*/, "($1) $2-$3");
+  } else if (value.length > 6) {
+    // (99) 9999-9999
+    value = value.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, "($1) $2-$3");
+  } else if (value.length > 2) {
+    // (99) 9...
+    value = value.replace(/^(\d{2})(\d{0,5}).*/, "($1) $2");
+  } else {
+    // Apenas DDD incompleto
+    value = value.replace(/^(\d{0,2}).*/, "($1");
+    // Remove o "(" se estiver vazio
+    if (value === "(") value = "";
+  }
+
+  setTelefone(value);
+};
+
+// Máscara para o Input de Taxa de Manutenção (R$)
+const handleTaxaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  let value = e.target.value.replace(/\D/g, ""); // Remove tudo que não for número
+
+  // Se não houver valor, limpa o campo
+  if (value === "") {
+    setTaxa("");
+    return;
+  }
+
+  // Converte para centavos
+  value = (Number(value) / 100).toFixed(2);
+
+  // Substitui ponto por vírgula e adiciona separador de milhar
+  value = value
+    .replace(".", ",")
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+  // Adiciona o prefixo R$
+  value = "R$ " + value;
+
+  setTaxa(value);
+};
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#012E4B] to-[#064F75] text-white flex flex-col relative">
@@ -144,8 +226,8 @@ export default function AberturaConta() {
               <input
                 type="text"
                 required
-                value={formData.agencia}
-                onChange={(e) => handleChange("agencia", e.target.value)}
+                value={agencia}
+                onChange={handleContaChange}
                 className="w-full bg-transparent border-b border-white/50 text-white outline-none"
               />
             </div>
@@ -156,9 +238,9 @@ export default function AberturaConta() {
               <input
                 type="text"
                 required
-                value={formData.cpf}
+                value={CPF}
                 maxLength={14}
-                onChange={(e) => handleChange("cpf", e.target.value)}
+                onChange={handleCPFChange}
                 className="w-full bg-transparent border-b border-white/50 text-white outline-none"
               />
             </div>
@@ -169,8 +251,8 @@ export default function AberturaConta() {
               <input
                 type="text"
                 required
-                value={formData.telefone}
-                onChange={(e) => handleChange("telefone", e.target.value)}
+                value={telefone}
+                onChange={handleTelefoneChange}
                 className="w-full bg-transparent border-b border-white/50 text-white outline-none"
               />
             </div>
@@ -217,8 +299,8 @@ export default function AberturaConta() {
               <label className="block text-sm text-white/70">Taxa de Manutenção</label>
               <input
                 type="text"
-                value={formData.manutencao}
-                onChange={(e) => handleChange("manutencao", e.target.value)}
+                value={taxa}
+                onChange={handleTaxaChange}
                 className="w-full bg-transparent border-b border-white/50 text-white outline-none"
               />
             </div>
