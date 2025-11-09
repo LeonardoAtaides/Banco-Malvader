@@ -33,7 +33,7 @@ export default function AberturaConta() {
     } else {
       if (senha === "321") {
         alert("Conta cadastrada com sucesso!");
-        router.push("/Cliente");
+        router.push("/Funcionario");
       } else {
         alert("Senha incorreta. Tente novamente.");
       }
