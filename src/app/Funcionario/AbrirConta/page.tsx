@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { X, ChevronRight, Check, ChevronDown, ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Confirmacaof from "@/components/confirmacao";
 
 export default function AberturaConta() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function AberturaConta() {
   const [telefone, setTelefone] = useState("");
   const [taxa, setTaxa] = useState("");
   const [openSelect, setOpenSelect] = useState<string | null>(null);
+    const [confirmacaoAberta, setConfirmacaoAberta] = useState(false);
 
   const [formData, setFormData] = useState({
     nome: "",
@@ -33,94 +35,124 @@ export default function AberturaConta() {
 
   const handleNext = () => {
     if (step === "dados") {
-      setStep("senha");
+      // Verifica se todos os campos obrigatórios estão preenchidos
+      if (
+        !formData.nome.trim() ||
+        !formData.nascimento ||
+        !formData.tipoConta.trim() ||
+        !agencia.trim() ||
+        !CPF.trim() ||
+        !telefone.trim() ||
+        !formData.vencimento.trim() ||
+        !taxa.trim() ||
+        !formData.endereco.trim()
+      ) {
+        alert("Por favor, preencha todos os campos antes de continuar.");
+        return; // Impede avanço se algo estiver vazio
+      }
+
+      setStep("senha"); // Vai para a próxima etapa se estiver tudo ok
     } else {
+      // Validação da senha na etapa final
       if (senha === "321") {
-        alert("Conta cadastrada com sucesso!");
-        router.push("/Funcionario");
+        // 👉 Ao invés de alert, abre o componente de confirmação
+        setConfirmacaoAberta(true);
       } else {
         alert("Senha incorreta. Tente novamente.");
       }
     }
   };
 
-    // Máscara para o Input de Agência
-    const handleContaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      let input = e.target.value.replace(/\D/g, ""); // remove tudo que não é número
   
-      if (input.length > 6) input = input.slice(0, 6); // limita a 6 números
-  
-      // adiciona o hífen automaticamente
-      if (input.length > 5) {
-        input = input.slice(0, 5) + "-" + input.slice(5);
-      }
-  
-      setAgencia(input);
-    };
-
-    // Máscara para o Input de CPF
-    const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  let value = e.target.value.replace(/\D/g, ""); 
-
-  // Aplica a máscara
-  if (value.length > 9) {
-    value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2}).*/, "$1.$2.$3-$4");
-  } else if (value.length > 6) {
-    value = value.replace(/^(\d{3})(\d{3})(\d{0,3}).*/, "$1.$2.$3");
-  } else if (value.length > 3) {
-    value = value.replace(/^(\d{3})(\d{0,3}).*/, "$1.$2");
+    if (confirmacaoAberta) {
+    return (
+      <Confirmacaof
+        mensagemLoading="Cadastrando Cliente"
+        mensagemSuccess="Cadastro Realizado com Sucesso!"
+        tempoLoading={2000}
+        onComplete={() => router.push("/Funcionario")}
+      />
+    );
   }
 
-  setCPF(value);
-};
+    // Máscara para o Input de Agência
+  const handleContaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let input = e.target.value.replace(/\D/g, ""); // remove tudo que não é número
+
+    if (input.length > 6) input = input.slice(0, 6); // limita a 6 números
+
+    // adiciona o hífen automaticamente
+    if (input.length > 5) {
+      input = input.slice(0, 5) + "-" + input.slice(5);
+    }
+
+    setAgencia(input);
+  };
+
+  // Máscara para o Input de CPF
+  const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, ""); 
+
+    // Aplica a máscara
+    if (value.length > 9) {
+      value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2}).*/, "$1.$2.$3-$4");
+    } else if (value.length > 6) {
+      value = value.replace(/^(\d{3})(\d{3})(\d{0,3}).*/, "$1.$2.$3");
+    } else if (value.length > 3) {
+      value = value.replace(/^(\d{3})(\d{0,3}).*/, "$1.$2");
+    }
+
+    setCPF(value);
+  };
 
 // Máscara para o Input de Telefone
-const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  let value = e.target.value.replace(/\D/g, ""); // Remove tudo que não for número
+  const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, ""); // Remove tudo que não for número
 
-  // Aplica a máscara dinamicamente
-  if (value.length > 10) {
-    // (99) 99999-9999
-    value = value.replace(/^(\d{2})(\d{5})(\d{4}).*/, "($1) $2-$3");
-  } else if (value.length > 6) {
-    // (99) 9999-9999
-    value = value.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, "($1) $2-$3");
-  } else if (value.length > 2) {
-    // (99) 9...
-    value = value.replace(/^(\d{2})(\d{0,5}).*/, "($1) $2");
-  } else {
-    // Apenas DDD incompleto
-    value = value.replace(/^(\d{0,2}).*/, "($1");
-    // Remove o "(" se estiver vazio
-    if (value === "(") value = "";
-  }
+    // Aplica a máscara dinamicamente
+    if (value.length > 10) {
+      // (99) 99999-9999
+      value = value.replace(/^(\d{2})(\d{5})(\d{4}).*/, "($1) $2-$3");
+    } else if (value.length > 6) {
+      // (99) 9999-9999
+      value = value.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, "($1) $2-$3");
+    } else if (value.length > 2) {
+      // (99) 9...
+      value = value.replace(/^(\d{2})(\d{0,5}).*/, "($1) $2");
+    } else {
+      // Apenas DDD incompleto
+      value = value.replace(/^(\d{0,2}).*/, "($1");
+      // Remove o "(" se estiver vazio
+      if (value === "(") value = "";
+    }
 
-  setTelefone(value);
-};
+    setTelefone(value);
+  };
 
-// Máscara para o Input de Taxa de Manutenção (R$)
-const handleTaxaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  let value = e.target.value.replace(/\D/g, ""); // Remove tudo que não for número
+  // Máscara para o Input de Taxa de Manutenção (R$)
+  const handleTaxaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, ""); // Remove tudo que não for número
 
-  // Se não houver valor, limpa o campo
-  if (value === "") {
-    setTaxa("");
-    return;
-  }
+    // Se não houver valor, limpa o campo
+    if (value === "") {
+      setTaxa("");
+      return;
+    }
 
-  // Converte para centavos
-  value = (Number(value) / 100).toFixed(2);
+    // Converte para centavos
+    value = (Number(value) / 100).toFixed(2);
 
-  // Substitui ponto por vírgula e adiciona separador de milhar
-  value = value
-    .replace(".", ",")
-    .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    // Substitui ponto por vírgula e adiciona separador de milhar
+    value = value
+      .replace(".", ",")
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
-  // Adiciona o prefixo R$
-  value = "R$ " + value;
+    // Adiciona o prefixo R$
+    value = "R$ " + value;
 
-  setTaxa(value);
-};
+    setTaxa(value);
+  };
+
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#012E4B] to-[#064F75] text-white flex flex-col relative">
@@ -148,7 +180,7 @@ const handleTaxaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         </h1>
 
         {step === "senha" && (
-          <h2 className="text-center text-xs font-bold text-white/70">
+          <h2 className="text-center text-xs font-bold text-white/70 mt-[-2px]">
             digite sua senha para validar a abertura da conta
           </h2>
         )}
@@ -320,7 +352,7 @@ const handleTaxaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         )}
         {/* SENHA DE CONFIRMAÇÃO*/}
         {step === "senha" && (
-        <div className="flex justify-center mt-8 w-full px-5">
+        <div className="flex justify-center mt-[18px] w-full px-5">
             <div className="relative w-full max-w-xs">
             <input
                 type="password"
@@ -330,14 +362,14 @@ const handleTaxaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                 required
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
-                className="peer w-full bg-transparent border-b border-white/50  text-white outline-none focus:border-white"
+                className="peer w-full bg-transparent border-b border-white/50 p-2 text-white outline-none focus:border-white"
             />
             <label
                 htmlFor="senha"
-                className="absolute left-2 to text-white text-sm transition-all
-                        peer-placeholder-shown:to peer-placeholder-shown:text-white/50 peer-placeholder-shown:text-base
-                        peer-focus:-top-4 peer-focus:text-white peer-focus:text-sm
-                        peer-valid:-top-4 peer-valid:text-white peer-valid:text-sm"
+                className="absolute left-2 top-2 text-white text-sm transition-all
+                           peer-placeholder-shown:top-2 peer-placeholder-shown:text-white/50 peer-placeholder-shown:text-base
+                           peer-focus:-top-4 peer-focus:text-white peer-focus:text-sm
+                           peer-valid:-top-4 peer-valid:text-white peer-valid:text-sm"
             >
                 Senha
             </label>
