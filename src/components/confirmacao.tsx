@@ -57,7 +57,7 @@ const Confirmacao: React.FC<ConfirmacaoProps> = ({
         >
           {/* Círculo verde (agora com espaço garantido) */}
           <div
-            className={`relative flex items-center justify-center w-24 h-24 rounded-full bg-green-500 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            className={`relative flex items-center justify-center w-24 h-24 rounded-full bg-[#42D23A] transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
               animarSucesso ? "scale-100" : "scale-75"
             }`}
             style={{
