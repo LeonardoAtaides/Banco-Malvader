@@ -5,14 +5,13 @@ import {
   ChevronRight,
   HandHelping,
   FileText,
-  CircleFadingPlus,
-  ChartNoAxesCombined,
-  ChartCandlestick,
-  ArrowLeftRight,
-  BanknoteArrowDown,
-  BanknoteArrowUp,
-  FileChartColumn,
   Search,
+  UserPlus,
+  UserSearch,
+  Settings2,
+  IdCardLanyard,
+  FileSpreadsheet,
+  UserX,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import FuncNavbar from "@/components/funcnavbar";
@@ -25,32 +24,32 @@ export default function Cliente() {
   const opcoes = [
     {
       nome: "Abrir Conta",
-      icone: <FileChartColumn />,
+      icone: <UserPlus/>,
       rota: "/Funcionario/AbrirConta",
     },
     {
       nome: "Consultar Dados",
-      icone: <BanknoteArrowUp />,
+      icone: <UserSearch />,
       rota: "/Funcionario/ConsultarDados",
     },
     {
       nome: "Alterar Limite",
-      icone: <BanknoteArrowDown />,
+      icone: <Settings2 />,
       rota: "/Funcionario/AlterarLimite",
     },
     {
       nome: "Novo Funcionario",
-      icone: <ArrowLeftRight />,
+      icone: <IdCardLanyard  />,
       rota: "/Funcionario/NovoFuncionario",
     },
     {
       nome: "Gerar Relatorios",
-      icone: <ChartCandlestick />,
+      icone: <FileSpreadsheet />,
       rota: "//Funcionario/GerarRelatorios",
     },
     {
       nome: "EncerrarConta",
-      icone: <ChartNoAxesCombined />,
+      icone: <UserX />,
       rota: "Funcionario/EncerrarConta",
     },
     {

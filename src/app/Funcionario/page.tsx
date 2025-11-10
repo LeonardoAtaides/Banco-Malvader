@@ -14,8 +14,6 @@ import {
   ChartNoAxesCombined,
   Users,
   UserX,
-
-
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Titulo from "@/components/titles";
