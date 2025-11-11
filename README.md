@@ -11,25 +11,27 @@ Sistema bancário completo com chat IA integrado.
 npm install
 
 # 2. Configurar .env
-cp .env.example .env
-# Edite .env com suas credenciais MySQL:
-# DATABASE_URL="mysql://root:senha@localhost:3306/banco_malvader"
+# Crie o .env com suas credenciais MySQL:
+DATABASE_URL="mysql://root:senha@localhost:3306/banco_malvader"
+OLLAMA_MODEL="tinyllama" #opicional caso queira usar o chat com ia
 
 # 3. Criar banco de dados (escolha UMA opção):
 
-# OPÇÃO A: Usar SQL direto (recomendado se já tem o schema.sql)
-mysql -u root -p < database/schema.sql
+Crie o banco de dados sql no local certo que suas credencias do .env indicam
 
-# OPÇÃO B: Usar Prisma migrations
-npx prisma migrate deploy
-npx prisma generate
+Logo apos:
+npx prisma db pull                # Sincronizar schema
+npx prisma generate               # Gerar client
+
+
+
 
 # 4. Instalar Ollama (Chat IA - opcional)
-winget install Ollama.Ollama
-# Escolha o modelo conforme sua RAM:
+winget install Ollama.Ollama   #Ira instalar o setup do ollama no seu computador
+
+# Instale o modelo da ia 
 ollama pull tinyllama          # Leve: 637MB (requer ~1-1.5GB RAM)
-# OU
-ollama pull llama3.2:1b        # Melhor: 1.3GB (requer ~2-3GB RAM)
+
 
 # 5. Rodar projeto
 npm run dev
@@ -103,8 +105,6 @@ O banco está usando **SQL nativo** com:
 
 Ver instruções completas em: **[AI_SETUP.md](./AI_SETUP.md)**
 
-**Requisitos**: 4GB RAM livre  
-**Modelo padrão**: llama3.2:1b (local, grátis)
 
 ---
 
