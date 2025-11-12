@@ -10,17 +10,21 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import SearchBar from "@/components/pesquisadados";
+import DadosSearch from "@/components/pesquisadados"; // componente de busca
 
-export default function ConsultarConta() {
+export default function ConsultarDados() {
   const router = useRouter();
+
   const [cpfBusca, setCpfBusca] = useState("");
-  const [conta, setConta] = useState<any | null>(null);
+  const [tipoSelecionado, setTipoSelecionado] = useState<
+    "conta" | "cliente" | "funcionario" | ""
+  >("");
+  const [dados, setDados] = useState<any | null>(null);
+  const [backup, setBackup] = useState<any | null>(null);
   const [editando, setEditando] = useState(false);
   const [openSelect, setOpenSelect] = useState<string | null>(null);
-  const [backupConta, setBackupConta] = useState<any | null>(null);
 
-  // Base simulada
+  // --------- Dados Fake (simulação de banco) ---------
   const contasFake = [
     {
       cpf: "123.168.178-09",
@@ -35,35 +39,212 @@ export default function ConsultarConta() {
     },
   ];
 
-  const handleSearch = (term: string) => {
+  const clientesFake = [
+    {
+      cpf: "111.222.333-44",
+      nome: "Carlos Pereira",
+      nascimento: "12/03/1998",
+      telefone: "(61) 99999-8888",
+      endereco: "Rua das Flores, 120",
+    },
+  ];
+
+  const funcionariosFake = [
+    {
+      codigo: "F001",
+      cargo: "Atendente",
+      nome: "Maria Santos",
+      cpf: "222.333.444-55",
+      nascimento: "05/08/1995",
+      telefone: "(61) 98888-7777",
+      endereco: "Av. Central, 45",
+      agencia: "Agência 001",
+    },
+  ];
+
+  // --------- Busca Dinâmica ---------
+  const handleSearch = (term: string, tipo: string) => {
+    if (!term) return;
+
     setCpfBusca(term);
-    const encontrada = contasFake.find((c) => c.cpf === term);
+    const tipoLower = tipo.toLowerCase();
+    setTipoSelecionado(tipoLower as any);
+
+    let encontrada = null;
+
+    if (tipoLower === "conta") encontrada = contasFake.find((c) => c.cpf === term);
+    if (tipoLower === "cliente") encontrada = clientesFake.find((c) => c.cpf === term);
+    if (tipoLower === "funcionário" || tipoLower === "funcionario")
+      encontrada = funcionariosFake.find((c) => c.cpf === term);
+
     if (encontrada) {
-      setConta({ ...encontrada });
-      setBackupConta({ ...encontrada }); // guarda cópia original
+      setDados({ ...encontrada });
+      setBackup({ ...encontrada });
     } else {
-      setConta(null);
+      setDados(null);
     }
   };
 
   const handleChange = (campo: string, valor: string) => {
-    if (!conta || !editando) return;
-    setConta({ ...conta, [campo]: valor });
+    if (!dados || !editando) return;
+    setDados({ ...dados, [campo]: valor });
   };
 
   const handleBack = () => router.back();
 
   const handleLimpar = () => {
-    if (backupConta) setConta({ ...backupConta }); // restaura estado anterior
+    if (backup) setDados({ ...backup });
     setEditando(false);
     setOpenSelect(null);
   };
 
   const handleSalvar = () => {
-    console.log("Dados salvos:", conta);
-    setBackupConta({ ...conta }); // atualiza backup com os novos dados
+    console.log("Dados salvos:", dados);
+    setBackup({ ...dados });
     setEditando(false);
     setOpenSelect(null);
+  };
+
+  // --------- Renderização dos campos ---------
+  const renderFormulario = () => {
+    if (!dados) return null;
+
+    // -------- CONTA --------
+    if (tipoSelecionado === "conta") {
+      return (
+        <>
+          <Campo label="Tipo de Conta" valor={dados.tipoConta} />
+          <Campo label="Número da Conta" valor={dados.numeroConta} />
+          <Campo label="Nome do Titular" valor={dados.titular} />
+          <Campo label="CPF" valor={dados.cpf} />
+          <Campo label="Saldo Atual" valor={dados.saldo} />
+          <CampoEditavel
+            label="Limite Disponível"
+            valor={dados.limite}
+            editando={editando}
+            onChange={(v) => handleChange("limite", v)}
+          />
+
+          {/* Select de vencimento */}
+          <div className="relative">
+            <label className="block text-sm text-white/70">Data de Vencimento</label>
+            <div
+              className={`w-full border-b border-white/30 flex justify-between items-center transition ${
+                editando ? "cursor-pointer text-white" : "text-white/70 cursor-not-allowed"
+              }`}
+              onClick={() =>
+                editando && setOpenSelect(openSelect === "vencimento" ? null : "vencimento")
+              }
+            >
+              <span>{dados.vencimento}</span>
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${
+                  openSelect === "vencimento" ? "rotate-180" : ""
+                }`}
+              />
+            </div>
+
+            {openSelect === "vencimento" && editando && (
+              <div className="absolute z-20 w-full mt-1 bg-[#012E4B] rounded-md shadow-md border border-white/20 overflow-hidden">
+                {["Dia 5", "Dia 10", "Dia 15"].map((dia) => (
+                  <div
+                    key={dia}
+                    onClick={() => {
+                      handleChange("vencimento", dia);
+                      setOpenSelect(null);
+                    }}
+                    className={`px-3 py-2 text-sm flex justify-between items-center hover:bg-white/10 cursor-pointer ${
+                      dados.vencimento === dia ? "text-white" : "text-white/80"
+                    }`}
+                  >
+                    <span>{dia}</span>
+                    {dados.vencimento === dia && <Check className="w-4 h-4 text-white" />}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <Campo
+            label="Status"
+            valor={dados.status}
+            color={dados.status === "Ativa" ? "#42D23A" : "red"}
+          />
+          <Campo label="Data de Abertura" valor={dados.abertura} />
+        </>
+      );
+    }
+
+    // -------- CLIENTE --------
+    if (tipoSelecionado === "cliente") {
+      return (
+        <>
+          <CampoEditavel
+            label="Nome Completo"
+            valor={dados.nome}
+            editando={editando}
+            onChange={(v) => handleChange("nome", v)}
+          />
+          <Campo label="CPF" valor={dados.cpf} />
+          <CampoEditavel
+            label="Data de Nascimento"
+            valor={dados.nascimento}
+            editando={editando}
+            onChange={(v) => handleChange("nascimento", v)}
+          />
+          <CampoEditavel
+            label="Telefone"
+            valor={dados.telefone}
+            editando={editando}
+            onChange={(v) => handleChange("telefone", v)}
+          />
+          <CampoEditavel
+            label="Endereço"
+            valor={dados.endereco}
+            editando={editando}
+            onChange={(v) => handleChange("endereco", v)}
+          />
+        </>
+      );
+    }
+
+    // -------- FUNCIONÁRIO --------
+    if (tipoSelecionado === "funcionario" || tipoSelecionado === "funcionario") {
+      return (
+        <>
+          <Campo label="Código do Funcionário" valor={dados.codigo} />
+          <Campo label="Cargo" valor={dados.cargo} />
+          <CampoEditavel
+            label="Nome Completo"
+            valor={dados.nome}
+            editando={editando}
+            onChange={(v) => handleChange("nome", v)}
+          />
+          <Campo label="CPF" valor={dados.cpf} />
+          <CampoEditavel
+            label="Data de Nascimento"
+            valor={dados.nascimento}
+            editando={editando}
+            onChange={(v) => handleChange("nascimento", v)}
+          />
+          <CampoEditavel
+            label="Telefone"
+            valor={dados.telefone}
+            editando={editando}
+            onChange={(v) => handleChange("telefone", v)}
+          />
+          <CampoEditavel
+            label="Endereço"
+            valor={dados.endereco}
+            editando={editando}
+            onChange={(v) => handleChange("endereco", v)}
+          />
+          <Campo label="Agência" valor={dados.agencia} />
+        </>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -75,221 +256,58 @@ export default function ConsultarConta() {
         </button>
 
         <h1 className="pt-6 text-center text-2xl font-bold">
-          Consultar Conta
+          Consultar Dados
         </h1>
 
-        {/* Campo CPF */}
-        <SearchBar
-          onSearch={(term) => handleSearch(term)}
-          onClear={handleLimpar}
-        />
+        {/* Campo CPF e Filtro */}
+        <DadosSearch onSearch={handleSearch} onClear={handleLimpar} />
 
-        {conta ? (
+        {dados ? (
           <>
-            {/* Botões fora do formulário */}
-<div className="flex justify-end gap-3 mt-6">
-  {/* Botão Editar / Salvar */}
-  <button
-    onClick={editando ? handleSalvar : () => setEditando(true)}
-    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition"
-    style={{
-      backgroundColor: editando ? "#42D23A" : "rgba(255,255,255,0.1)",
-      color: "#fff",
-    }}
-  >
-    {editando ? (
-      <>
-        <Save className="w-4 h-4" /> Salvar
-      </>
-    ) : (
-      <>
-        <PencilLine className="w-4 h-4" /> Editar
-      </>
-    )}
-  </button>
+            {/* Botões */}
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={editando ? handleSalvar : () => setEditando(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition"
+                style={{
+                  backgroundColor: editando ? "#42D23A" : "rgba(255,255,255,0.1)",
+                  color: "#fff",
+                }}
+              >
+                {editando ? (
+                  <>
+                    <Save className="w-4 h-4" /> Salvar
+                  </>
+                ) : (
+                  <>
+                    <PencilLine className="w-4 h-4" /> Editar
+                  </>
+                )}
+              </button>
 
-  {/* Botão Limpar */}
-  <button
-    onClick={handleLimpar}
-    disabled={!editando}
-    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-white/20 transition
-      ${
-        editando
-          ? "bg-white/10 text-white/80 hover:text-white"
-          : "bg-white/5 text-white/50 cursor-not-allowed opacity-60"
-      }`}
-  >
-    <RotateCcw className="w-4 h-4" /> Limpar
-  </button>
-</div>
+              <button
+                onClick={handleLimpar}
+                disabled={!editando}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-white/20 transition
+                ${
+                  editando
+                    ? "bg-white/10 text-white/80 hover:text-white"
+                    : "bg-white/5 text-white/50 cursor-not-allowed opacity-60"
+                }`}
+              >
+                <RotateCcw className="w-4 h-4" /> Limpar
+              </button>
+            </div>
 
             {/* Formulário */}
             <div className="mt-6 p-5 rounded-2xl border border-white/20 bg-white/5">
-              <div className="flex flex-col gap-4">
-                {/* Tipo de Conta */}
-                <div>
-                  <label className="block text-sm text-white/70">
-                    Tipo de Conta
-                  </label>
-                  <input
-                    type="text"
-                    disabled
-                    value={conta.tipoConta}
-                    className="w-full bg-transparent border-b border-white/30 outline-none text-sm text-white/70"
-                  />
-                </div>
-
-                {/* Número da Conta */}
-                <div>
-                  <label className="block text-sm text-white/70">
-                    Número da Conta
-                  </label>
-                  <input
-                    type="text"
-                    disabled
-                    value={conta.numeroConta}
-                    className="w-full bg-transparent border-b border-white/30 outline-none text-sm text-white/70"
-                  />
-                </div>
-
-                {/* Nome do Titular */}
-                <div>
-                  <label className="block text-sm text-white/70">
-                    Nome do Titular
-                  </label>
-                  <input
-                    type="text"
-                    disabled
-                    value={conta.titular}
-                    className="w-full bg-transparent border-b border-white/30 outline-none text-sm text-white/70"
-                  />
-                </div>
-
-                {/* CPF */}
-                <div>
-                  <label className="block text-sm text-white/70">CPF</label>
-                  <input
-                    type="text"
-                    disabled
-                    value={conta.cpf}
-                    className="w-full bg-transparent border-b border-white/30 outline-none text-sm text-white/70"
-                  />
-                </div>
-
-                {/* Saldo Atual */}
-                <div>
-                  <label className="block text-sm text-white/70">
-                    Saldo Atual
-                  </label>
-                  <input
-                    type="text"
-                    disabled
-                    value={conta.saldo}
-                    className="w-full bg-transparent border-b border-white/30 outline-none text-sm text-white/70"
-                  />
-                </div>
-
-                {/* Limite Disponível */}
-                <div>
-                  <label className="block text-sm text-white/70">
-                    Limite Disponível
-                  </label>
-                  <input
-                    type="text"
-                    disabled={!editando}
-                    value={conta.limite}
-                    onChange={(e) => handleChange("limite", e.target.value)}
-                    className={`w-full bg-transparent border-b border-white/30 outline-none text-sm transition ${
-                      editando ? "text-white" : "text-white/70"
-                    }`}
-                  />
-                </div>
-
-                {/* Data de Vencimento */}
-                <div className="relative">
-                  <label className="block text-sm text-white/70">
-                    Data de Vencimento
-                  </label>
-                  <div
-                    className={`w-full border-b border-white/30 flex justify-between items-center transition ${
-                      editando
-                        ? "cursor-pointer text-white"
-                        : "text-white/70 cursor-not-allowed"
-                    }`}
-                    onClick={() =>
-                      editando &&
-                      setOpenSelect(
-                        openSelect === "vencimento" ? null : "vencimento"
-                      )
-                    }
-                  >
-                    <span>{conta.vencimento}</span>
-                    <ChevronDown
-                      className={`w-4 h-4 transition-transform ${
-                        openSelect === "vencimento" ? "rotate-180" : ""
-                      }`}
-                    />
-                  </div>
-
-                  {openSelect === "vencimento" && editando && (
-                    <div className="absolute z-20 w-full mt-1 bg-[#012E4B] rounded-md shadow-md border border-white/20 overflow-hidden">
-                      {["Dia 5", "Dia 10", "Dia 15"].map((dia) => (
-                        <div
-                          key={dia}
-                          onClick={() => {
-                            handleChange("vencimento", dia);
-                            setOpenSelect(null);
-                          }}
-                          className={`px-3 py-2 text-sm flex justify-between items-center hover:bg-white/10 cursor-pointer ${
-                            conta.vencimento === dia
-                              ? "text-white"
-                              : "text-white/80"
-                          }`}
-                        >
-                          <span>{dia}</span>
-                          {conta.vencimento === dia && (
-                            <Check className="w-4 h-4 text-white" />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Status */}
-                <div>
-                  <label className="block text-sm text-white/70">Status</label>
-                  <input
-                    type="text"
-                    disabled
-                    value={conta.status}
-                    className={`w-full bg-transparent border-b border-white/30 outline-none text-sm ${
-                      conta.status === "Ativa"
-                        ? "text-[#42D23A]"
-                        : "text-red-400"
-                    }`}
-                  />
-                </div>
-
-                {/* Data de Abertura */}
-                <div>
-                  <label className="block text-sm text-white/70">
-                    Data de Abertura
-                  </label>
-                  <input
-                    type="text"
-                    disabled
-                    value={conta.abertura}
-                    className="w-full bg-transparent border-b border-white/30 outline-none text-sm text-white/70"
-                  />
-                </div>
-              </div>
+              <div className="flex flex-col gap-4">{renderFormulario()}</div>
             </div>
           </>
         ) : (
           cpfBusca && (
             <p className="text-center text-sm text-gray-300 mt-10">
-              Nenhuma conta encontrada para o CPF informado.
+              Nenhum registro encontrado para o CPF informado.
             </p>
           )
         )}
@@ -297,3 +315,50 @@ export default function ConsultarConta() {
     </main>
   );
 }
+
+/* ---------- COMPONENTES AUXILIARES ---------- */
+const Campo = ({
+  label,
+  valor,
+  color,
+}: {
+  label: string;
+  valor: string;
+  color?: string;
+}) => (
+  <div>
+    <label className="block text-sm text-white/70">{label}</label>
+    <input
+      type="text"
+      disabled
+      value={valor}
+      className="w-full bg-transparent border-b border-white/30 outline-none text-sm"
+      style={{ color: color || "rgba(255,255,255,0.7)" }}
+    />
+  </div>
+);
+
+const CampoEditavel = ({
+  label,
+  valor,
+  editando,
+  onChange,
+}: {
+  label: string;
+  valor: string;
+  editando: boolean;
+  onChange: (valor: string) => void;
+}) => (
+  <div>
+    <label className="block text-sm text-white/70">{label}</label>
+    <input
+      type="text"
+      disabled={!editando}
+      value={valor}
+      onChange={(e) => onChange(e.target.value)}
+      className={`w-full bg-transparent border-b border-white/30 outline-none text-sm transition ${
+        editando ? "text-white" : "text-white/70"
+      }`}
+    />
+  </div>
+);
