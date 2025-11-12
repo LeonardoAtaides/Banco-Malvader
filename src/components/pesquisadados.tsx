@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Search, Funnel, Check } from "lucide-react";
 
 type Props = {
@@ -16,23 +16,39 @@ const DadosSearch: React.FC<Props> = ({ onSearch, onClear }) => {
 
   const filtros = ["Conta", "Cliente", "Funcionário"];
 
-  // Função de busca
+  // 👉 Máscara de CPF
+  const formatarCPF = (valor: string) => {
+    let v = valor.replace(/\D/g, ""); // remove tudo que não é número
+    v = v.replace(/(\d{3})(\d)/, "$1.$2");
+    v = v.replace(/(\d{3})(\d)/, "$1.$2");
+    v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    return v;
+  };
+
+  // 🔎 Função de busca
   const handleSearch = (term = searchTerm, tipo = filtro) => {
     if (onSearch) onSearch(term, tipo);
     else console.log("Pesquisar:", { term, tipo });
   };
 
-  // Função de limpar
+  // ❌ Limpar
   const handleClear = () => {
     setSearchTerm("");
     if (onClear) onClear();
   };
 
+  // 🚀 Dispara busca automática ao trocar o tipo
+  useEffect(() => {
+    if (searchTerm.trim() !== "") {
+      handleSearch(searchTerm, filtro);
+    }
+  }, [filtro]);
+
   return (
     <div className="flex flex-col w-full max-w-lg mx-auto gap-3 pt-5 relative">
       {/* Campo de busca */}
       <div className="flex items-center gap-2">
-        {/* Input de pesquisa */}
+        {/* Input */}
         <div className="flex items-center border border-white/20 bg-white/5 rounded-lg px-3 py-2 flex-1">
           <Search className="w-5 h-5 text-white/60 mr-2" />
           <input
@@ -40,9 +56,10 @@ const DadosSearch: React.FC<Props> = ({ onSearch, onClear }) => {
             placeholder="Busque pelo CPF..."
             value={searchTerm}
             onChange={(e) => {
-              const value = e.target.value;
+              const value = formatarCPF(e.target.value);
               setSearchTerm(value);
-              // 🔥 dispara automaticamente quando digita
+
+              // 🔥 dispara automaticamente conforme digita
               if (value.trim() !== "") handleSearch(value, filtro);
               else handleClear();
             }}
@@ -50,7 +67,7 @@ const DadosSearch: React.FC<Props> = ({ onSearch, onClear }) => {
           />
         </div>
 
-        {/* Botão de filtro */}
+        {/* Botão filtro */}
         <button
           onClick={() => {
             setShowSelect(!showSelect);
@@ -62,7 +79,7 @@ const DadosSearch: React.FC<Props> = ({ onSearch, onClear }) => {
         </button>
       </div>
 
-      {/* Dropdown de filtros */}
+      {/* Dropdown */}
       {showSelect && (
         <div className="absolute right-0 top-16 w-40 z-30">
           <div className="relative">
@@ -75,7 +92,7 @@ const DadosSearch: React.FC<Props> = ({ onSearch, onClear }) => {
                       setFiltro(tipo);
                       setOpenSelect(false);
                       setShowSelect(false);
-                      // 🔥 dispara automaticamente ao trocar tipo
+                      // 🔥 busca automática ao trocar filtro
                       if (searchTerm.trim() !== "") handleSearch(searchTerm, tipo);
                     }}
                     className={`px-3 py-2 text-sm flex justify-between items-center hover:bg-white/10 cursor-pointer ${

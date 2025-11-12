@@ -10,11 +10,27 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import DadosSearch from "@/components/pesquisadados"; // componente de busca
+import DadosSearch from "@/components/pesquisadados";
+
+// ----------- Funções auxiliares de máscara -----------
+const maskTelefone = (v: string) => {
+  v = v.replace(/\D/g, "");
+  v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
+  v = v.replace(/(\d{5})(\d)/, "$1-$2");
+  return v.slice(0, 15);
+};
+
+const maskMoney = (v: string) => {
+  v = v.replace(/\D/g, "");
+  v = (Number(v) / 100).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
+  return v;
+};
 
 export default function ConsultarDados() {
   const router = useRouter();
-
   const [cpfBusca, setCpfBusca] = useState("");
   const [tipoSelecionado, setTipoSelecionado] = useState<
     "conta" | "cliente" | "funcionario" | ""
@@ -24,15 +40,15 @@ export default function ConsultarDados() {
   const [editando, setEditando] = useState(false);
   const [openSelect, setOpenSelect] = useState<string | null>(null);
 
-  // --------- Dados Fake (simulação de banco) ---------
+  // --------- Dados Fake ---------
   const contasFake = [
     {
       cpf: "123.168.178-09",
       tipoConta: "Conta Corrente (CC)",
       numeroConta: "1234-5",
       titular: "José Antonio Marcos",
-      saldo: "R$ 1200,00",
-      limite: "R$ 5000,00",
+      saldo: "R$ 1.200,00",
+      limite: "R$ 5.000,00",
       vencimento: "Dia 5",
       status: "Ativa",
       abertura: "15/01/2025",
@@ -43,7 +59,7 @@ export default function ConsultarDados() {
     {
       cpf: "111.222.333-44",
       nome: "Carlos Pereira",
-      nascimento: "12/03/1998",
+      nascimento: "1998-03-12",
       telefone: "(61) 99999-8888",
       endereco: "Rua das Flores, 120",
     },
@@ -55,7 +71,7 @@ export default function ConsultarDados() {
       cargo: "Atendente",
       nome: "Maria Santos",
       cpf: "222.333.444-55",
-      nascimento: "05/08/1995",
+      nascimento: "1995-08-05",
       telefone: "(61) 98888-7777",
       endereco: "Av. Central, 45",
       agencia: "Agência 001",
@@ -64,17 +80,21 @@ export default function ConsultarDados() {
 
   // --------- Busca Dinâmica ---------
   const handleSearch = (term: string, tipo: string) => {
-    if (!term) return;
-
     setCpfBusca(term);
     const tipoLower = tipo.toLowerCase();
     setTipoSelecionado(tipoLower as any);
 
+    if (!term) {
+      setDados(null);
+      return;
+    }
+
     let encontrada = null;
 
     if (tipoLower === "conta") encontrada = contasFake.find((c) => c.cpf === term);
-    if (tipoLower === "cliente") encontrada = clientesFake.find((c) => c.cpf === term);
-    if (tipoLower === "funcionário" || tipoLower === "funcionario")
+    else if (tipoLower === "cliente")
+      encontrada = clientesFake.find((c) => c.cpf === term);
+    else if (tipoLower === "funcionário" || tipoLower === "funcionario")
       encontrada = funcionariosFake.find((c) => c.cpf === term);
 
     if (encontrada) {
@@ -105,7 +125,7 @@ export default function ConsultarDados() {
     setOpenSelect(null);
   };
 
-  // --------- Renderização dos campos ---------
+  // --------- Renderização ---------
   const renderFormulario = () => {
     if (!dados) return null;
 
@@ -122,18 +142,24 @@ export default function ConsultarDados() {
             label="Limite Disponível"
             valor={dados.limite}
             editando={editando}
-            onChange={(v) => handleChange("limite", v)}
+            onChange={(v) => handleChange("limite", maskMoney(v))}
+            
           />
 
           {/* Select de vencimento */}
           <div className="relative">
-            <label className="block text-sm text-white/70">Data de Vencimento</label>
+            <label className="block text-sm text-white/70">
+              Data de Vencimento
+            </label>
             <div
               className={`w-full border-b border-white/30 flex justify-between items-center transition ${
-                editando ? "cursor-pointer text-white" : "text-white/70 cursor-not-allowed"
+                editando
+                  ? "cursor-pointer text-white"
+                  : "text-white/70 cursor-not-allowed"
               }`}
               onClick={() =>
-                editando && setOpenSelect(openSelect === "vencimento" ? null : "vencimento")
+                editando &&
+                setOpenSelect(openSelect === "vencimento" ? null : "vencimento")
               }
             >
               <span>{dados.vencimento}</span>
@@ -154,11 +180,15 @@ export default function ConsultarDados() {
                       setOpenSelect(null);
                     }}
                     className={`px-3 py-2 text-sm flex justify-between items-center hover:bg-white/10 cursor-pointer ${
-                      dados.vencimento === dia ? "text-white" : "text-white/80"
+                      dados.vencimento === dia
+                        ? "text-white"
+                        : "text-white/80"
                     }`}
                   >
                     <span>{dia}</span>
-                    {dados.vencimento === dia && <Check className="w-4 h-4 text-white" />}
+                    {dados.vencimento === dia && (
+                      <Check className="w-4 h-4 text-white" />
+                    )}
                   </div>
                 ))}
               </div>
@@ -186,7 +216,7 @@ export default function ConsultarDados() {
             onChange={(v) => handleChange("nome", v)}
           />
           <Campo label="CPF" valor={dados.cpf} />
-          <CampoEditavel
+          <CampoDate
             label="Data de Nascimento"
             valor={dados.nascimento}
             editando={editando}
@@ -196,7 +226,7 @@ export default function ConsultarDados() {
             label="Telefone"
             valor={dados.telefone}
             editando={editando}
-            onChange={(v) => handleChange("telefone", v)}
+            onChange={(v) => handleChange("telefone", maskTelefone(v))}
           />
           <CampoEditavel
             label="Endereço"
@@ -209,7 +239,7 @@ export default function ConsultarDados() {
     }
 
     // -------- FUNCIONÁRIO --------
-    if (tipoSelecionado === "funcionario" || tipoSelecionado === "funcionario") {
+    if (tipoSelecionado === "funcionario") {
       return (
         <>
           <Campo label="Código do Funcionário" valor={dados.codigo} />
@@ -221,7 +251,7 @@ export default function ConsultarDados() {
             onChange={(v) => handleChange("nome", v)}
           />
           <Campo label="CPF" valor={dados.cpf} />
-          <CampoEditavel
+          <CampoDate
             label="Data de Nascimento"
             valor={dados.nascimento}
             editando={editando}
@@ -231,7 +261,7 @@ export default function ConsultarDados() {
             label="Telefone"
             valor={dados.telefone}
             editando={editando}
-            onChange={(v) => handleChange("telefone", v)}
+            onChange={(v) => handleChange("telefone", maskTelefone(v))}
           />
           <CampoEditavel
             label="Endereço"
@@ -250,7 +280,6 @@ export default function ConsultarDados() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#012E4B] to-[#064F75] text-white flex flex-col">
       <div className="px-5 py-5">
-        {/* Voltar */}
         <button onClick={handleBack} className="hover:text-white/70 transition">
           <X className="w-8 h-8" />
         </button>
@@ -259,12 +288,10 @@ export default function ConsultarDados() {
           Consultar Dados
         </h1>
 
-        {/* Campo CPF e Filtro */}
         <DadosSearch onSearch={handleSearch} onClear={handleLimpar} />
 
         {dados ? (
           <>
-            {/* Botões */}
             <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={editando ? handleSalvar : () => setEditando(true)}
@@ -288,8 +315,7 @@ export default function ConsultarDados() {
               <button
                 onClick={handleLimpar}
                 disabled={!editando}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-white/20 transition
-                ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-white/20 transition ${
                   editando
                     ? "bg-white/10 text-white/80 hover:text-white"
                     : "bg-white/5 text-white/50 cursor-not-allowed opacity-60"
@@ -299,7 +325,6 @@ export default function ConsultarDados() {
               </button>
             </div>
 
-            {/* Formulário */}
             <div className="mt-6 p-5 rounded-2xl border border-white/20 bg-white/5">
               <div className="flex flex-col gap-4">{renderFormulario()}</div>
             </div>
@@ -343,6 +368,36 @@ const CampoEditavel = ({
   valor,
   editando,
   onChange,
+  prefixo,
+}: {
+  label: string;
+  valor: string;
+  editando: boolean;
+  onChange: (valor: string) => void;
+  prefixo?: string;
+}) => (
+  <div>
+    <label className="block text-sm text-white/70">{label}</label>
+    <div className="flex items-center border-b border-white/30">
+      {prefixo && <span className="text-white/70 mr-1">{prefixo}</span>}
+      <input
+        type="text"
+        disabled={!editando}
+        value={valor}
+        onChange={(e) => onChange(e.target.value)}
+        className={`w-full bg-transparent outline-none text-sm transition ${
+          editando ? "text-white" : "text-white/70"
+        }`}
+      />
+    </div>
+  </div>
+);
+
+const CampoDate = ({
+  label,
+  valor,
+  editando,
+  onChange,
 }: {
   label: string;
   valor: string;
@@ -352,7 +407,7 @@ const CampoEditavel = ({
   <div>
     <label className="block text-sm text-white/70">{label}</label>
     <input
-      type="text"
+      type="date"
       disabled={!editando}
       value={valor}
       onChange={(e) => onChange(e.target.value)}
