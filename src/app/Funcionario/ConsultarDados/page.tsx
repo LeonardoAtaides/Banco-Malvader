@@ -12,7 +12,7 @@ import {
 import { useRouter } from "next/navigation";
 import DadosSearch from "@/components/pesquisadados";
 
-// ----------- Funções auxiliares de máscara -----------
+// ----------- Máscaras -----------
 const maskTelefone = (v: string) => {
   v = v.replace(/\D/g, "");
   v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
@@ -81,7 +81,12 @@ export default function ConsultarDados() {
   // --------- Busca Dinâmica ---------
   const handleSearch = (term: string, tipo: string) => {
     setCpfBusca(term);
-    const tipoLower = tipo.toLowerCase();
+
+    // remove acento e normaliza tipo
+    const tipoLower = tipo
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
     setTipoSelecionado(tipoLower as any);
 
     if (!term) {
@@ -89,12 +94,13 @@ export default function ConsultarDados() {
       return;
     }
 
-    let encontrada = null;
+    let encontrada: any = null;
 
-    if (tipoLower === "conta") encontrada = contasFake.find((c) => c.cpf === term);
+    if (tipoLower === "conta")
+      encontrada = contasFake.find((c) => c.cpf === term);
     else if (tipoLower === "cliente")
       encontrada = clientesFake.find((c) => c.cpf === term);
-    else if (tipoLower === "funcionário" || tipoLower === "funcionario")
+    else if (tipoLower === "funcionario")
       encontrada = funcionariosFake.find((c) => c.cpf === term);
 
     if (encontrada) {
@@ -105,6 +111,7 @@ export default function ConsultarDados() {
     }
   };
 
+  // --------- Manipulação ---------
   const handleChange = (campo: string, valor: string) => {
     if (!dados || !editando) return;
     setDados({ ...dados, [campo]: valor });
@@ -143,16 +150,13 @@ export default function ConsultarDados() {
             valor={dados.limite}
             editando={editando}
             onChange={(v) => handleChange("limite", maskMoney(v))}
-            
           />
 
           {/* Select de vencimento */}
           <div className="relative">
-            <label className="block text-sm text-white/70">
-              Data de Vencimento
-            </label>
+            <label className="block text-sm text-white/70">Data de Vencimento</label>
             <div
-              className={`w-full border-b border-white/30 flex justify-between items-center transition ${
+              className={`w-full border-b border-white/30 flex justify-between items-center text-sm transition ${
                 editando
                   ? "cursor-pointer text-white"
                   : "text-white/70 cursor-not-allowed"
@@ -164,14 +168,14 @@ export default function ConsultarDados() {
             >
               <span>{dados.vencimento}</span>
               <ChevronDown
-                className={`w-4 h-4 transition-transform ${
+                className={`w-3 h-3 transition-transform ${
                   openSelect === "vencimento" ? "rotate-180" : ""
                 }`}
               />
             </div>
 
             {openSelect === "vencimento" && editando && (
-              <div className="absolute z-20 w-full mt-1 bg-[#012E4B] rounded-md shadow-md border border-white/20 overflow-hidden">
+              <div className="absolute z-20 w-full mt-1 bg-[#012E4B] rounded-md shadow-md border border-white/20 overflow-hidden text-sm">
                 {["Dia 5", "Dia 10", "Dia 15"].map((dia) => (
                   <div
                     key={dia}
@@ -179,21 +183,20 @@ export default function ConsultarDados() {
                       handleChange("vencimento", dia);
                       setOpenSelect(null);
                     }}
-                    className={`px-3 py-2 text-sm flex justify-between items-center hover:bg-white/10 cursor-pointer ${
-                      dados.vencimento === dia
-                        ? "text-white"
-                        : "text-white/80"
+                    className={`px-2 py-1 flex justify-between items-center hover:bg-white/10 cursor-pointer ${
+                      dados.vencimento === dia ? "text-white" : "text-white/80"
                     }`}
                   >
                     <span>{dia}</span>
                     {dados.vencimento === dia && (
-                      <Check className="w-4 h-4 text-white" />
+                      <Check className="w-3 h-3 text-white" />
                     )}
                   </div>
                 ))}
               </div>
             )}
           </div>
+
 
           <Campo
             label="Status"
@@ -385,7 +388,7 @@ const CampoEditavel = ({
         disabled={!editando}
         value={valor}
         onChange={(e) => onChange(e.target.value)}
-        className={`w-full bg-transparent outline-none text-sm transition ${
+        className={`w-full  bg-transparent outline-none text-sm transition ${
           editando ? "text-white" : "text-white/70"
         }`}
       />
@@ -411,9 +414,10 @@ const CampoDate = ({
       disabled={!editando}
       value={valor}
       onChange={(e) => onChange(e.target.value)}
-      className={`w-full bg-transparent border-b border-white/30 outline-none text-sm transition ${
+      className={`w-full border-b text-sm border-white/50 outline-none bg-transparent ${
         editando ? "text-white" : "text-white/70"
       }`}
+      style={{ colorScheme: "dark" }}
     />
   </div>
 );
