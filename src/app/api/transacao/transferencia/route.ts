@@ -22,7 +22,7 @@ const transferenciaSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
-    // 1️⃣ Validar autenticação
+    //  Validar autenticação
     const authHeader = request.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return NextResponse.json(
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2️⃣ Validar dados de entrada
+    //  Validar dados de entrada
     const body = await request.json();
     const validation = transferenciaSchema.safeParse(body);
 
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     const { numero_conta_origem, numero_conta_destino, valor, descricao } = validation.data;
 
-    // 3️⃣ Executar transferência em uma transação do Prisma (garante atomicidade)
+    //  Executar transferência em uma transação do Prisma (garante atomicidade)
     const resultado = await prisma.$transaction(async (tx) => {
       // Buscar conta de origem
       const contaOrigem = await tx.conta.findUnique({
@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    // 4️⃣ Retornar sucesso
+    //  Retornar sucesso
     return NextResponse.json(
       {
         sucesso: true,

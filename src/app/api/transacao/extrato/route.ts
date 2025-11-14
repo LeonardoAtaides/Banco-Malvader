@@ -19,7 +19,7 @@ const extratoQuerySchema = z.object({
  */
 export async function GET(request: NextRequest) {
   try {
-    // 1️⃣ Validar autenticação
+    //  Validar autenticação
     const authHeader = request.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return NextResponse.json(
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 2️⃣ Validar parâmetros da URL
+    //  Validar parâmetros da URL
     const { searchParams } = new URL(request.url);
     const queryParams = {
       numero_conta: searchParams.get("numero_conta"),
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
 
     const { numero_conta, limite, pagina, tipo_transacao } = validation.data;
 
-    // 3️⃣ Buscar conta
+    //  Buscar conta
     const conta = await prisma.conta.findUnique({
       where: { numero_conta },
       select: {
@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 4️⃣ Buscar transações da conta
+    //  Buscar transações da conta
     const skip = (pagina - 1) * limite;
 
     // Filtro base: transações onde a conta é origem OU destino
@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
       prisma.transacao.count({ where: whereClause }),
     ]);
 
-    // 5️⃣ Formatar transações para exibição
+    //  Formatar transações para exibição
     const transacoesFormatadas = transacoes.map((t) => {
       const isDebito = t.id_conta_origem === conta.id_conta;
       const isCredito = t.id_conta_destino === conta.id_conta;
@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // 6️⃣ Retornar extrato
+    //  Retornar extrato
     return NextResponse.json(
       {
         sucesso: true,

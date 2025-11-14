@@ -18,7 +18,7 @@ const saqueSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
-    // 1️⃣ Validar autenticação
+    //  Validar autenticação
     const authHeader = request.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return NextResponse.json(
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2️⃣ Validar dados de entrada
+    //  Validar dados de entrada
     const body = await request.json();
     const validation = saqueSchema.safeParse(body);
 
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
 
     const { numero_conta, valor, descricao } = validation.data;
 
-    // 3️⃣ Executar saque em uma transação do Prisma
+    //  Executar saque em uma transação do Prisma
     const resultado = await prisma.$transaction(async (tx) => {
       // Buscar conta com informações do tipo (para verificar limite)
       const conta = await tx.conta.findUnique({
@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    // 4️⃣ Retornar sucesso
+    //  Retornar sucesso
     return NextResponse.json(
       {
         sucesso: true,
