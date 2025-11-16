@@ -31,6 +31,9 @@ export default function Cliente() {
   // Aqui é onde pega os conteúdos do JWT -> vide o arquivo TokenPayload.ts
   const [nomeUsuario, setNomeUsuario] = useState("");
   const [numeroConta, setNumeroConta] = useState<number | null>(null);
+  const [saldoConta, setSaldoConta] = useState<number | null>(null);
+  const [saldoInvestido, setSaldoInvestido] = useState<number | null>(null);
+  const [ rendimento, setRendimento] = useState<number | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -44,7 +47,10 @@ export default function Cliente() {
     try {
       const decoded = jwtDecode<TokenPayload>(token);
       setNomeUsuario(decoded.nome);
-      setNumeroConta(decoded.id_usuario) // teste
+      setNumeroConta(decoded.id_usuario)
+      setSaldoConta(decoded.id_usuario) // teste
+      setSaldoInvestido(decoded.id_usuario) // teste
+      setRendimento(decoded.id_usuario) // teste 
     } catch (err) {
       router.push("/Login");
     }
@@ -101,12 +107,12 @@ export default function Cliente() {
         <div className="flex justify-between pt-5 z-10">
           <div className="text-center">
             <h2>Saldo disponível</h2>
-            <p>{ocultar ? "•••••" : numeroConta}</p>
+            <p>{ocultar ? "•••••" : `R$ ${saldoConta}`}</p>
           </div>
 
           <div className="text-center">
             <h2>Conta</h2>
-            <p>{ocultar ? "•••••" : "1234-5"}</p>
+            <p>{ocultar ? "•••••" : numeroConta}</p>
           </div>
         </div>
       </div>
@@ -214,12 +220,12 @@ export default function Cliente() {
           <div className="flex justify-center gap-20">
             <div className="flex-col text-center">
               <h2>Saldo total Investido</h2>
-              <p>{ocultar ? "•••••" : "R$ 1200,00"}</p>
+              <p>{ocultar ? "•••••" : `R$ ${saldoInvestido}`}</p>
             </div>
             <div className="flex-col text-center">
               <h2>Rendimento</h2>
               <p className="text-[#42D23A]">
-                {ocultar ? "•••••" : "+ R$ 52,50"}
+                {ocultar ? "•••••" : `+ R$ ${rendimento}`}
               </p>
             </div>
           </div>
