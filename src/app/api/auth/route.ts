@@ -1,12 +1,25 @@
+// /app/api/auth/route.ts
+"use server";
+
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { loginSchema } from "@/lib/validations";
-import { verificarSenha, gerarToken } from "@/lib/auth";
+import crypto from "crypto";
+import jwt from "jsonwebtoken";
 
-/**
- * POST /api/auth
- * Autentica um usuário (funcionário ou cliente)
- */
+// Função para verificar senha MD5
+function verificarSenha(senhaClara: string, hashBanco: string) {
+  const hash = crypto.createHash("md5").update(senhaClara).digest("hex");
+  return hash === hashBanco;
+}
+
+// Função para gerar JWT
+function gerarToken(payload: object) {
+  return jwt.sign(payload, process.env.JWT_SECRET || "supersecret", {
+    expiresIn: "8h",
+  });
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -22,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     const { cpf, senha } = validation.data;
 
-    //  Buscar usuário + possíveis vínculos
+    // 2️⃣ Buscar usuário pelo CPF
     const usuario = await prisma.usuario.findUnique({
       where: { cpf },
       select: {
@@ -36,7 +49,6 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    //  Caso não exista, erro genérico
     if (!usuario) {
       return NextResponse.json(
         { error: "CPF ou senha incorretos" },
@@ -44,8 +56,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    //  Validar senha
-    const senhaValida = await verificarSenha(senha, usuario.senha_hash);
+    // 3️⃣ Verificar senha
+    const senhaValida = verificarSenha(senha, usuario.senha_hash);
     if (!senhaValida) {
       return NextResponse.json(
         { error: "CPF ou senha incorretos" },
@@ -53,19 +65,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    //  Montar payload JWT
+    // 4️⃣ Montar payload JWT
     const payload = {
       id_usuario: usuario.id_usuario,
       nome: usuario.nome,
       tipo_usuario: usuario.tipo_usuario,
-      id_cliente: usuario.cliente?.[0]?.id_cliente ?? null,
-      id_funcionario: usuario.funcionario?.[0]?.id_funcionario ?? null,
+      id_cliente: usuario.cliente?.id_cliente ?? null,
+      id_funcionario: usuario.funcionario?.id_funcionario ?? null,
     };
 
-    //  Gerar token
     const token = gerarToken(payload);
 
-    //  Montar resposta limpa (sem senha)
+    // 5️⃣ Retornar usuário sem a senha
     const { senha_hash, ...usuarioSemSenha } = usuario;
 
     return NextResponse.json({
@@ -73,10 +84,8 @@ export async function POST(request: NextRequest) {
       usuario: usuarioSemSenha,
       token,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("Erro no login:", error);
-
-    //  Resposta segura, sem vazar stack trace
     return NextResponse.json(
       { error: "Erro interno no servidor" },
       { status: 500 }
