@@ -21,7 +21,6 @@ export default function GerarRelatorio() {
 
   // ---------------------------
   //   DADOS DO RELATÓRIO (FAKE)
-  //   (Em map para receber API)
   // ---------------------------
   const dadosRelatorio = [
     { titulo: "Total de Transações", valor: "1247" },
@@ -42,7 +41,7 @@ export default function GerarRelatorio() {
   };
 
   // ---------------------------
-  //      GERAR PDF EXCEL
+  //      GERAR PDF
   // ---------------------------
   const gerarPDF = () => {
     const doc = new jsPDF({
@@ -53,7 +52,6 @@ export default function GerarRelatorio() {
 
     doc.setFont("Helvetica", "normal");
 
-    // Título
     doc.setFontSize(20);
     doc.text("Relatório Financeiro", 40, 40);
 
@@ -63,9 +61,6 @@ export default function GerarRelatorio() {
     doc.text(`Tipo de Transação: ${formData.transacao}`, 40, 105);
     doc.text(`Agência: ${formData.agencia}`, 40, 125);
 
-    // ---------------------------
-    // TABELA RESUMO
-    // ---------------------------
     autoTable(doc, {
       startY: 150,
       head: [["Indicador", "Valor"]],
@@ -84,9 +79,6 @@ export default function GerarRelatorio() {
       },
     });
 
-    // ---------------------------
-    // TABELA DE MOVIMENTAÇÕES
-    // ---------------------------
     autoTable(doc, {
       startY: doc.lastAutoTable.finalY + 30,
       head: [["Descrição", "Tipo", "Valor", "Data"]],
@@ -113,10 +105,22 @@ export default function GerarRelatorio() {
     doc.save("relatorio.pdf");
   };
 
+  // -----------------------------------------------------
+  //     🔴 VALIDAÇÃO — ALERT NATIVO SEM ALTERAR LAYOUT
+  // -----------------------------------------------------
+  const validarCampos = () => {
+    if (!formData.dataInicio || !formData.dataFim) {
+      alert("Preencha a Data de Início e a Data de Fim antes de gerar o relatório.");
+      return false;
+    }
+
+    return true;
+  };
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#012E4B] to-[#064F75] text-white flex flex-col relative">
 
-      {/* Cabeçalho */}
+      {/* Cabeçalho */} 
       <div className="px-5 py-5 relative">
         <button className="absolute top-5 left-5" onClick={() => router.back()}>
           <X className="w-7 h-7" />
@@ -254,15 +258,17 @@ export default function GerarRelatorio() {
         {/* Botão Gerar */}
         <button
           className="border border-white/60 bg-white/10 rounded-[10px] py-2 mt-6 font-bold hover:bg-white/90 hover:text-[#012E4B] transition"
-          onClick={() => setShowReport(true)}
+          onClick={() => {
+            if (validarCampos()) {
+              setShowReport(true);
+            }
+          }}
         >
           Gerar Relatório
         </button>
       </div>
 
-      {/* ----------------------------- */}
-      {/*      RELATÓRIO VISUAL         */}
-      {/* ----------------------------- */}
+      {/* RELATÓRIO VISUAL */}
       {showReport && (
         <div className="mt-10 w-full px-6 pb-10">
           <div className="w-full bg-white/5 border border-white/20 rounded-xl px-5 py-5 backdrop-blur">
