@@ -30,7 +30,7 @@ export default function Cliente() {
 
   // Aqui é onde pega os conteúdos do JWT -> vide o arquivo TokenPayload.ts
   const [nomeUsuario, setNomeUsuario] = useState("");
-  const [numeroConta, setNumeroConta] = useState("");
+  const [numeroConta, setNumeroConta] = useState<number | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -44,10 +44,12 @@ export default function Cliente() {
     try {
       const decoded = jwtDecode<TokenPayload>(token);
       setNomeUsuario(decoded.nome);
+      setNumeroConta(decoded.id_usuario) // teste
     } catch (err) {
       router.push("/Login");
     }
   }, []);
+
   // Aqui é o final, nesse meio aí que define sobre as coisas do JWT
   useEffect(() => {
     const interval = setInterval(() => {
@@ -99,7 +101,7 @@ export default function Cliente() {
         <div className="flex justify-between pt-5 z-10">
           <div className="text-center">
             <h2>Saldo disponível</h2>
-            <p>{ocultar ? "•••••" : "R$ 1200,00"}</p>
+            <p>{ocultar ? "•••••" : numeroConta}</p>
           </div>
 
           <div className="text-center">
