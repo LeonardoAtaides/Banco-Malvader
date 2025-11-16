@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Agora busca a conta corrente do cliente
+    //busca a conta corrente do cliente
     const contaCorrente = await prisma.conta.findFirst({
       where: { id_cliente: cliente.id_cliente, tipo_conta: "CORRENTE" },
       select: {
