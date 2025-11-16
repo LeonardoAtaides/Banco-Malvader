@@ -26,16 +26,32 @@ export default function Cliente() {
   ];
 
   const [index, setIndex] = useState(0);
-  const [ocultar, setOcultar] = useState(false); // controla ocultar/exibir saldo
+  const [ocultar, setOcultar] = useState(false);
 
-  // Aqui é onde pega os conteúdos do JWT -> vide o arquivo TokenPayload.ts
+  // Dados do usuário
   const [nomeUsuario, setNomeUsuario] = useState("");
   const [numeroConta, setNumeroConta] = useState<number | null>(null);
   const [saldoConta, setSaldoConta] = useState<number | null>(null);
-  const [saldoInvestido, setSaldoInvestido] = useState<number | null>(null);
-  const [ rendimento, setRendimento] = useState<number | null>(null);
+  const [saldoInvestido, setSaldoInvestido] = useState<number | null>(0);
+  const [rendimento, setRendimento] = useState<number | null>(0);
+
   const router = useRouter();
 
+  // Função para formatar valor em BRL
+  const formatarBRL = (v: number | null) =>
+    (v ?? 0).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+
+  // Gera bolinhas com o mesmo tamanho do valor real
+  const gerarBolinhas = (valor: number | null) => {
+    if (valor === null) return "•••••"; // fallback
+    const formatado = formatarBRL(valor);
+    return "•".repeat(formatado.length);
+  };
+
+  // 1️⃣ PEGAR DADOS DO TOKEN
   useEffect(() => {
     const token = localStorage.getItem("token");
 
@@ -47,16 +63,41 @@ export default function Cliente() {
     try {
       const decoded = jwtDecode<TokenPayload>(token);
       setNomeUsuario(decoded.nome);
-      setNumeroConta(decoded.id_usuario)
-      setSaldoConta(decoded.id_usuario) // teste
-      setSaldoInvestido(decoded.id_usuario) // teste
-      setRendimento(decoded.id_usuario) // teste 
     } catch (err) {
       router.push("/Login");
     }
   }, []);
 
-  // Aqui é o final, nesse meio aí que define sobre as coisas do JWT
+  // 2️⃣ BUSCAR SALDO REAL NA API
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    async function fetchSaldo() {
+      try {
+        const response = await fetch("/api/conta/saldo", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          console.error("Erro ao buscar saldo");
+          return;
+        }
+
+        const value = await response.json();
+
+        setNumeroConta(Number(value.numero_conta));
+        setSaldoConta(Number(value.saldo));
+      } catch (error) {
+        console.error("Erro na requisição:", error);
+      }
+    }
+
+    fetchSaldo();
+  }, []);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % dicas.length);
@@ -107,17 +148,17 @@ export default function Cliente() {
         <div className="flex justify-between pt-5 z-10">
           <div className="text-center">
             <h2>Saldo disponível</h2>
-            <p>{ocultar ? "•••••" : `R$ ${saldoConta}`}</p>
+            <p>{ocultar ? gerarBolinhas(saldoConta) : formatarBRL(saldoConta)}</p>
           </div>
 
           <div className="text-center">
             <h2>Conta</h2>
-            <p>{ocultar ? "•••••" : numeroConta}</p>
+            <p>{ocultar ? "•".repeat(String(numeroConta ?? "").length) : numeroConta}</p>
           </div>
         </div>
       </div>
 
-      {/*waves*/}
+      {/* waves */}
       <div className="w-full flex justify-center">
         <img
           src="/assets/Wave.png"
@@ -128,58 +169,38 @@ export default function Cliente() {
 
       <Titulo tipo={1} />
 
-      {/* Botões do cliente */}
+      {/* Botões */}
       <div className="w-full overflow-x-auto">
         <div className="flex gap-5 px-4 py-4 min-w-max">
-          {/* Extrato */}
-          <button
-            onClick={OpenExtrato}
-            className="flex flex-col items-center flex-shrink-0"
-          >
+          <button onClick={OpenExtrato} className="flex flex-col items-center flex-shrink-0">
             <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
               <FileChartColumn className="w-9 h-9 text-white" />
             </div>
             <h1 className="text-center text-[#012E4B] pt-1">Extrato</h1>
           </button>
 
-          {/* Depositar */}
-          <button
-            onClick={OpenDepositar}
-            className="flex flex-col items-center flex-shrink-0"
-          >
+          <button onClick={OpenDepositar} className="flex flex-col items-center flex-shrink-0">
             <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
               <BanknoteArrowUp className="w-9 h-9 text-white" />
             </div>
             <h1 className="text-center text-[#012E4B] pt-1">Depositar</h1>
           </button>
 
-          {/* Sacar */}
-          <button
-            onClick={OpenSacar}
-            className="flex flex-col items-center flex-shrink-0"
-          >
+          <button onClick={OpenSacar} className="flex flex-col items-center flex-shrink-0">
             <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
               <BanknoteArrowDown className="w-9 h-9 text-white" />
             </div>
             <h1 className="text-center text-[#012E4B] pt-1">Sacar</h1>
           </button>
 
-          {/* Transferir */}
-          <button
-            onClick={OpenTransferir}
-            className="flex flex-col items-center flex-shrink-0"
-          >
+          <button onClick={OpenTransferir} className="flex flex-col items-center flex-shrink-0">
             <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
               <ArrowLeftRight className="w-9 h-9 text-white" />
             </div>
             <h1 className="text-center text-[#012E4B] pt-1">Transferir</h1>
           </button>
 
-          {/* Limite */}
-          <button
-            onClick={OpenLimite}
-            className="flex flex-col items-center flex-shrink-0"
-          >
+          <button onClick={OpenLimite} className="flex flex-col items-center flex-shrink-0">
             <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
               <ChartCandlestick className="w-9 h-9 text-white" />
             </div>
@@ -220,12 +241,12 @@ export default function Cliente() {
           <div className="flex justify-center gap-20">
             <div className="flex-col text-center">
               <h2>Saldo total Investido</h2>
-              <p>{ocultar ? "•••••" : `R$ ${saldoInvestido}`}</p>
+              <p>{ocultar ? gerarBolinhas(saldoInvestido) : formatarBRL(saldoInvestido)}</p>
             </div>
             <div className="flex-col text-center">
               <h2>Rendimento</h2>
               <p className="text-[#42D23A]">
-                {ocultar ? "•••••" : `+ R$ ${rendimento}`}
+                {ocultar ? gerarBolinhas(rendimento) : "+ " + formatarBRL(rendimento)}
               </p>
             </div>
           </div>
@@ -237,11 +258,7 @@ export default function Cliente() {
       <Titulo tipo={4} />
       <div className="w-full overflow-x-auto">
         <div className="flex gap-5 px-4 py-4 min-w-max">
-          {/* Card de convite, termos e devs */}
-          <button
-            onClick={goToConvidar}
-            className="relative w-54 h-40 rounded-[10px] overflow-hidden shadow-lg"
-          >
+          <button onClick={goToConvidar} className="relative w-54 h-40 rounded-[10px] overflow-hidden shadow-lg">
             <img
               src="assets/Indicar.png"
               alt="indicar"
@@ -254,16 +271,12 @@ export default function Cliente() {
                 <ChevronRight className="w-5 h-5" />
               </div>
               <p className="text-[10px] mt-1">
-                Mostre como é bom fazer parte do nosso banco, com o que
-                oferecemos
+                Mostre como é bom fazer parte do nosso banco, com o que oferecemos
               </p>
             </div>
           </button>
 
-          <button
-            onClick={goToTermos}
-            className="relative w-54 h-40 rounded-[10px] overflow-hidden shadow-lg"
-          >
+          <button onClick={goToTermos} className="relative w-54 h-40 rounded-[10px] overflow-hidden shadow-lg">
             <img
               src="assets/Banco.png"
               alt="indicar"
@@ -276,16 +289,12 @@ export default function Cliente() {
                 <ChevronRight className="w-5 h-5" />
               </div>
               <p className="text-[10px] mt-1">
-                Saiba mais sobre nossos termos de uso e como realmente
-                trabalhamos
+                Saiba mais sobre nossos termos de uso e como realmente trabalhamos
               </p>
             </div>
           </button>
 
-          <button
-            onClick={goToDevs}
-            className="relative w-54 h-40 rounded-[10px] overflow-hidden shadow-lg"
-          >
+          <button onClick={goToDevs} className="relative w-54 h-40 rounded-[10px] overflow-hidden shadow-lg">
             <img
               src="assets/Devs.png"
               alt="indicar"

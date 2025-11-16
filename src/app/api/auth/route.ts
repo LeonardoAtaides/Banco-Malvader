@@ -57,9 +57,10 @@ export async function POST(request: NextRequest) {
       id_funcionario: usuario.funcionario?.[0]?.id_funcionario,
     };
 
-    const token = jwt.sign(payload, process.env.JWT_SECRET || "supersecret", {
+    const token = jwt.sign(payload, process.env.JWT_SECRET!, {
       expiresIn: "8h",
     });
+
 
     const { senha_hash, ...usuarioSemSenha } = usuario;
 
