@@ -1,11 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Titulo from "@/components/titles";
 import Navbar from "@/components/navbar";
 import {ChevronRight, HandHelping, FileText, CircleFadingPlus} from "lucide-react";
+import { jwtDecode } from "jwt-decode";
+import { TokenPayload } from "@/types/TokenPayload";
 
 export default function Cliente() {
     
@@ -22,6 +24,24 @@ export default function Cliente() {
   router.push("/Termos");
   };
 
+    // Aqui é onde pega os conteúdos do JWT -> vide o arquivo TokenPayload.ts
+    const [nomeUsuario, setNomeUsuario] = useState("");
+ useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      router.push("/Login");
+      return;
+    }
+
+    try {
+      const decoded = jwtDecode<TokenPayload>(token);
+      setNomeUsuario(decoded.nome);
+    } catch (err) {
+      router.push("/Login");
+    }
+  }, []);
+
   return ( 
     <main className="bg-white min-h-screen text-[14px] font-bold pb-18 ">
     <div className="bg-[#012E4B] pt-2 flex-col justify-center px-5 w h-[250px] z-50 bg-wave bg-no-repeat bg-bottom bg-cover"
@@ -31,7 +51,7 @@ export default function Cliente() {
       <div className="relative flex items-center justify-between  ">
         <div className="flex items-center gap-5 relative">
           <img src="/assets/Logo.png" alt="logo" className="w-8 h-8" />
-          <h2 className="text-white">Nome do Fulano</h2>
+          <h2 className="text-white">{nomeUsuario}</h2>
           {/* Linha passando por baixo de tudo */}
           <div className="absolute bottom-0 left-13 w-75 border-b border-white/50"></div>
         </div>
