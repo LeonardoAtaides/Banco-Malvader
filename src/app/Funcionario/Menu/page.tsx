@@ -45,17 +45,12 @@ export default function Cliente() {
     {
       nome: "Gerar Relatorios",
       icone: <FileSpreadsheet />,
-      rota: "//Funcionario/GerarRelatorios",
+      rota: "/Funcionario/GerarRelatorios",
     },
     {
       nome: "EncerrarConta",
       icone: <UserX />,
-      rota: "Funcionario/EncerrarConta",
-    },
-    {
-      nome: "Ajuda",
-      icone: <HandHelping />,
-      rota: "/Cliente/Ajuda",
+      rota: "/Funcionario/EncerrarConta",
     },
     {
       nome: "Termos",

@@ -71,17 +71,6 @@ export default function Cliente() {
     </div>
     
     <Titulo tipo={0}/>
-
-        <div className="flex justify-center text-[12px] mt-2">
-        <button onClick={Ajuda} className=" flex justify-between items-center w-90 text-center mt-2 bg-[#012E4B] py-3 px-5 rounded-[10px]">
-            <div className="flex justify-center items-center gap-5">
-                <HandHelping />
-                Ajuda
-            </div>
-        <ChevronRight  className="w-5 h-5"/>
-        </button> 
-        </div>
-
         <div className="flex justify-center text-[12px]">
         <button onClick={Termos} className=" flex justify-between items-center w-90 text-center mt-2 bg-[#012E4B] py-3 px-5 rounded-[10px]">
             <div className="flex justify-center items-center gap-5">
