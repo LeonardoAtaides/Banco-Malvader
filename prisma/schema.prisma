@@ -184,7 +184,7 @@ model usuario {
   data_nascimento  DateTime             @db.Date
   telefone         String               @db.VarChar(15)
   tipo_usuario     usuario_tipo_usuario
-  senha_hash       String               @db.Char(32)
+  senha_hash       String               @db.VarChar(255)
   chat_sessions    chat_session[]
   cliente          cliente[]
   endereco_usuario endereco_usuario[]
@@ -212,17 +212,10 @@ model chat_message {
   role         chat_message_role
   conteudo     String            @db.Text
   metadados    Json?
-  criado_em    DateTime          @default(now()) @db.Timestamp(0)
+  criado_em    DateTime?         @default(now()) @db.Timestamp(0)
   chat_session chat_session      @relation(fields: [session_uuid], references: [uuid], onDelete: Cascade, onUpdate: NoAction, map: "chat_message_ibfk_1")
 
   @@index([session_uuid], map: "idx_chat_message_session")
-}
-
-model efmigrationshistory {
-  MigrationId    String @id @db.VarChar(150)
-  ProductVersion String @db.VarChar(32)
-
-  @@map("__efmigrationshistory")
 }
 
 enum conta_investimento_perfil_risco {
