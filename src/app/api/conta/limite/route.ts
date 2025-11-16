@@ -1,35 +1,74 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import jwt from "jsonwebtoken";
 
-export async function GET(req: NextRequest) {
-    try {
-        const id = req.nextUrl.searchParams.get("id_conta");
-        if (!id) return NextResponse.json({ error: "id_conta required" }, { status: 400 });
+export async function GET(request: NextRequest) {
+  try {
+    const authHeader = request.headers.get("authorization");
 
-        const cc = await prisma.conta_corrente.findUnique({
-            where: { id_conta: Number(id) }
-        });
-
-        if (!cc) return NextResponse.json({ error: "Conta não encontrada" }, { status: 404 });
-        return NextResponse.json({ limite: cc.limite });
-    } catch (err) {
-        return NextResponse.json({ error: String(err) }, { status: 500 });
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return NextResponse.json(
+        { error: "Token não fornecido" },
+        { status: 401 }
+      );
     }
-}
 
-export async function PATCH(req: NextRequest) {
+    const token = authHeader.split(" ")[1];
+
+    let payload: any;
     try {
-        const body = await req.json();
-        const { id_conta, limite } = body;
-        if (!id_conta || limite == null) return NextResponse.json({ error: "id_conta e limite obrigatórios" }, { status: 400 });
-
-        const updated = await prisma.conta_corrente.update({
-            where: { id_conta: Number(id_conta) },
-            data: { limite: Number(limite) }
-        });
-
-        return NextResponse.json({ sucesso: true, limite: updated.limite });
-    } catch (err) {
-        return NextResponse.json({ error: String(err) }, { status: 500 });
+      payload = jwt.verify(token, process.env.JWT_SECRET!);
+    } catch (error) {
+      return NextResponse.json(
+        { error: "Token inválido" },
+        { status: 401 }
+      );
     }
+
+    // Primeiro busca o cliente relacionado ao usuário
+    const cliente = await prisma.cliente.findFirst({
+      where: { id_usuario: payload.id_usuario },
+      select: { id_cliente: true },
+    });
+
+    if (!cliente) {
+      return NextResponse.json(
+        { error: "Cliente não encontrado" },
+        { status: 404 }
+      );
+    }
+
+    // Agora busca a conta corrente do cliente
+    const contaCorrente = await prisma.conta.findFirst({
+      where: { id_cliente: cliente.id_cliente, tipo_conta: "CORRENTE" },
+      select: {
+        numero_conta: true,
+        saldo: true,
+        status: true,
+        conta_corrente: {
+          select: {
+            limite: true,
+            taxa_manutencao: true,
+            data_vencimento: true
+          },
+        },
+      },
+    });
+
+    if (!contaCorrente) {
+      return NextResponse.json(
+        { error: "Conta corrente não encontrada" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(contaCorrente);
+
+  } catch (error) {
+    console.error("Erro ao buscar limite:", error);
+    return NextResponse.json(
+      { error: "Erro interno ao buscar limite" },
+      { status: 500 }
+    );
+  }
 }
