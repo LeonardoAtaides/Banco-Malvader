@@ -31,6 +31,17 @@ export const enderecoSchema = z.object({
   complemento: z.string().optional().nullable(),
 });
 
+// --- EnderecoAgencia ---
+export const enderecoAgenciaSchema = z.object({
+  cep: z.string().min(8, "CEP inválido"),
+  local: z.string().min(1, "Logradouro é obrigatório"),
+  numero: z.number().int("Número inválido"),
+  bairro: z.string().min(1, "Bairro é obrigatório"),
+  cidade: z.string().min(1, "Cidade é obrigatória"),
+  estado: z.string().length(2, "Estado deve ter 2 letras"),
+  complemento: z.string().optional().nullable(),
+});
+
 export const enderecoUpdateSchema = z.object({
   id_endereco: z.number().int(),
   cep: z.string().optional(),
@@ -119,21 +130,33 @@ export const relatorioSchema = z.object({
 });
 
 // --- Validações Customizadas ---
-export function validarSenhaForte(senha: string): { valida: boolean; mensagem?: string } {
+export function validarSenhaForte(senha: string): {
+  valida: boolean;
+  mensagem?: string;
+} {
   if (senha.length < 8) {
     return { valida: false, mensagem: "Senha deve ter no mínimo 8 caracteres" };
   }
   if (!/[A-Z]/.test(senha)) {
-    return { valida: false, mensagem: "Senha deve conter ao menos uma letra maiúscula" };
+    return {
+      valida: false,
+      mensagem: "Senha deve conter ao menos uma letra maiúscula",
+    };
   }
   if (!/[a-z]/.test(senha)) {
-    return { valida: false, mensagem: "Senha deve conter ao menos uma letra minúscula" };
+    return {
+      valida: false,
+      mensagem: "Senha deve conter ao menos uma letra minúscula",
+    };
   }
   if (!/[0-9]/.test(senha)) {
     return { valida: false, mensagem: "Senha deve conter ao menos um número" };
   }
   if (!/[^a-zA-Z0-9]/.test(senha)) {
-    return { valida: false, mensagem: "Senha deve conter ao menos um caractere especial" };
+    return {
+      valida: false,
+      mensagem: "Senha deve conter ao menos um caractere especial",
+    };
   }
   return { valida: true };
 }

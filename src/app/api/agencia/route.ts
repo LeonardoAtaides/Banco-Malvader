@@ -1,20 +1,19 @@
-import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
 
 // GET - Listar todas as agências
 export async function GET() {
   try {
     const agencias = await prisma.agencia.findMany({
-      orderBy: {
-        numero_agencia: 'asc'
-      }
+      orderBy: { id_agencia: "asc" },
+      include: { endereco_agencia: true },
     });
 
     return NextResponse.json(agencias);
   } catch (error) {
-    console.error('Erro ao buscar agências:', error);
+    console.error("Erro ao buscar agências:", error);
     return NextResponse.json(
-      { error: 'Erro ao buscar agências' },
+      { error: "Erro ao buscar agências" },
       { status: 500 }
     );
   }
@@ -24,42 +23,41 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { numero_agencia, nome_agencia, endereco, telefone } = body;
+    const { nome, codigo_agencia, endereco_id } = body;
 
-    // Validações básicas
-    if (!numero_agencia || !nome_agencia || !endereco) {
+    // Validação
+    if (!nome || !codigo_agencia || !endereco_id) {
       return NextResponse.json(
-        { error: 'Número da agência, nome e endereço são obrigatórios' },
+        { error: "nome, codigo_agencia e endereco_id são obrigatórios" },
         { status: 400 }
       );
     }
 
-    // Verificar se a agência já existe
-    const agenciaExistente = await prisma.agencia.findUnique({
-      where: { numero_agencia }
+    // Verificar duplicidade
+    const existe = await prisma.agencia.findUnique({
+      where: { codigo_agencia },
     });
 
-    if (agenciaExistente) {
+    if (existe) {
       return NextResponse.json(
-        { error: 'Agência com este número já existe' },
+        { error: "Já existe uma agência com este código" },
         { status: 409 }
       );
     }
 
     const novaAgencia = await prisma.agencia.create({
       data: {
-        numero_agencia,
-        nome_agencia,
-        endereco,
-        telefone
-      }
+        nome,
+        codigo_agencia,
+        endereco_id,
+      },
     });
 
     return NextResponse.json(novaAgencia, { status: 201 });
   } catch (error) {
-    console.error('Erro ao criar agência:', error);
+    console.error("Erro ao criar agência:", error);
     return NextResponse.json(
-      { error: 'Erro ao criar agência' },
+      { error: "Erro ao criar agência" },
       { status: 500 }
     );
   }

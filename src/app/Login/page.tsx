@@ -4,12 +4,18 @@ import { useState } from "react";
 import Intro from "@/components/intro";
 import { User, Users, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { jwtDecode } from "jwt-decode";
+import { TokenPayload } from "@/types/TokenPayload";
 
 export default function LoginFuncionario() {
   const [showIntro, setShowIntro] = useState(true);
   const [showLogin, setShowLogin] = useState(false);
-  const [loginType, setLoginType] = useState<"cliente" | "funcionario" | null>(null);
-  const [active, setActive] = useState<"cliente" | "funcionario" | "sair" | null>(null);
+  const [loginType, setLoginType] = useState<"cliente" | "funcionario" | null>(
+    null
+  );
+  const [active, setActive] = useState<
+    "cliente" | "funcionario" | "sair" | null
+  >(null);
 
   const router = useRouter();
 
@@ -51,6 +57,14 @@ export default function LoginFuncionario() {
         return;
       }
 
+      try {
+        const decoded = jwtDecode<TokenPayload>(data.token);
+        console.log("TOKEN DECODED:", decoded);
+      } catch (err) {
+        alert("Token inválido recebido do servidor");
+        return;
+      }
+
       localStorage.setItem("token", data.token);
       localStorage.setItem("usuario", JSON.stringify(data.usuario));
 
@@ -61,9 +75,11 @@ export default function LoginFuncionario() {
     }
   };
 
-  // LOGIN DO FUNCIONÁRIO 
+  // LOGIN DO FUNCIONÁRIO
 
-  const handleFuncionarioSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleFuncionarioSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const cpf = (formData.get("cpf") as string).replace(/\D/g, "");
@@ -80,6 +96,14 @@ export default function LoginFuncionario() {
 
       if (!response.ok) {
         alert(data.error || "Erro ao fazer login");
+        return;
+      }
+
+      try {
+        const decoded = jwtDecode<TokenPayload>(data.token);
+        console.log("TOKEN DECODED:", decoded);
+      } catch (err) {
+        alert("Token inválido recebido do servidor");
         return;
       }
 
@@ -103,7 +127,6 @@ export default function LoginFuncionario() {
 
       <main className="bg-gradient-to-b from-[#012E4B] to-[#064F75] min-h-screen w-full flex flex-col justify-between">
         <div className="flex flex-col justify-between w-full min-h-screen sm:min-h-[70vh] sm:w-[80%] sm:max-w-2xl sm:bg-white/5 sm:border sm:border-white/50 sm:rounded-2xl sm:mx-auto sm:my-auto">
-
           <div className="flex flex-col items-center pt-10">
             <img src="/assets/Logo.png" alt="Logo" className="w-10 h-10" />
 
@@ -123,9 +146,14 @@ export default function LoginFuncionario() {
                 </p>
               </>
             ) : loginType === "cliente" ? (
-              <form onSubmit={handleClienteSubmit} className="pt-14 w-[80%] max-w-xs flex flex-col gap-6 text-white">
+              <form
+                onSubmit={handleClienteSubmit}
+                className="pt-14 w-[80%] max-w-xs flex flex-col gap-6 text-white"
+              >
                 <div className="justify-center flex mb-10 font-bold">
-                  <h2 className="w-50">Acesse e conheça tudo que podemos oferecer</h2>
+                  <h2 className="w-50">
+                    Acesse e conheça tudo que podemos oferecer
+                  </h2>
                 </div>
 
                 <div className="relative w-full">
@@ -172,10 +200,14 @@ export default function LoginFuncionario() {
                 </button>
               </form>
             ) : loginType === "funcionario" ? (
-              <form onSubmit={handleFuncionarioSubmit} className="pt-14 w-[80%] max-w-xs flex flex-col gap-6 text-white">
-
+              <form
+                onSubmit={handleFuncionarioSubmit}
+                className="pt-14 w-[80%] max-w-xs flex flex-col gap-6 text-white"
+              >
                 <div className="justify-center flex mb-10 font-bold">
-                  <h2 className="w-70 text-center">Olá Prezado, que ótimo ter você de volta, bom expediente!</h2>
+                  <h2 className="w-70 text-center">
+                    Olá Prezado, que ótimo ter você de volta, bom expediente!
+                  </h2>
                 </div>
 
                 <div className="relative w-full">

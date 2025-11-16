@@ -22,7 +22,11 @@ export async function GET(request: NextRequest) {
 
   const usuario = await prisma.usuario.findUnique({
     where: { id_usuario },
-    include: { endereco_usuario: true },
+    include: {
+      cliente: true,
+      funcionario: true,
+      endereco_usuario: true,
+    },
   });
 
   if (!usuario) {
@@ -32,7 +36,23 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  return NextResponse.json(usuario);
+  // Retorno seguro
+  const safeUser = {
+    id_usuario: usuario.id_usuario, // opcional — pode remover
+    nome: usuario.nome,
+    tipo_usuario: usuario.tipo_usuario,
+    id_cliente: usuario.cliente?.[0]?.id_cliente ?? null,
+    id_funcionario: usuario.funcionario?.[0]?.id_funcionario ?? null,
+    endereco: usuario.endereco_usuario?.map((e) => ({
+      local: e.local,
+      numero: e.numero_casa,
+      bairro: e.bairro,
+      cidade: e.cidade,
+      estado: e.estado,
+    })),
+  };
+
+  return NextResponse.json(safeUser);
 }
 
 // PUT usuário específico
