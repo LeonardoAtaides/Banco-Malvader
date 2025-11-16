@@ -1,83 +1,125 @@
-// app/.../extrato.tsx (ou onde estiver sua page)
+// app/cliente/extrato.tsx
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { X, BanknoteArrowUp, BanknoteArrowDown, ArrowLeftRight, ChartCandlestick } from "lucide-react";
+import React, { useEffect, useState, useMemo } from "react";
+import { X, BanknoteArrowUp, BanknoteArrowDown, ArrowLeftRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Search from "@/components/pesquisa";
 
-const parseBRDateTime = (br: string) => {
-  // br: "12/05/2025 10:35" -> Date
-  const [datePart, timePart] = br.split(" ");
-  const [day, month, year] = datePart.split("/").map(Number);
-  const [hour = 0, minute = 0] = timePart ? timePart.split(":").map(Number) : [];
-  return new Date(year, month - 1, day, hour, minute);
-};
+interface Transacao {
+  id_transacao: number;
+  id_conta_origem: number | null;
+  id_conta_destino: number | null;
+  tipo_transacao: "DEPOSITO" | "SAQUE" | "TRANSFERENCIA" | "TAXA" | "RENDIMENTO";
+  valor: string;
+  data_hora: string;
+}
 
 const Extrato: React.FC = () => {
   const router = useRouter();
+  const [transacoes, setTransacoes] = useState<Transacao[]>([]);
   const [filters, setFilters] = useState({ searchTerm: "", startDate: "", endDate: "" });
 
-  const handleBack = () => {
-    router.back();
+  const handleBack = () => router.back();
+
+  const parseBRDateTime = (dataStr: string) => {
+    const dt = new Date(dataStr);
+    const dia = String(dt.getDate()).padStart(2, "0");
+    const mes = String(dt.getMonth() + 1).padStart(2, "0");
+    const ano = String(dt.getFullYear()).slice(-2);
+    const hora = String(dt.getHours()).padStart(2, "0");
+    const min = String(dt.getMinutes()).padStart(2, "0");
+    return `${dia}/${mes}/${ano} ${hora}:${min}`;
   };
 
-  // lista padrão de transações (datas em formato BR para manter visual)
-  const transacoes = [
-    { tipo: "Depósito", valor: "+ R$ 380,00", data: "12/05/2025 10:35", icone: BanknoteArrowUp, cor: "#42D23A" },
-    { tipo: "Saque", valor: "- R$ 120,00", data: "12/05/2025 12:10", icone: BanknoteArrowDown, cor: "#E53935" },
-    { tipo: "Transferência", valor: "+ R$ 980,00", data: "13/05/2025 09:12", icone: ArrowLeftRight, cor: "#42D23A" },
-    { tipo: "Pagamento", valor: "- R$ 250,00", data: "13/05/2025 14:47", icone: ArrowLeftRight, cor: "#E53935" },
-    { tipo: "Transferência", valor: "- R$ 360,00", data: "15/05/2025 16:05", icone: ArrowLeftRight, cor: "#E53935" },
-    { tipo: "Depósito", valor: "+ R$ 1.200,00", data: "16/05/2025 08:50", icone: BanknoteArrowUp, cor: "#42D23A" },
-    { tipo: "Depósito", valor: "+ R$ 283,34", data: "12/05/2025 15:33", icone: BanknoteArrowUp, cor: "#42D23A" },
-    { tipo: "Depósito", valor: "+ R$ 25,14", data: "12/05/2025 16:23", icone: BanknoteArrowUp, cor: "#42D23A" },
-  ];
+  const formatBRCurrency = (valor: string) => {
+    const num = Number(valor);
+    if (isNaN(num)) return valor;
+    return num.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  };
 
-  // filtra a lista com base em filters
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/Login");
+      return;
+    }
+
+    async function fetchTransacoes() {
+      try {
+        const res = await fetch("/api/transacao", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error("Erro ao buscar transações");
+
+        const data = await res.json();
+        setTransacoes(data);
+      } catch (err) {
+        console.error("Erro ao buscar transações:", err);
+      }
+    }
+
+    fetchTransacoes();
+  }, []);
+
   const filtered = useMemo(() => {
     const { searchTerm, startDate, endDate } = filters;
-    // converte start/end (inputs date -> yyyy-mm-dd) para Date comparável
     const start = startDate ? new Date(`${startDate}T00:00:00`) : null;
     const end = endDate ? new Date(`${endDate}T23:59:59`) : null;
 
     return transacoes.filter((t) => {
-      // filtro por texto (tipo ou valor)
-      const lowerSearch = searchTerm.trim().toLowerCase();
-      if (lowerSearch) {
-        const matchText =
-          t.tipo.toLowerCase().includes(lowerSearch) ||
-          t.valor.toLowerCase().includes(lowerSearch);
-        if (!matchText) return false;
-      }
+      const lowerSearch = searchTerm.toLowerCase();
+      const tipoDesc = t.tipo_transacao.toLowerCase();
+      const valorDesc = t.valor.toString().toLowerCase();
 
-      // filtro por data
+      if (lowerSearch && !tipoDesc.includes(lowerSearch) && !valorDesc.includes(lowerSearch)) return false;
+
       if (start || end) {
-        const dt = parseBRDateTime(t.data);
+        const dt = new Date(t.data_hora);
         if (start && dt < start) return false;
         if (end && dt > end) return false;
       }
 
       return true;
     });
-  }, [filters]);
+  }, [filters, transacoes]);
+
+  // Define quantos itens mostrar
+  const mostrarLista = useMemo(() => {
+    if (filters.searchTerm || filters.startDate || filters.endDate) {
+      return filtered; // mostrar todos se há filtro
+    }
+    return filtered.slice(0, 7); // apenas 7 por padrão
+  }, [filtered, filters]);
+
+  const getIconAndColor = (tipo: string) => {
+    switch (tipo) {
+      case "DEPOSITO":
+      case "RENDIMENTO":
+        return { icon: BanknoteArrowUp, color: "#42D23A" };
+      case "SAQUE":
+      case "TAXA":
+        return { icon: BanknoteArrowDown, color: "#E53935" };
+      case "TRANSFERENCIA":
+        return { icon: ArrowLeftRight, color: "#42D23A" };
+      default:
+        return { icon: ArrowLeftRight, color: "#FFFFFF" };
+    }
+  };
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#012E4B] to-[#064F75] text-white flex flex-col justify-between">
       <div className="px-5 py-5">
         {/* Header */}
         <div className="relative">
-          <button
-            className="absolute top-0 left-0 hover:text-white/70 transition"
-            onClick={handleBack}
-          >
+          <button className="absolute top-0 left-0 hover:text-white/70 transition" onClick={handleBack}>
             <X className="w-8 h-8" />
           </button>
         </div>
 
         <h1 className="pt-12 text-center text-2xl font-bold">Últimas Transações</h1>
 
-        {/* Barra de Pesquisa (agora passamos onSearch) */}
+        {/* Barra de pesquisa */}
         <Search
           onSearch={(searchTerm, startDate, endDate) =>
             setFilters({ searchTerm, startDate, endDate })
@@ -85,35 +127,33 @@ const Extrato: React.FC = () => {
           onClear={() => setFilters({ searchTerm: "", startDate: "", endDate: "" })}
         />
 
-        {/* Lista de Transações */}
+        {/* Lista de transações */}
         <div className="mt-4 flex flex-col gap-3">
-          {filtered.length === 0 && (
+          {mostrarLista.length === 0 && (
             <p className="text-center text-sm text-gray-300 py-6">Nenhuma transação encontrada</p>
           )}
 
-          {filtered.map((item, index) => {
-            const Icone = item.icone;
+          {mostrarLista.map((item) => {
+            const { icon: Icone, color } = getIconAndColor(item.tipo_transacao);
+            const valorFormat = (item.tipo_transacao === "SAQUE" || item.tipo_transacao === "TAXA")
+              ? `- ${formatBRCurrency(item.valor)}`
+              : `+ ${formatBRCurrency(item.valor)}`;
+
             return (
               <div
-                key={index}
+                key={item.id_transacao}
                 className="flex items-center justify-between px-5 py-3 bg-white/10 rounded-2xl border border-white/20"
               >
-                {/* Ícone e descrição */}
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-full" style={{ backgroundColor: `${item.cor}20` }}>
-                    <Icone className="w-6 h-6" style={{ color: item.cor }} />
+                  <div className="p-2 rounded-full" style={{ backgroundColor: `${color}20` }}>
+                    <Icone className="w-6 h-6" style={{ color }} />
                   </div>
-
                   <div className="flex flex-col">
-                    <h2 className="text-sm font-medium text-white">{item.tipo}</h2>
-                    <p className="text-[11px] text-gray-300">{item.data}</p>
+                    <h2 className="text-sm font-medium text-white">{item.tipo_transacao}</h2>
+                    <p className="text-[11px] text-gray-300">{parseBRDateTime(item.data_hora)}</p>
                   </div>
                 </div>
-
-                {/* Valor */}
-                <h2 className="font-semibold text-sm" style={{ color: item.cor }}>
-                  {item.valor}
-                </h2>
+                <h2 className="font-semibold text-sm" style={{ color }}>{valorFormat}</h2>
               </div>
             );
           })}
