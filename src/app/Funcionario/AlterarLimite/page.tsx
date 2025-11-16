@@ -1,23 +1,18 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  X,
-  ChevronDown,
-  Check,
-  PencilLine,
-  Save,
-  RotateCcw,
-} from "lucide-react";
+import { X, PencilLine, Save, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import LimiteSearch from "@/components/pesquisalimite";
 
-// ----------- Máscaras ----------- //
-const maskMoney = (v: string) => {
-  if (!v) return "";
-  v = v.replace(/\D/g, "");
-  if (!v) return "";
-  return (Number(v) / 100).toLocaleString("pt-BR", {
+// -------- MÁSCARA CORRIGIDA -------- //
+const maskMoney = (v: string | number) => {
+  if (!v) return "R$ 0,00";
+
+  const onlyNumbers = String(v).replace(/\D/g, "");
+  if (!onlyNumbers) return "R$ 0,00";
+
+  return (Number(onlyNumbers) / 100).toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
   });
@@ -25,29 +20,24 @@ const maskMoney = (v: string) => {
 
 export default function ConsultarDados() {
   const router = useRouter();
+
   const [agenciaBusca, setAgenciaBusca] = useState("");
   const [dados, setDados] = useState<any | null>(null);
   const [backup, setBackup] = useState<any | null>(null);
   const [editando, setEditando] = useState(false);
-  const [openSelect, setOpenSelect] = useState<string | null>(null);
 
-  // -------- DADOS FAKE ---------- //
+  // -------- DADOS TESTE -------- //
   const contasFake = [
     {
       agencia: "1234-5",
-      tipoConta: "Conta Corrente (CC)",
-      numeroConta: "98765-1",
+      tipoConta: "Conta Corrente",
       titular: "José Antonio Marcos",
-      cpf: "000.000.000-00",
       saldo: "R$ 1.200,00",
-      limite: "R$ 5.000,00",
-      vencimento: "Dia 5",
-      status: "Ativa",
-      abertura: "15/01/2025",
+      limite: "R$ 500,00",
     },
   ];
 
-  // -------- Busca usando APENAS a agência -------- //
+  // -------- BUSCA POR AGÊNCIA -------- //
   const handleSearch = (term: string) => {
     setAgenciaBusca(term);
 
@@ -69,22 +59,25 @@ export default function ConsultarDados() {
   const handleLimpar = () => {
     if (backup) setDados({ ...backup });
     setEditando(false);
-    setOpenSelect(null);
   };
 
-  const handleChange = (campo: string, valor: string) => {
+  const handleChange = (campo: string, valor: string | number) => {
     if (!dados || !editando) return;
     setDados({ ...dados, [campo]: valor });
   };
-
-  const handleBack = () => router.back();
 
   const handleSalvar = () => {
     console.log("Dados salvos:", dados);
     setBackup({ ...dados });
     setEditando(false);
-    setOpenSelect(null);
   };
+
+  const handleBack = () => router.back();
+
+  // Valor numérico sem máscara
+  const limiteNumber = dados
+    ? Number(dados.limite.replace(/\D/g, ""))
+    : 0;
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#012E4B] to-[#064F75] text-white flex flex-col">
@@ -95,7 +88,7 @@ export default function ConsultarDados() {
 
         <h1 className="pt-6 text-center text-2xl font-bold">Alterar Limite</h1>
 
-        {/* 🔎 Usa o SEU componente de pesquisa */}
+        {/* 🔎 Campo de pesquisa */}
         <LimiteSearch onSearch={handleSearch} />
 
         {dados ? (
@@ -134,9 +127,10 @@ export default function ConsultarDados() {
               </button>
             </div>
 
-            {/* NOVO CARD (IGUAL DA IMAGEM) */}
+            {/* ----------- CARD ----------- */}
             <div className="mt-6 rounded-2xl border border-white/20 bg-white/5 p-5">
-              {/* Topo com Nome + Tipo Conta */}
+              
+              {/* Nome + Tipo */}
               <div className="grid grid-cols-2 gap-4 pb-2 border-b border-white/30">
                 <div>
                   <label className="block text-xs text-white/60">
@@ -153,30 +147,66 @@ export default function ConsultarDados() {
                 </div>
               </div>
 
-              {/* Limite Atual */}
+              {/* Limite atual */}
               <div className="py-6 text-center">
                 <h2 className="text-sm text-white/70">Limite atual</h2>
                 <p className="text-3xl font-bold mt-1">{dados.limite}</p>
               </div>
 
-              {/* Slider de aumento */}
-              <div className="pt-2">
-                <label className="block text-xs text-white/70">
-                  Alterar Limite
-                </label>
+            {/* RANGE EDITÁVEL */}
+            <div className="pt-2">
+            <label className="block text-xs text-white/70">
+                Alterar Limite
+            </label>
 
-                <input
-                  type="range"
-                  min="0"
-                  max="20000"
-                  disabled={!editando}
-                  value={parseInt(dados.limite.replace(/\D/g, ""))}
-                  onChange={(e) =>
-                    handleChange("limite", maskMoney(e.target.value))
-                  }
-                  className="w-full mt-3 accent-white"
-                />
-              </div>
+            <input
+                type="range"
+                min="0"
+                max="2000000"
+                disabled={!editando}
+                value={limiteNumber}
+                onChange={(e) =>
+                handleChange("limite", maskMoney(e.target.value))
+                }
+                className="w-full mt-3 cursor-pointer"
+                style={{
+                WebkitAppearance: "none",
+                appearance: "none",
+                width: "100%",
+                height: "8px",
+                background: "#026DB1",
+                borderRadius: "9999px",
+                }}
+            />
+
+            <div className="flex justify-between mt-1">
+                <span className="text-sm">0</span>
+                <span className="text-sm">Máx</span>
+            </div>
+
+            {/* ESTILO DO CURSOR (THUMB) */}
+            <style>
+                {`
+                input[type="range"]::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 18px;
+                    height: 18px;
+                    background: white;   /* Sempre branco */
+                    border-radius: 9999px;
+                    cursor: pointer;
+                }
+
+                input[type="range"]::-moz-range-thumb {
+                    width: 18px;
+                    height: 18px;
+                    background: white;   /* Sempre branco */
+                    border-radius: 9999px;
+                    cursor: pointer;
+                }
+                `}
+            </style>
+            </div>
             </div>
           </>
         ) : (
