@@ -43,7 +43,7 @@ export default function ConsultarDados() {
   // --------- Dados Fake ---------
   const contasFake = [
     {
-      cpf: "123.168.178-09",
+      cpf: "000.000.000-00",
       tipoConta: "Conta Corrente (CC)",
       numeroConta: "1234-5",
       titular: "José Antonio Marcos",
@@ -57,7 +57,7 @@ export default function ConsultarDados() {
 
   const clientesFake = [
     {
-      cpf: "111.222.333-44",
+      cpf: "000.000.000-01",
       nome: "Carlos Pereira",
       nascimento: "1998-03-12",
       telefone: "(61) 99999-8888",
@@ -70,7 +70,7 @@ export default function ConsultarDados() {
       codigo: "F001",
       cargo: "Atendente",
       nome: "Maria Santos",
-      cpf: "222.333.444-55",
+      cpf: "000.000.000-02",
       nascimento: "1995-08-05",
       telefone: "(61) 98888-7777",
       endereco: "Av. Central, 45",
