@@ -37,16 +37,12 @@ export default function Cliente() {
 
   const router = useRouter();
 
-  // Função para formatar valor em BRL
+  // Formata valor em BRL
   const formatarBRL = (v: number | null) =>
-    (v ?? 0).toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    });
+    (v ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-  // Gera bolinhas com o mesmo tamanho do valor real
   const gerarBolinhas = (valor: number | null) => {
-    if (valor === null) return "•••••"; // fallback
+    if (valor === null) return "•••••";
     const formatado = formatarBRL(valor);
     return "•".repeat(formatado.length);
   };
@@ -63,7 +59,7 @@ export default function Cliente() {
     try {
       const decoded = jwtDecode<TokenPayload>(token);
       setNomeUsuario(decoded.nome);
-    } catch (err) {
+    } catch {
       router.push("/Login");
     }
   }, []);
@@ -76,9 +72,7 @@ export default function Cliente() {
     async function fetchSaldo() {
       try {
         const response = await fetch("/api/conta/saldo", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         if (!response.ok) {
@@ -98,10 +92,35 @@ export default function Cliente() {
     fetchSaldo();
   }, []);
 
+  // 3️⃣ BUSCAR RESUMO (Saldo total investido + rendimento)
   useEffect(() => {
-    const interval = setInterval(() => {
-      setIndex((prev) => (prev + 1) % dicas.length);
-    }, 6000);
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    async function fetchResumo() {
+      try {
+        const res = await fetch("/api/conta/resumo", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!res.ok) {
+          console.error("Erro ao buscar resumo");
+          return;
+        }
+
+        const data = await res.json();
+        setSaldoInvestido(Number(data.saldoTotal) || 0);
+        setRendimento(Number(data.rendimentoTotal) || 0);
+      } catch (error) {
+        console.error("Erro ao buscar resumo:", error);
+      }
+    }
+
+    fetchResumo();
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => setIndex((prev) => (prev + 1) % dicas.length), 6000);
     return () => clearInterval(interval);
   }, [dicas.length]);
 
@@ -135,11 +154,7 @@ export default function Cliente() {
 
           <div className="flex gap-2 relative z-10">
             <button onClick={toggleOcultar}>
-              {ocultar ? (
-                <EyeOff className="w-5 h-5 text-white" />
-              ) : (
-                <Eye className="w-5 h-5 text-white" />
-              )}
+              {ocultar ? <EyeOff className="w-5 h-5 text-white" /> : <Eye className="w-5 h-5 text-white" />}
             </button>
             <LogOut className="w-5 h-5" onClick={handleLogout} />
           </div>
@@ -160,11 +175,7 @@ export default function Cliente() {
 
       {/* waves */}
       <div className="w-full flex justify-center">
-        <img
-          src="/assets/Wave.png"
-          alt="wave"
-          className="w-full h-auto object-cover repeat-y"
-        />
+        <img src="/assets/Wave.png" alt="wave" className="w-full h-auto object-cover repeat-y" />
       </div>
 
       <Titulo tipo={1} />
@@ -178,28 +189,24 @@ export default function Cliente() {
             </div>
             <h1 className="text-center text-[#012E4B] pt-1">Extrato</h1>
           </button>
-
           <button onClick={OpenDepositar} className="flex flex-col items-center flex-shrink-0">
             <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
               <BanknoteArrowUp className="w-9 h-9 text-white" />
             </div>
             <h1 className="text-center text-[#012E4B] pt-1">Depositar</h1>
           </button>
-
           <button onClick={OpenSacar} className="flex flex-col items-center flex-shrink-0">
             <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
               <BanknoteArrowDown className="w-9 h-9 text-white" />
             </div>
             <h1 className="text-center text-[#012E4B] pt-1">Sacar</h1>
           </button>
-
           <button onClick={OpenTransferir} className="flex flex-col items-center flex-shrink-0">
             <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
               <ArrowLeftRight className="w-9 h-9 text-white" />
             </div>
             <h1 className="text-center text-[#012E4B] pt-1">Transferir</h1>
           </button>
-
           <button onClick={OpenLimite} className="flex flex-col items-center flex-shrink-0">
             <div className="flex justify-center items-center bg-[#012E4B] w-20 h-20 rounded-full">
               <ChartCandlestick className="w-9 h-9 text-white" />
@@ -214,18 +221,11 @@ export default function Cliente() {
       {/* Dicas */}
       <div className="flex flex-col items-center mt-4 text-[13px]">
         <div className="flex justify-center items-center w-80 text-center bg-[#012E4B] text-white px-3 py-3 rounded-[10px] shadow-md transition-all duration-500 ease-in-out">
-          <p key={index} className="animate-fade font-medium">
-            {dicas[index]}
-          </p>
+          <p key={index} className="animate-fade font-medium">{dicas[index]}</p>
         </div>
         <div className="flex justify-center mt-2 space-x-2">
           {dicas.map((_, i) => (
-            <span
-              key={i}
-              className={`w-2 h-2 rounded-full ${
-                i === index ? "bg-[#0274B6] w-4" : "bg-[#012E4B]"
-              } transition-all duration-300`}
-            />
+            <span key={i} className={`w-2 h-2 rounded-full ${i === index ? "bg-[#0274B6] w-4" : "bg-[#012E4B]"} transition-all duration-300`} />
           ))}
         </div>
       </div>
@@ -245,70 +245,50 @@ export default function Cliente() {
             </div>
             <div className="flex-col text-center">
               <h2>Rendimento</h2>
-              <p className="text-[#42D23A]">
-                {ocultar ? gerarBolinhas(rendimento) : "+ " + formatarBRL(rendimento)}
-              </p>
+              <p className="text-[#42D23A]">{ocultar ? gerarBolinhas(rendimento) : "+ " + formatarBRL(rendimento)}</p>
             </div>
           </div>
           <ChevronRight className="w-5 h-5" />
         </button>
       </div>
 
-      {/* Cards */}
       <Titulo tipo={4} />
+      {/* Cards */}
       <div className="w-full overflow-x-auto">
         <div className="flex gap-5 px-4 py-4 min-w-max">
           <button onClick={goToConvidar} className="relative w-54 h-40 rounded-[10px] overflow-hidden shadow-lg">
-            <img
-              src="assets/Indicar.png"
-              alt="indicar"
-              className="w-full h-full object-cover center"
-            />
+            <img src="assets/Indicar.png" alt="indicar" className="w-full h-full object-cover center" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0274B6]/50 to-transparent"></div>
             <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
               <div className="flex justify-between items-center">
                 <h1 className="font-semibold">Indique para Amigos</h1>
                 <ChevronRight className="w-5 h-5" />
               </div>
-              <p className="text-[10px] mt-1">
-                Mostre como é bom fazer parte do nosso banco, com o que oferecemos
-              </p>
+              <p className="text-[10px] mt-1">Mostre como é bom fazer parte do nosso banco, com o que oferecemos</p>
             </div>
           </button>
 
           <button onClick={goToTermos} className="relative w-54 h-40 rounded-[10px] overflow-hidden shadow-lg">
-            <img
-              src="assets/Banco.png"
-              alt="indicar"
-              className="w-full h-full object-cover center"
-            />
+            <img src="assets/Banco.png" alt="indicar" className="w-full h-full object-cover center" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0274B6]/50 to-transparent"></div>
             <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
               <div className="flex justify-between items-center">
                 <h1 className="font-semibold">Termos de Uso</h1>
                 <ChevronRight className="w-5 h-5" />
               </div>
-              <p className="text-[10px] mt-1">
-                Saiba mais sobre nossos termos de uso e como realmente trabalhamos
-              </p>
+              <p className="text-[10px] mt-1">Saiba mais sobre nossos termos de uso e como realmente trabalhamos</p>
             </div>
           </button>
 
           <button onClick={goToDevs} className="relative w-54 h-40 rounded-[10px] overflow-hidden shadow-lg">
-            <img
-              src="assets/Devs.png"
-              alt="indicar"
-              className="w-full h-full object-cover center"
-            />
+            <img src="assets/Devs.png" alt="indicar" className="w-full h-full object-cover center" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0274B6]/50 to-transparent"></div>
             <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
               <div className="flex justify-between items-center">
                 <h1 className="font-semibold">Nossos Devs</h1>
                 <ChevronRight className="w-5 h-5" />
               </div>
-              <p className="text-[10px] mt-1">
-                Conheça o nossos desenvolvedores, que deram vida ao nosso banco
-              </p>
+              <p className="text-[10px] mt-1">Conheça o nossos desenvolvedores, que deram vida ao nosso banco</p>
             </div>
           </button>
         </div>
