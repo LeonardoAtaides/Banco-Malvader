@@ -103,7 +103,7 @@ const DevsPage: React.FC = () => {
 
     </div>        
     {/*waves*/ }
-    <div className="w-full pt-2 flex justify-center ">
+    <div className="w-full pt-28 flex justify-center ">
         <img 
         src="/assets/Wave_white.png" 
         alt="wave" 
