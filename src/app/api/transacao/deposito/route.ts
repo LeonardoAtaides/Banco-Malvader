@@ -1,133 +1,111 @@
+// file: /app/api/deposito/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { verificarToken } from "@/lib/auth";
+import jwt from "jsonwebtoken";
 import { z } from "zod";
+import bcrypt from "bcryptjs";
+import Decimal from "decimal.js";
 
-/**
- * Schema de validação para depósito
- */
 const depositoSchema = z.object({
-  numero_conta: z.string().min(1, "Número da conta é obrigatório"),
   valor: z.number().positive("Valor deve ser maior que zero"),
-  descricao: z.string().optional(),
+  senha: z.string().min(1, "Senha é obrigatória"),
 });
 
-/**
- * POST /api/transacao/deposito
- * Realiza um depósito em uma conta
- */
 export async function POST(request: NextRequest) {
   try {
-    //  Validar autenticação
+    // Verifica token
     const authHeader = request.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return NextResponse.json(
-        { error: "Token de autenticação não fornecido" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Token não fornecido" }, { status: 401 });
     }
 
-    const token = authHeader.substring(7);
-    const payload = verificarToken(token);
-
-    if (!payload) {
-      return NextResponse.json(
-        { error: "Token inválido ou expirado" },
-        { status: 401 }
-      );
+    const token = authHeader.split(" ")[1];
+    let payload: any;
+    try {
+      payload = jwt.verify(token, process.env.JWT_SECRET!);
+    } catch {
+      return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
-    //  Validar dados de entrada
+    // Valida body
     const body = await request.json();
     const validation = depositoSchema.safeParse(body);
-
     if (!validation.success) {
       return NextResponse.json(
-        {
-          error: "Dados inválidos",
-          detalhes: validation.error.issues,
-        },
+        { error: "Dados inválidos", detalhes: validation.error.issues },
         { status: 400 }
       );
     }
 
-    const { numero_conta, valor, descricao } = validation.data;
+    const { valor, senha } = validation.data;
 
-    //  Executar depósito em uma transação do Prisma
+    // Busca usuário + cliente + contas
+    const usuario = await prisma.usuario.findUnique({
+      where: { id_usuario: payload.id_usuario },
+      select: {
+        senha_hash: true,
+        cliente: {
+          select: {
+            conta: true,
+          },
+        },
+      },
+    });
+
+    if (!usuario) return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+
+    // Verifica senha
+    const senhaValida = await bcrypt.compare(senha, usuario.senha_hash);
+    if (!senhaValida) return NextResponse.json({ error: "Senha incorreta" }, { status: 401 });
+
+    // Pega cliente e conta ativa
+    const cliente = usuario.cliente?.[0];
+    if (!cliente) return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
+
+    const conta = cliente.conta.find(c => c.status === "ATIVA");
+    if (!conta) return NextResponse.json({ error: "Conta ativa não encontrada" }, { status: 404 });
+
+    // ✅ CORREÇÃO: Usa Decimal.js mantendo precisão
+    const saldoAnterior = new Decimal(conta.saldo.toString());
+    const valorDeposito = new Decimal(valor);
+    const novoSaldo = saldoAnterior.plus(valorDeposito);
+
     const resultado = await prisma.$transaction(async (tx) => {
-      // Buscar conta
-      const conta = await tx.conta.findUnique({
-        where: { numero_conta },
-        select: {
-          id_conta: true,
-          numero_conta: true,
-          saldo: true,
-          status: true,
-          tipo_conta: true,
+      // ✅ CORREÇÃO: Mantém como Decimal, não converte para number
+      const contaAtualizada = await tx.conta.update({
+        where: { id_conta: conta.id_conta },
+        data: { 
+          saldo: novoSaldo // ← Mantém como Decimal
         },
       });
 
-      // Validar se conta existe
-      if (!conta) {
-        throw new Error(`Conta ${numero_conta} não encontrada`);
-      }
-
-      // Validar se conta está ativa
-      if (conta.status !== "ATIVA") {
-        throw new Error(`Conta ${numero_conta} está ${conta.status.toLowerCase()}. Não é possível realizar depósitos.`);
-      }
-
-      // Atualizar saldo da conta
-      const novoSaldo = Number(conta.saldo) + valor;
-      const contaAtualizada = await tx.conta.update({
-        where: { id_conta: conta.id_conta },
-        data: { saldo: novoSaldo },
-      });
-
-      // Registrar transação
       const transacao = await tx.transacao.create({
         data: {
           id_conta_destino: conta.id_conta,
           tipo_transacao: "DEPOSITO",
-          valor,
-          descricao: descricao || `Depósito na conta ${numero_conta}`,
+          valor: valorDeposito, // ← Mantém como Decimal
+          descricao: `Depósito na conta do usuário`,
         },
       });
 
-      return {
-        conta: contaAtualizada,
-        transacao,
-      };
+      return { contaAtualizada, transacao };
     });
 
-    //  Retornar sucesso
-    return NextResponse.json(
-      {
-        sucesso: true,
-        mensagem: "Depósito realizado com sucesso",
-        dados: {
-          numero_conta: resultado.conta.numero_conta,
-          saldo_anterior: Number(resultado.conta.saldo) - valor,
-          valor_depositado: valor,
-          saldo_atual: Number(resultado.conta.saldo),
-          id_transacao: resultado.transacao.id_transacao,
-          data_hora: resultado.transacao.data_hora,
-        },
+    return NextResponse.json({
+      sucesso: true,
+      mensagem: "Depósito realizado com sucesso",
+      dados: {
+        numero_conta: resultado.contaAtualizada.numero_conta,
+        saldo_anterior: saldoAnterior.toNumber(), // Apenas para exibição
+        valor_depositado: valorDeposito.toNumber(), // Apenas para exibição
+        saldo_atual: novoSaldo.toNumber(), // Apenas para exibição
+        id_transacao: resultado.transacao.id_transacao,
+        data_hora: resultado.transacao.data_hora,
       },
-      { status: 200 }
-    );
-  } catch (error: any) {
+    });
+
+  } catch (error) {
     console.error("Erro ao processar depósito:", error);
-
-    // Erros de validação de negócio
-    if (error.message?.includes("não encontrada") || error.message?.includes("está")) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 400 }
-      );
-    }
-
-    // Erro genérico
     return NextResponse.json(
       { error: "Erro ao processar depósito. Tente novamente." },
       { status: 500 }

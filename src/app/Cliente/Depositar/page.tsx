@@ -11,8 +11,8 @@ const Depositar: React.FC = () => {
   const [valor, setValor] = useState("0,00");
   const [senha, setSenha] = useState("");
   const [confirmacaoAberta, setConfirmacaoAberta] = useState(false);
-
-  const senhaPadrao = "123";
+  const [loadingMensagem, setLoadingMensagem] = useState("");
+  const [successMensagem, setSuccessMensagem] = useState("");
 
   const handleBack = () => {
     if (step === "senha") {
@@ -23,44 +23,90 @@ const Depositar: React.FC = () => {
     }
   };
 
-  const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let input = e.target.value.replace(/\D/g, "");
-    if (input === "") input = "0";
+  // Formata o valor com milhar e vírgula
+  const formatarValor = (numero: number) => {
+    return numero.toLocaleString("pt-BR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
 
-    const numero = (parseInt(input, 10) / 100).toFixed(2);
-    setValor(numero.replace(".", ","));
+  const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Remove tudo que não for número
+    let input = e.target.value.replace(/\D/g, "");
+    if (!input) input = "0";
+
+    // Converte para número com duas casas decimais
+    const numero = parseInt(input, 10) / 100;
+    setValor(formatarValor(numero));
   };
 
   const handleSenhaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSenha(e.target.value);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    // Converte "1.207,50" -> 1207.50
+    const valorNumerico = parseFloat( valor.replace(/\./g, "").replace(",", ".")
+    );
+
     if (step === "valor") {
-      const valorNumerico = parseFloat(valor.replace(",", "."));
       if (isNaN(valorNumerico) || valorNumerico <= 0) {
         alert("Digite um valor válido maior que zero.");
         return;
       }
       setStep("senha");
     } else {
-      if (senha === "") {
+      if (!senha) {
         alert("Digite sua senha para confirmar.");
         return;
       }
-      if (senha !== senhaPadrao) {
-        alert("Senha incorreta.");
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Usuário não autenticado.");
         return;
       }
+
+      setLoadingMensagem("Processando depósito...");
       setConfirmacaoAberta(true);
+
+      try {
+        const res = await fetch("/api/transacao/deposito", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            valor: valorNumerico,
+            senha,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          alert(data.error || "Erro ao realizar depósito");
+          setConfirmacaoAberta(false);
+          return;
+        }
+
+        setSuccessMensagem("Depósito efetuado com sucesso!");
+        setSenha("");
+      } catch (err) {
+        console.error(err);
+        alert("Erro ao processar depósito.");
+        setConfirmacaoAberta(false);
+      }
     }
   };
 
   if (confirmacaoAberta) {
     return (
       <Confirmacao
-        mensagemLoading="Processando depósito..."
-        mensagemSuccess="Depósito efetuado com sucesso!"
+        mensagemLoading={loadingMensagem}
+        mensagemSuccess={successMensagem}
         tempoLoading={2000}
         onComplete={() => router.push("/Cliente")}
       />
@@ -81,9 +127,7 @@ const Depositar: React.FC = () => {
         </div>
 
         <h1 className="pt-12 text-center text-2xl font-bold">
-          {step === "valor"
-            ? "Qual o valor que você \n deseja depositar?"
-            : "Confirme sua senha"}
+          {step === "valor" ? "Qual o valor que deseja depositar?" : "Confirme sua senha"}
         </h1>
 
         {/* Campo de valor */}
@@ -130,7 +174,7 @@ const Depositar: React.FC = () => {
         )}
       </div>
 
-      {/* Botão absoluto */}
+      {/* Botão de avançar */}
       <button
         className="absolute bottom-8 right-6 bg-transparent border border-white rounded-full p-3 hover:bg-white/10 transition"
         onClick={handleNext}
