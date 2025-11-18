@@ -1,6 +1,6 @@
 #  Banco Malvader
 
-Sistema bancário completo com chat IA integrado.
+Sistema bancário completo desenvolvido com Next.js e MySQL.
 
 ---
 
@@ -13,27 +13,16 @@ npm install
 # 2. Configurar .env
 # Crie o .env com suas credenciais MySQL:
 DATABASE_URL="mysql://root:senha@localhost:3306/banco_malvader"
-OLLAMA_MODEL="tinyllama" #opicional caso queira usar o chat com ia
 
-# 3. Criar banco de dados (escolha UMA opção):
+# 3. Criar banco de dados
 
-Crie o banco de dados sql no local certo que suas credencias do .env indicam
+Crie o banco de dados SQL no local correto que suas credenciais do .env indicam
 
-Logo apos:
+Logo após:
 npx prisma db pull                # Sincronizar schema
 npx prisma generate               # Gerar client
 
-
-
-
-# 4. Instalar Ollama (Chat IA - opcional)
-winget install Ollama.Ollama   #Ira instalar o setup do ollama no seu computador
-
-# Instale o modelo da ia 
-ollama pull tinyllama          # Leve: 637MB (requer ~1-1.5GB RAM)
-
-
-# 5. Rodar projeto
+# 4. Rodar projeto
 npm run dev
 ```
 
@@ -54,13 +43,6 @@ npx prisma studio                 # Visualizar dados (GUI)
 npm run dev                  # Servidor desenvolvimento
 npm run build               # Build produção
 npm start                   # Rodar produção
-
-# Chat IA (Ollama)
-ollama list                      # Ver modelos instalados
-ollama pull tinyllama            # Baixar modelo leve (637MB)
-ollama pull llama3.2:1b          # Baixar modelo melhor (1.3GB)
-ollama run tinyllama "teste"     # Testar modelo
-ollama rm [modelo]               # Remover modelo
 ```
 
 ---
@@ -90,20 +72,12 @@ O banco está usando **SQL nativo** com:
 │   │   ├── Cliente/      # Área do cliente
 │   │   └── Funcionario/  # Área do funcionário
 │   ├── components/        # Componentes React
-│   │   ├── ai-chat.tsx   # Chat IA
 │   │   └── navbar.tsx    # Navegação
 │   └── lib/              # Utilitários
 │       ├── auth.ts       # Autenticação JWT
-│       ├── prisma.ts     # Cliente Prisma
-│       └── ai/           # Cliente Ollama
+│       └── prisma.ts     # Cliente Prisma
 └── public/               # Arquivos estáticos
 ```
-
----
-
-##  Chat IA
-
-Ver instruções completas em: **[AI_SETUP.md](./AI_SETUP.md)**
 
 
 ---
@@ -126,29 +100,6 @@ npx prisma db pull
 npx prisma generate
 ```
 
-**Erro: "Model requires more memory" (Chat IA)**
-**Solução 1: Use modelo mais leve**
-```bash
-ollama pull tinyllama
-# Atualizar .env: OLLAMA_MODEL="tinyllama"
-```
-
-**Solução 2: Force CPU-only**
-```bash
-Stop-Process -Name ollama -Force
-[System.Environment]::SetEnvironmentVariable('OLLAMA_NUM_GPU', '0', 'User')
-Start-Process "ollama"
-```
-
-**Solução 3: Libere memória**
-- Feche Chrome/Edge e outros programas pesados
-- Reinicie o computador
-
-**Porta 3000 em uso**
-```bash
-PORT=3001 npm run dev
-```
-
 **Erro: "Cannot find module @prisma/client"**
 ```bash
 npx prisma generate
@@ -158,49 +109,6 @@ npx prisma generate
 ```bash
 PORT=3001 npm run dev
 ```
-
----
-
-##  Chat IA
-
-O sistema possui um assistente virtual inteligente que funciona **100% localmente** (sem enviar dados para fora).
-
-### Modelos Disponíveis
-
-| Modelo | Tamanho | RAM | Qualidade | Comando |
-|--------|---------|-----|-----------|---------|
-| **tinyllama** ⭐ | 637MB | 1-1.5GB | Razoável | `ollama pull tinyllama` |
-| **llama3.2:1b** | 1.3GB | 2-3GB | Boa | `ollama pull llama3.2:1b` |
-| **phi3:mini** | 2.2GB | 3-4GB | Excelente | `ollama pull phi3:mini` |
-
-⭐ = Recomendado para PCs com pouca RAM
-
-### Como usar
-
-1. **Acesse o Menu do Cliente**: http://localhost:3000/Cliente/Menu
-2. **Clique no ícone 💬** no canto inferior direito
-3. **Digite sua dúvida** sobre o banco
-
-### Trocar de modelo
-
-```bash
-# Ver modelos instalados
-ollama list
-
-# Remover modelo atual
-ollama rm tinyllama
-
-# Instalar novo modelo
-ollama pull llama3.2:1b
-
-# Atualizar .env
-# OLLAMA_MODEL="llama3.2:1b"
-
-# Reiniciar servidor
-npm run dev
-```
-
- **Mais detalhes**: Veja [AI_SETUP.md](AI_SETUP.md)
 
 ---
 

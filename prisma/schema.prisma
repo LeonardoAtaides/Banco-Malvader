@@ -185,37 +185,11 @@ model usuario {
   telefone         String               @db.VarChar(15)
   tipo_usuario     usuario_tipo_usuario
   senha_hash       String               @db.VarChar(255)
-  chat_sessions    chat_session[]
   cliente          cliente[]
   endereco_usuario endereco_usuario[]
   funcionario      funcionario[]
 
   @@index([cpf], map: "idx_usuario_cpf")
-}
-
-model chat_session {
-  uuid          String               @id @db.VarChar(36)
-  id_usuario    Int
-  titulo        String               @db.VarChar(200)
-  status        chat_session_status? @default(ativo)
-  criado_em     DateTime?            @default(now()) @db.Timestamp(0)
-  atualizado_em DateTime?            @default(now()) @updatedAt @db.Timestamp(0)
-  chat_message  chat_message[]
-  usuario       usuario              @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction, map: "chat_session_ibfk_1")
-
-  @@index([id_usuario], map: "idx_chat_session_usuario")
-}
-
-model chat_message {
-  uuid         String            @id @db.VarChar(36)
-  session_uuid String            @db.VarChar(36)
-  role         chat_message_role
-  conteudo     String            @db.Text
-  metadados    Json?
-  criado_em    DateTime?         @default(now()) @db.Timestamp(0)
-  chat_session chat_session      @relation(fields: [session_uuid], references: [uuid], onDelete: Cascade, onUpdate: NoAction, map: "chat_message_ibfk_1")
-
-  @@index([session_uuid], map: "idx_chat_message_session")
 }
 
 enum conta_investimento_perfil_risco {
@@ -253,16 +227,4 @@ enum conta_status {
   ATIVA
   ENCERRADA
   BLOQUEADA
-}
-
-enum chat_message_role {
-  user
-  assistant
-  system
-}
-
-enum chat_session_status {
-  ativo
-  encerrado
-  arquivado
 }
