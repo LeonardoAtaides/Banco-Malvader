@@ -166,7 +166,7 @@ const Transferir: React.FC = () => {
 
         <h1 className="pt-12 text-center text-2xl font-bold whitespace-pre-line">
           {step === "conta"
-            ? "Para qual conta você deseja transferir?"
+            ? "Para qual conta você\n deseja transferir?"
             : step === "valor"
             ? "Qual o valor que você\n deseja transferir?"
             : "Confirme sua senha"}
