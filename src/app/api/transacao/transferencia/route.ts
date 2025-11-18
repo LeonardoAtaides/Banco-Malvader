@@ -1,201 +1,161 @@
+// file: /app/api/transacao/transferencia/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { verificarToken } from "@/lib/auth";
+import jwt from "jsonwebtoken";
 import { z } from "zod";
+import Decimal from "decimal.js";
+import bcrypt from "bcryptjs";
 
-/**
- * Schema de validação para transferência
- */
 const transferenciaSchema = z.object({
-  numero_conta_origem: z.string().min(1, "Número da conta origem é obrigatório"),
-  numero_conta_destino: z.string().min(1, "Número da conta destino é obrigatório"),
+  numero_conta_destino: z.string().min(1, "Número da conta é obrigatório"),
   valor: z.number().positive("Valor deve ser maior que zero"),
-  descricao: z.string().optional(),
-}).refine((data) => data.numero_conta_origem !== data.numero_conta_destino, {
-  message: "Conta de origem e destino não podem ser iguais",
-  path: ["numero_conta_destino"],
+  senha: z.string().min(1, "Senha é obrigatória"),
 });
 
-/**
- * POST /api/transacao/transferencia
- * Realiza uma transferência entre contas
- */
 export async function POST(request: NextRequest) {
   try {
-    //  Validar autenticação
+    // Autenticação
     const authHeader = request.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return NextResponse.json(
-        { error: "Token de autenticação não fornecido" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Token não fornecido" }, { status: 401 });
     }
 
-    const token = authHeader.substring(7);
-    const payload = verificarToken(token);
+    const token = authHeader.split(" ")[1];
+    let payload: any;
 
-    if (!payload) {
-      return NextResponse.json(
-        { error: "Token inválido ou expirado" },
-        { status: 401 }
-      );
+    try {
+      payload = jwt.verify(token, process.env.JWT_SECRET!);
+    } catch {
+      return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
-    //  Validar dados de entrada
+    // Validação do body
     const body = await request.json();
     const validation = transferenciaSchema.safeParse(body);
-
     if (!validation.success) {
       return NextResponse.json(
-        {
-          error: "Dados inválidos",
-          detalhes: validation.error.issues,
-        },
+        { error: "Dados inválidos", detalhes: validation.error.issues },
         { status: 400 }
       );
     }
 
-    const { numero_conta_origem, numero_conta_destino, valor, descricao } = validation.data;
+    const { numero_conta_destino, valor, senha } = validation.data;
 
-    //  Executar transferência em uma transação do Prisma (garante atomicidade)
-    const resultado = await prisma.$transaction(async (tx) => {
-      // Buscar conta de origem
-      const contaOrigem = await tx.conta.findUnique({
-        where: { numero_conta: numero_conta_origem },
-        select: {
-          id_conta: true,
-          numero_conta: true,
-          saldo: true,
-          status: true,
-          tipo_conta: true,
-          conta_corrente: {
-            select: {
-              limite: true,
-            },
+    // Buscar usuário logado
+    const usuario = await prisma.usuario.findUnique({
+      where: { id_usuario: payload.id_usuario },
+      select: {
+        senha_hash: true,
+        cliente: {
+          select: {
+            conta: true,
           },
         },
-      });
+      },
+    });
 
-      // Validar se conta origem existe
-      if (!contaOrigem) {
-        throw new Error(`Conta de origem ${numero_conta_origem} não encontrada`);
-      }
+    if (!usuario)
+      return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
 
-      // Validar se conta origem está ativa
-      if (contaOrigem.status !== "ATIVA") {
-        throw new Error(`Conta de origem ${numero_conta_origem} está ${contaOrigem.status.toLowerCase()}. Não é possível realizar transferências.`);
-      }
+    // Validar senha
+    const senhaOk = await bcrypt.compare(senha, usuario.senha_hash);
+    if (!senhaOk)
+      return NextResponse.json({ error: "Senha incorreta" }, { status: 401 });
 
-      // Buscar conta de destino
-      const contaDestino = await tx.conta.findUnique({
-        where: { numero_conta: numero_conta_destino },
-        select: {
-          id_conta: true,
-          numero_conta: true,
-          saldo: true,
-          status: true,
-          tipo_conta: true,
-        },
-      });
+    // Verificar cliente e conta ativa
+    const cliente = usuario.cliente?.[0];
+    if (!cliente)
+      return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
 
-      // Validar se conta destino existe
-      if (!contaDestino) {
-        throw new Error(`Conta de destino ${numero_conta_destino} não encontrada`);
-      }
+    const contaOrigem = cliente.conta.find((c) => c.status === "ATIVA");
+    if (!contaOrigem)
+      return NextResponse.json({ error: "Nenhuma conta ativa encontrada" }, { status: 404 });
 
-      // Validar se conta destino está ativa
-      if (contaDestino.status !== "ATIVA") {
-        throw new Error(`Conta de destino ${numero_conta_destino} está ${contaDestino.status.toLowerCase()}. Não é possível receber transferências.`);
-      }
+    // Buscar conta destino
+    const contaDestino = await prisma.conta.findUnique({
+      where: { numero_conta: numero_conta_destino },
+    });
 
-      // Calcular saldo disponível da conta origem
-      const saldoOrigemAtual = Number(contaOrigem.saldo);
-      const limiteDisponivel = contaOrigem.tipo_conta === "CORRENTE" && contaOrigem.conta_corrente
-        ? Number(contaOrigem.conta_corrente.limite)
-        : 0;
-      const saldoDisponivel = saldoOrigemAtual + limiteDisponivel;
+    if (!contaDestino)
+      return NextResponse.json(
+        { error: "Conta destino não encontrada" },
+        { status: 404 }
+      );
 
-      // Validar se tem saldo suficiente
-      if (valor > saldoDisponivel) {
-        throw new Error(
-          `Saldo insuficiente na conta de origem. Disponível: R$ ${saldoDisponivel.toFixed(2)} (Saldo: R$ ${saldoOrigemAtual.toFixed(2)}${limiteDisponivel > 0 ? ` + Limite: R$ ${limiteDisponivel.toFixed(2)}` : ""})`
-        );
-      }
+    if (contaDestino.id_conta === contaOrigem.id_conta) {
+      return NextResponse.json(
+        { error: "Não é permitido transferir para a própria conta" },
+        { status: 400 }
+      );
+    }
 
-      // Atualizar saldo da conta origem (debitar)
-      const novoSaldoOrigem = saldoOrigemAtual - valor;
-      const contaOrigemAtualizada = await tx.conta.update({
+    // Verificar saldo
+    const valorDecimal = new Decimal(valor);
+    const saldoOrigem = new Decimal(contaOrigem.saldo);
+
+    if (valorDecimal.gt(saldoOrigem)) {
+      return NextResponse.json({ error: "Saldo insuficiente" }, { status: 400 });
+    }
+
+    const novoSaldoOrigem = saldoOrigem.minus(valorDecimal);
+    const novoSaldoDestino = new Decimal(contaDestino.saldo).plus(valorDecimal);
+
+    // Transação Prisma
+    const resultado = await prisma.$transaction(async (tx) => {
+      // Atualizar origem
+      await tx.conta.update({
         where: { id_conta: contaOrigem.id_conta },
         data: { saldo: novoSaldoOrigem },
       });
 
-      // Atualizar saldo da conta destino (creditar)
-      const saldoDestinoAtual = Number(contaDestino.saldo);
-      const novoSaldoDestino = saldoDestinoAtual + valor;
-      const contaDestinoAtualizada = await tx.conta.update({
+      // Atualizar destino
+      await tx.conta.update({
         where: { id_conta: contaDestino.id_conta },
         data: { saldo: novoSaldoDestino },
       });
 
-      // Registrar transação
-      const transacao = await tx.transacao.create({
+      // Registro da transferência enviada
+      const envio = await tx.transacao.create({
         data: {
           id_conta_origem: contaOrigem.id_conta,
           id_conta_destino: contaDestino.id_conta,
           tipo_transacao: "TRANSFERENCIA",
-          valor,
-          descricao: descricao || `Transferência de ${numero_conta_origem} para ${numero_conta_destino}`,
+          valor: valorDecimal,
+          descricao: `Transferência enviada para conta ${contaDestino.numero_conta}`,
         },
       });
 
-      return {
-        contaOrigem: contaOrigemAtualizada,
-        contaDestino: contaDestinoAtualizada,
-        transacao,
-        saldo_origem_anterior: saldoOrigemAtual,
-        saldo_destino_anterior: saldoDestinoAtual,
-      };
+      // Registro da transferência recebida
+      const recebimento = await tx.transacao.create({
+        data: {
+          id_conta_origem: contaOrigem.id_conta,
+          id_conta_destino: contaDestino.id_conta,
+          tipo_transacao: "TRANSFERENCIA",
+          valor: valorDecimal,
+          descricao: `Transferência recebida da conta ${contaOrigem.numero_conta}`,
+        },
+      });
+
+      return { envio, recebimento };
     });
 
-    //  Retornar sucesso
-    return NextResponse.json(
-      {
-        sucesso: true,
-        mensagem: "Transferência realizada com sucesso",
-        dados: {
-          origem: {
-            numero_conta: resultado.contaOrigem.numero_conta,
-            saldo_anterior: resultado.saldo_origem_anterior,
-            saldo_atual: Number(resultado.contaOrigem.saldo),
-          },
-          destino: {
-            numero_conta: resultado.contaDestino.numero_conta,
-            saldo_anterior: resultado.saldo_destino_anterior,
-            saldo_atual: Number(resultado.contaDestino.saldo),
-          },
-          valor_transferido: valor,
-          id_transacao: resultado.transacao.id_transacao,
-          data_hora: resultado.transacao.data_hora,
-        },
+    return NextResponse.json({
+      sucesso: true,
+      mensagem: "Transferência realizada com sucesso",
+      dados: {
+        conta_origem: contaOrigem.numero_conta,
+        conta_destino: numero_conta_destino,
+        valor: valorDecimal.toNumber(),
+        saldo_atual: novoSaldoOrigem.toNumber(),
+        id_transacao_envio: resultado.envio.id_transacao,
+        id_transacao_recebimento: resultado.recebimento.id_transacao,
+        data: resultado.envio.data_hora,
       },
-      { status: 200 }
-    );
-  } catch (error: any) {
+    });
+  } catch (error) {
     console.error("Erro ao processar transferência:", error);
-
-    // Erros de validação de negócio
-    if (error.message?.includes("não encontrada") || 
-        error.message?.includes("está") || 
-        error.message?.includes("insuficiente")) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 400 }
-      );
-    }
-
-    // Erro genérico
     return NextResponse.json(
-      { error: "Erro ao processar transferência. Tente novamente." },
+      { error: "Erro interno ao processar transferência." },
       { status: 500 }
     );
   }
