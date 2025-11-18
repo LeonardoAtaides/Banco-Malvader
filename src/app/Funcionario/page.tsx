@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Eye,
   EyeOff,
@@ -18,6 +18,8 @@ import {
 import { useRouter } from "next/navigation";
 import Titulo from "@/components/titles";
 import FuncNavBar from "@/components/funcnavbar" 
+import { jwtDecode } from "jwt-decode";
+import { TokenPayload } from "@/types/TokenPayload";
 
 export default function Cliente() {
   const [ocultar, setOcultar] = useState(false);
@@ -38,6 +40,7 @@ export default function Cliente() {
   const GerarRelatorios = () => router.push("/Funcionario/GerarRelatorios");
   const EncerrarConta = () => router.push("/Funcionario/EncerrarConta");
   const Termos = () => router.push("/Termos");
+  const [nomeUsuario, setNomeUsuario] = useState("");
 
   // Dados simulados para o map
   const ultimasContas = [
@@ -52,6 +55,24 @@ export default function Cliente() {
     { titulo: "Funcionário cadastrado", detalhe: "Pedro Costa - Atendente", tempo: "Há 4 horas" },
   ];
 
+
+  // PEGAR DADOS DO TOKEN
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      router.push("/Login");
+      return;
+    }
+
+    try {
+      const decoded = jwtDecode<TokenPayload>(token);
+      setNomeUsuario(decoded.nome);
+    } catch {
+      router.push("/Login");
+    }
+  }, []);
+
   return (
     <main className="bg-white min-h-screen text-[14px] font-bold pb-18">
       {/* Header */}
@@ -59,7 +80,7 @@ export default function Cliente() {
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-5 relative">
             <img src="/assets/Logo.png" alt="logo" className="w-8 h-8" />
-            <h2 className="text-white">Nome - Cargo</h2>
+            <h2 className="text-white">{nomeUsuario} - Cargo</h2>
             <div className="absolute bottom-0 left-13 w-74 border-b border-white/50"></div>
           </div>
 
