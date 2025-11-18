@@ -40,7 +40,8 @@ export default function Cliente() {
   const GerarRelatorios = () => router.push("/Funcionario/GerarRelatorios");
   const EncerrarConta = () => router.push("/Funcionario/EncerrarConta");
   const Termos = () => router.push("/Termos");
-  const [nomeUsuario, setNomeUsuario] = useState("");
+  const [nomeFuncionario, setNomeFuncionario] = useState("");
+  const [cargo, setCargo] = useState("");
 
   // Dados simulados para o map
   const ultimasContas = [
@@ -56,22 +57,33 @@ export default function Cliente() {
   ];
 
 
-  // PEGAR DADOS DO TOKEN
-  useEffect(() => {
-    const token = localStorage.getItem("token");
 
-    if (!token) {
-      router.push("/Login");
-      return;
-    }
-
-    try {
-      const decoded = jwtDecode<TokenPayload>(token);
-      setNomeUsuario(decoded.nome);
-    } catch {
-      router.push("/Login");
-    }
-  }, []);
+    useEffect(() => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.push("/Login");
+        return;
+      }
+  
+      async function fetchPerfil() {
+        try {
+          const res = await fetch("/api/funcionario", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+  
+          if (!res.ok) throw new Error("Erro ao buscar perfil");
+  
+          const data = await res.json();
+  
+          setNomeFuncionario(data.nome || "");
+          setCargo(data.cargo || "");
+        } catch (err) {
+          console.error("Erro ao buscar perfil:", err);
+        }
+      }
+  
+      fetchPerfil();
+    }, [router]);
 
   return (
     <main className="bg-white min-h-screen text-[14px] font-bold pb-18">
@@ -80,7 +92,7 @@ export default function Cliente() {
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-5 relative">
             <img src="/assets/Logo.png" alt="logo" className="w-8 h-8" />
-            <h2 className="text-white">{nomeUsuario} - Cargo</h2>
+            <h2 className="text-white">{nomeFuncionario} - {cargo}</h2>
             <div className="absolute bottom-0 left-13 w-74 border-b border-white/50"></div>
           </div>
 
