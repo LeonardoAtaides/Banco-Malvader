@@ -41,13 +41,14 @@ export default function Cliente() {
   const formatarBRL = (v: number | null) =>
     (v ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-  const gerarBolinhas = (valor: number | null) => {
-    if (valor === null) return "•••••";
-    const formatado = formatarBRL(valor);
-    return "•".repeat(formatado.length);
-  };
+const gerarBolinhas = (valor: number | null) => {
+  if (valor === null) return "•••••";
+  const formatado = formatarBRL(valor);
+  const apenasNumeros = formatado.replace(/\D/g, "");
+  return "•".repeat(apenasNumeros.length);
+};
 
-  // 1️⃣ PEGAR DADOS DO TOKEN
+  // PEGAR DADOS DO TOKEN
   useEffect(() => {
     const token = localStorage.getItem("token");
 
@@ -64,7 +65,7 @@ export default function Cliente() {
     }
   }, []);
 
-  // 2️⃣ BUSCAR SALDO REAL NA API
+  // BUSCAR SALDO API
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -92,7 +93,7 @@ export default function Cliente() {
     fetchSaldo();
   }, []);
 
-  // 3️⃣ BUSCAR RESUMO (Saldo total investido + rendimento)
+  // BUSCAR RESUMO (Saldo total investido + rendimento) API
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
