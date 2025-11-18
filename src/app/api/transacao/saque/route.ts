@@ -3,10 +3,12 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
+import bcrypt from "bcryptjs";
 import Decimal from "decimal.js";
 
 const saqueSchema = z.object({
   valor: z.number().positive("Valor deve ser maior que zero"),
+  senha: z.string().min(1, "Senha é obrigatória"),
 });
 
 export async function POST(request: NextRequest) {
@@ -35,12 +37,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { valor } = validation.data;
+    const { valor, senha } = validation.data;
 
-    // Busca usuário e conta ativa
+    // Busca usuário e conta
     const usuario = await prisma.usuario.findUnique({
       where: { id_usuario: payload.id_usuario },
       select: {
+        senha_hash: true,
         cliente: {
           select: {
             conta: true,
@@ -49,21 +52,33 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    if (!usuario) return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+    if (!usuario)
+      return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+
+    // 🔐 Verifica senha igual rota depósito
+    const senhaValida = await bcrypt.compare(senha, usuario.senha_hash);
+    if (!senhaValida)
+      return NextResponse.json({ error: "Senha incorreta" }, { status: 401 });
 
     const cliente = usuario.cliente?.[0];
-    if (!cliente) return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
+    if (!cliente)
+      return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
 
-    const conta = cliente.conta.find(c => c.status === "ATIVA");
-    if (!conta) return NextResponse.json({ error: "Conta ativa não encontrada" }, { status: 404 });
+    const conta = cliente.conta.find((c) => c.status === "ATIVA");
+    if (!conta)
+      return NextResponse.json({ error: "Conta ativa não encontrada" }, { status: 404 });
 
-    // Calcula saque + taxa
+    // Cálculo valor + taxa
     const valorDecimal = new Decimal(valor);
     const TAXA_SAQUE = new Decimal(5);
-    const valorComTaxa = valorDecimal.gt(1000) ? valorDecimal.plus(TAXA_SAQUE) : valorDecimal;
+
+    const valorComTaxa =
+      valorDecimal.gt(1000) ? valorDecimal.plus(TAXA_SAQUE) : valorDecimal;
 
     const saldoAtual = new Decimal(conta.saldo);
-    if (valorComTaxa.gt(saldoAtual)) return NextResponse.json({ error: "Saldo insuficiente" }, { status: 400 });
+
+    if (valorComTaxa.gt(saldoAtual))
+      return NextResponse.json({ error: "Saldo insuficiente" }, { status: 400 });
 
     const novoSaldo = saldoAtual.minus(valorComTaxa);
 
@@ -79,18 +94,18 @@ export async function POST(request: NextRequest) {
           id_conta_origem: conta.id_conta,
           tipo_transacao: "SAQUE",
           valor: valorDecimal,
-          descricao: `Saque da conta do usuário${valorDecimal.gt(1000) ? " + taxa R$ 5,00" : ""}`,
+          descricao: `Saque realizado${valorDecimal.gt(1000) ? " + taxa R$ 5,00" : ""}`,
         },
       });
 
-      return { contaAtualizada, transacao, saldoAnterior: saldoAtual };
+      return { contaAtualizada, transacao };
     });
 
     return NextResponse.json({
       sucesso: true,
       mensagem: "Saque realizado com sucesso",
       dados: {
-        saldo_anterior: resultado.saldoAnterior.toNumber(),
+        saldo_anterior: saldoAtual.toNumber(),
         valor_sacado: valorDecimal.toNumber(),
         taxa_aplicada: valorDecimal.gt(1000) ? TAXA_SAQUE.toNumber() : 0,
         saldo_atual: novoSaldo.toNumber(),
@@ -98,9 +113,11 @@ export async function POST(request: NextRequest) {
         data_hora: resultado.transacao.data_hora,
       },
     });
-
   } catch (error) {
     console.error("Erro ao processar saque:", error);
-    return NextResponse.json({ error: "Erro ao processar saque. Tente novamente." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Erro ao processar saque. Tente novamente." },
+      { status: 500 }
+    );
   }
 }
