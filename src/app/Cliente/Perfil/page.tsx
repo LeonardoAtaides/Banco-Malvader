@@ -75,8 +75,8 @@ export default function Cliente() {
             <h2 className="text-white">{nomeUsuario}</h2>
             <div className="absolute bottom-0 left-13 w-75 border-b border-white/50"></div>
           </div>
-          <div className="flex text-center gap-4">
-            <h2>Conta. <span>{numeroConta}</span></h2>
+          <div className="flex text-center">
+            <h2>Cc. <span>{numeroConta}</span></h2>
           </div>
         </div>
 
