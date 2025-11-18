@@ -26,7 +26,7 @@ export default function Cliente() {
     const partes = dataStr.split("T")[0].split("-"); // "2005-11-03" => ["2005","11","03"]
     const dia = partes[2];
     const mes = partes[1];
-    const ano = partes[0].slice(-2);
+    const ano = partes[0];
     return `${dia}/${mes}/${ano}`;
   };
 
