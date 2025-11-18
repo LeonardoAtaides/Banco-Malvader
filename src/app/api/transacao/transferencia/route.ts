@@ -89,16 +89,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar saldo
     const valorDecimal = new Decimal(valor);
+    const taxa = valorDecimal.gt(5000) ? new Decimal(10) : new Decimal(0);
+
+    const totalDebito = valorDecimal.plus(taxa); // o que sai da conta de origem
+
     const saldoOrigem = new Decimal(contaOrigem.saldo);
 
-    if (valorDecimal.gt(saldoOrigem)) {
-      return NextResponse.json({ error: "Saldo insuficiente" }, { status: 400 });
+    if (totalDebito.gt(saldoOrigem)) {
+      return NextResponse.json(
+        { error: "Saldo insuficiente para cobrir o valor e a taxa" },
+        { status: 400 }
+      );
     }
 
-    const novoSaldoOrigem = saldoOrigem.minus(valorDecimal);
+    const novoSaldoOrigem = saldoOrigem.minus(totalDebito);
     const novoSaldoDestino = new Decimal(contaDestino.saldo).plus(valorDecimal);
+  
 
     // Transação Prisma
     const resultado = await prisma.$transaction(async (tx) => {
@@ -136,7 +143,21 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      return { envio, recebimento };
+      // Registro da taxa (caso exista)
+      let taxaRegistro = null;
+      if (taxa.gt(0)) {
+        taxaRegistro = await tx.transacao.create({
+          data: {
+            id_conta_origem: contaOrigem.id_conta,
+            id_conta_destino: contaOrigem.id_conta,
+            tipo_transacao: "TAXA",
+            valor: taxa,
+            descricao: "Taxa de transferência (valor acima de R$ 5000)",
+          },
+        });
+      }
+
+      return { envio, recebimento, taxaRegistro };
     });
 
     return NextResponse.json({
@@ -146,9 +167,12 @@ export async function POST(request: NextRequest) {
         conta_origem: contaOrigem.numero_conta,
         conta_destino: numero_conta_destino,
         valor: valorDecimal.toNumber(),
+        taxa: taxa.toNumber(),
+        total_debitado: totalDebito.toNumber(),
         saldo_atual: novoSaldoOrigem.toNumber(),
         id_transacao_envio: resultado.envio.id_transacao,
         id_transacao_recebimento: resultado.recebimento.id_transacao,
+        id_transacao_taxa: resultado.taxaRegistro?.id_transacao ?? null,
         data: resultado.envio.data_hora,
       },
     });
