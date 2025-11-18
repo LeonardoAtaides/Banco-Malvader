@@ -1,6 +1,5 @@
 "use client";
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, ChevronRight, Check, Eye, EyeOff, AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Confirmacao from "@/components/confirmacao";
@@ -13,34 +12,46 @@ const Transferir: React.FC = () => {
   const [senha, setSenha] = useState("");
   const [confirmacaoAberta, setConfirmacaoAberta] = useState(false);
   const [mostrarSaldo, setMostrarSaldo] = useState(true);
+  const [saldoConta, setSaldoConta] = useState<number | null>(null);
 
-  const senhaPadrao = "123";
-
-  const handleBack = () => {
-    if (step === "senha") {
-      setStep("valor");
-      setSenha("");
-    } else if (step === "valor") {
-      setStep("conta");
-    } else {
-      router.back();
+  // Busca saldo ao entrar na página
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Faça login novamente.");
+      router.push("/");
+      return;
     }
+
+    async function fetchSaldo() {
+      try {
+        const res = await fetch("/api/conta/saldo", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+        setSaldoConta(Number(data.saldo));
+      } catch {}
+    }
+
+    fetchSaldo();
+  }, [router]);
+
+  const formatarValor = (numero: number) => {
+    return numero.toLocaleString("pt-BR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   };
 
-  // Campo  com máscara e limite de caracteres
+  // Correção: update da conta
   const handleContaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let input = e.target.value.replace(/\D/g, ""); // remove tudo que não é número
-
-    if (input.length > 6) input = input.slice(0, 6); // limita a 6 números
-
-    // adiciona o hífen automaticamente
-    if (input.length > 5) {
-      input = input.slice(0, 5) + "-" + input.slice(5);
-    }
-
-    setConta(input);
+    setConta(e.target.value);
   };
 
+  // Valor formatado
   const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let input = e.target.value.replace(/\D/g, "");
     if (input === "") input = "0";
@@ -52,10 +63,49 @@ const Transferir: React.FC = () => {
     setSenha(e.target.value);
   };
 
+  // 🔥 AQUI ENVIA A TRANSFERÊNCIA DE VERDADE
+  const handleTransferir = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Faça login novamente.");
+      router.push("/");
+      return;
+    }
+
+    const valorNumerico = parseFloat(valor.replace(",", "."));
+
+    try {
+      const res = await fetch("/api/transacao/transferencia", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          numero_conta_destino: conta,
+          valor: valorNumerico,
+          senha: senha,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Erro ao realizar transferência");
+        return;
+      }
+
+      // Abre confirmação visual
+      setConfirmacaoAberta(true);
+    } catch (error) {
+      alert("Erro ao conectar com o servidor.");
+    }
+  };
+
   const handleNext = () => {
     if (step === "conta") {
-      if (conta.trim().length < 7) {
-        alert("Digite um número de conta válido (ex: 12345-6).");
+      if (conta.trim().length < 5) {
+        alert("Digite um número de conta válido.");
         return;
       }
       setStep("valor");
@@ -73,18 +123,23 @@ const Transferir: React.FC = () => {
     }
 
     if (step === "senha") {
-      if (senha === "") {
-        alert("Digite sua senha para confirmar.");
+      if (!senha) {
+        alert("Digite sua senha.");
         return;
       }
-      if (senha !== senhaPadrao) {
-        alert("Senha incorreta.");
-        return;
-      }
-      setConfirmacaoAberta(true);
+
+      // 🔥 CHAMA REQUISIÇÃO AQUI
+      handleTransferir();
     }
   };
 
+  const handleBack = () => {
+    if (step === "conta") return router.back();
+    if (step === "valor") return setStep("conta");
+    if (step === "senha") return setStep("valor");
+  };
+
+  // Tela de confirmação
   if (confirmacaoAberta) {
     return (
       <Confirmacao
@@ -117,27 +172,24 @@ const Transferir: React.FC = () => {
             : "Confirme sua senha"}
         </h1>
 
-        {/* Campo da conta */}
+        {/* CAMPO CONTA */}
         {step === "conta" && (
           <div className="flex justify-center mt-8 w-full px-5">
             <div className="relative w-full max-w-xs">
               <input
                 type="text"
                 id="conta"
-                name="conta"
                 placeholder=" "
-                required
                 value={conta}
                 onChange={handleContaChange}
-                maxLength={7} // garante que o usuário não digite mais que 7 caracteres
                 className="peer w-full bg-transparent border-b border-white/50 p-2 text-white outline-none focus:border-white"
               />
               <label
                 htmlFor="conta"
                 className="absolute left-2 top-2 text-white text-sm transition-all
-                           peer-placeholder-shown:top-2 peer-placeholder-shown:text-white/50 peer-placeholder-shown:text-base
-                           peer-focus:-top-4 peer-focus:text-white peer-focus:text-sm
-                           peer-valid:-top-4 peer-valid:text-white peer-valid:text-sm"
+               peer-placeholder-shown:top-2 peer-placeholder-shown:text-white/50 peer-placeholder-shown:text-base
+               peer-focus:-top-4 peer-focus:text-white peer-focus:text-sm
+               peer-valid:-top-4 peer-valid:text-white peer-valid:text-sm"
               >
                 N° da Conta
               </label>
@@ -145,10 +197,9 @@ const Transferir: React.FC = () => {
           </div>
         )}
 
-        {/* Campo de valor */}
+        {/* CAMPO VALOR */}
         {step === "valor" && (
           <div className="flex flex-col justify-center items-center mt-8 space-y-6">
-            {/* Campo de valor */}
             <div className="flex items-center text-2xl font-medium border-b border-white/50 pb-2 w-75 justify-center">
               <span className="text-white mr-1 select-none">R$</span>
               <input
@@ -160,30 +211,20 @@ const Transferir: React.FC = () => {
               />
             </div>
 
-            {/* Saldo disponível */}
-            <div className="flex justify-start items-center text-sm text-white/80 space-x-2 w-full max-w-[300px]">
-              <button
-                onClick={() => setMostrarSaldo(!mostrarSaldo)}
-                className="focus:outline-none hover:text-white transition"
-              >
-                {mostrarSaldo ? (
-                  <EyeOff className="w-5 h-5" />
-                ) : (
-                  <Eye className="w-5 h-5" />
-                )}
+            {/* Saldo */}
+            <div className="flex items-center text-sm text-white/80 space-x-2 w-full max-w-[300px]">
+              <button onClick={() => setMostrarSaldo(!mostrarSaldo)} className="focus:outline-none hover:text-white transition">
+                {mostrarSaldo ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
               <span>Saldo disponível</span>
-              <span
-                className="ml-2 font-semibold text-white inline-block text-right min-w-[70px]"
-              >
-                {mostrarSaldo ? "R$ 20,00" : "••••••"}
+              <span className="ml-2 font-semibold text-white inline-block text-right min-w-[70px]">
+                {mostrarSaldo ? `R$ ${formatarValor(saldoConta ?? 0)}` : "••••••"}
               </span>
             </div>
 
-            {/* Aviso de taxa */}
             <div className="flex justify-center items-center w-80 text-center bg-white/10 text-white px-3 py-3 rounded-[10px] transition-all duration-500 ease-in-out border border-white/20 space-x-2">
-              <AlertTriangle className="w-10 h-10 text-white/80" />
-              <p>Transferências acima de R$ 5.000,00 possuem taxa de R$ 10,00</p>
+              <AlertTriangle className="w-10 h-10" />
+              <p className="text-sm">Transferências acima de R$ 5.000,00 possuem taxa de R$ 10,00</p>
             </div>
           </div>
         )}
@@ -216,16 +257,12 @@ const Transferir: React.FC = () => {
         )}
       </div>
 
-      {/* Botão absoluto */}
+      {/* Botão Next */}
       <button
         className="absolute bottom-8 right-6 bg-transparent border border-white rounded-full p-3 hover:bg-white/10 transition"
         onClick={handleNext}
       >
-        {step === "senha" ? (
-          <Check className="w-6 h-6 text-white" />
-        ) : (
-          <ChevronRight className="w-6 h-6 text-white" />
-        )}
+        {step === "senha" ? <Check className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
       </button>
     </main>
   );
