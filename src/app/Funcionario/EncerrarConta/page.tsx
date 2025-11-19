@@ -9,20 +9,50 @@ export default function AberturaConta() {
   const router = useRouter();
   const [step, setStep] = useState<"dados" | "senha">("dados");
   const [senha, setSenha] = useState("");
-
+  const [numeroConta, setNumeroConta] = useState(""); // Para enviar à API
   const [CPF, setCPF] = useState("");
   const [confirmacaoAberta, setConfirmacaoAberta] = useState(false);
 
-  // Validação e avanço
-  const handleNext = () => {
+  // Validação e requisição
+  const handleNext = async () => {
     if (step === "dados") {
-
+      if (!numeroConta) {
+        alert("Número da conta é obrigatório.");
+        return;
+      }
       setStep("senha");
     } else {
-      if (senha === "321") {
-        setConfirmacaoAberta(true);
-      } else {
-        alert("Senha incorreta. Tente novamente.");
+      if (!senha) {
+        alert("Senha é obrigatória.");
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem("token"); // JWT do gerente
+        if (!token) {
+          alert("Token não encontrado. Faça login novamente.");
+          return;
+        }
+
+        const response = await fetch("/api/funcionario/excluirconta", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ senha, numeroConta }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          setConfirmacaoAberta(true);
+        } else {
+          alert(data.error || "Erro ao tentar excluir a conta.");
+        }
+      } catch (error) {
+        console.error(error);
+        alert("Erro ao tentar excluir a conta.");
       }
     }
   };
@@ -39,24 +69,9 @@ export default function AberturaConta() {
   }
 
 
-  // Máscara CPF
-  const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, "");
-
-    if (value.length > 9) {
-      value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2}).*/, "$1.$2.$3-$4");
-    } else if (value.length > 6) {
-      value = value.replace(/^(\d{3})(\d{3})(\d{0,3}).*/, "$1.$2.$3");
-    } else if (value.length > 3) {
-      value = value.replace(/^(\d{3})(\d{0,3}).*/, "$1.$2");
-    }
-
-    setCPF(value);
-  };
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#012E4B] to-[#064F75] text-white flex flex-col relative">
-      {/* Cabeçalho */}
       <div className="px-5 py-5">
         <button
           className="absolute top-5 left-5 hover:text-white/70 transition"
@@ -65,11 +80,7 @@ export default function AberturaConta() {
             else router.back();
           }}
         >
-          {step === "senha" ? (
-            <ChevronLeft className="w-7 h-7" />
-          ) : (
-            <X className="w-7 h-7" />
-          )}
+          {step === "senha" ? <ChevronLeft className="w-7 h-7" /> : <X className="w-7 h-7" />}
         </button>
 
         <h1 className="pt-12 text-center text-2xl font-bold">
@@ -85,13 +96,13 @@ export default function AberturaConta() {
         {/* FORMULÁRIO DE DADOS */}
         {step === "dados" && (
           <div className="px-3 mt-8 flex flex-col gap-4 mb-28">
-
-            {/* Número da conta */}
             <div>
               <label className="block text-sm text-white/70">Número da Conta</label>
               <input
                 type="text"
                 className="w-full bg-transparent border-b border-white/50 text-white outline-none"
+                value={numeroConta}
+                onChange={(e) => setNumeroConta(e.target.value)}
               />
             </div>
           </div>
@@ -130,11 +141,7 @@ export default function AberturaConta() {
         className="absolute bottom-3 right-6 bg-transparent border border-white rounded-full p-3 hover:bg-white/10 transition"
         onClick={handleNext}
       >
-        {step === "dados" ? (
-          <ChevronRight className="w-6 h-6 text-white" />
-        ) : (
-          <Check className="w-6 h-6 text-white" />
-        )}
+        {step === "dados" ? <ChevronRight className="w-6 h-6 text-white" /> : <Check className="w-6 h-6 text-white" />}
       </button>
     </main>
   );
