@@ -5,18 +5,14 @@ import { X, PencilLine, Save, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import LimiteSearch from "@/components/pesquisalimite";
 
-// -------- MÁSCARA CORRIGIDA -------- //
-const maskMoney = (v: string | number) => {
-  if (!v) return "R$ 0,00";
-
-  const onlyNumbers = String(v).replace(/\D/g, "");
-  if (!onlyNumbers) return "R$ 0,00";
-
-  return (Number(onlyNumbers) / 100).toLocaleString("pt-BR", {
+// -------- FORMATADOR SIMPLES (sem mascarar a entrada) -------- //
+function formatar(valor: number) {
+  return valor.toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
   });
-};
+}
+
 
 export default function ConsultarDados() {
   const router = useRouter();
@@ -26,19 +22,8 @@ export default function ConsultarDados() {
   const [backup, setBackup] = useState<any | null>(null);
   const [editando, setEditando] = useState(false);
 
-  // -------- DADOS TESTE -------- //
-  const contasFake = [
-    {
-      agencia: "1234-5",
-      tipoConta: "Conta Corrente",
-      titular: "José Antonio Marcos",
-      saldo: "R$ 1.200,00",
-      limite: "R$ 500,00",
-    },
-  ];
-
-  // -------- BUSCA POR AGÊNCIA -------- //
-  const handleSearch = (term: string) => {
+  // -------- BUSCA REAL NO BACKEND -------- //
+  const handleSearch = async (term: string) => {
     setAgenciaBusca(term);
 
     if (!term) {
@@ -46,38 +31,90 @@ export default function ConsultarDados() {
       return;
     }
 
-    const encontrada = contasFake.find((c) => c.agencia === term);
+    try {
+      const token = localStorage.getItem("token");
 
-    if (encontrada) {
-      setDados({ ...encontrada });
-      setBackup({ ...encontrada });
-    } else {
+      const res = await fetch(`/api/funcionario/alterarlimite?conta=${term}`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setDados(null);
+        return;
+      }
+
+      // LIMITE VEM COMO NÚMERO REAL → usa direto
+      const limiteReal = data.conta_corrente.limite;
+
+      const dadosFormatados = {
+        agencia: term,
+        tipoConta: data.tipo_conta,
+        titular: data.cliente.usuario.nome,
+        saldo: formatar(data.saldo),
+        limite: limiteReal, 
+      };
+
+      setDados(dadosFormatados);
+      setBackup(dadosFormatados);
+    } catch (error) {
+      console.error("Erro ao buscar limite:", error);
       setDados(null);
     }
   };
 
+  // -------- LIMPAR -------- //
   const handleLimpar = () => {
     if (backup) setDados({ ...backup });
     setEditando(false);
   };
 
-  const handleChange = (campo: string, valor: string | number) => {
+  // -------- ALTERAÇÃO DE CAMPOS (SEM MÁSCARA!) -------- //
+  const handleChange = (campo: string, valor: number) => {
     if (!dados || !editando) return;
     setDados({ ...dados, [campo]: valor });
   };
 
-  const handleSalvar = () => {
-    console.log("Dados salvos:", dados);
-    setBackup({ ...dados });
-    setEditando(false);
+  // -------- SALVAR (PUT) -------- //
+  const handleSalvar = async () => {
+    if (!dados) return;
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch("/api/funcionario/alterarlimite", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          numero_conta: dados.agencia,
+          novo_limite: dados.limite, // 🔥 envia número real
+        }),
+      });
+
+      const response = await res.json();
+
+      if (!res.ok) {
+        alert("Erro ao salvar limite");
+        return;
+      }
+
+      setDados({ ...dados, limite: response.limite });
+      setBackup({ ...dados, limite: response.limite });
+      setEditando(false);
+
+      alert("Limite atualizado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao salvar limite:", error);
+    }
   };
 
   const handleBack = () => router.back();
 
-  // Valor numérico sem máscara
-  const limiteNumber = dados
-    ? Number(dados.limite.replace(/\D/g, ""))
-    : 0;
+  const limiteNumber = dados ? Number(dados.limite) : 0;
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#012E4B] to-[#064F75] text-white flex flex-col">
@@ -88,7 +125,6 @@ export default function ConsultarDados() {
 
         <h1 className="pt-6 text-center text-2xl font-bold">Alterar Limite</h1>
 
-        {/* 🔎 Campo de pesquisa */}
         <LimiteSearch onSearch={handleSearch} />
 
         {dados ? (
@@ -127,10 +163,9 @@ export default function ConsultarDados() {
               </button>
             </div>
 
-            {/* ----------- CARD ----------- */}
+            {/* CARD */}
             <div className="mt-6 rounded-2xl border border-white/20 bg-white/5 p-5">
-              
-              {/* Nome + Tipo */}
+              {/* Dados do titular */}
               <div className="grid grid-cols-2 gap-4 pb-2 border-b border-white/30">
                 <div>
                   <label className="block text-xs text-white/60">
@@ -147,66 +182,64 @@ export default function ConsultarDados() {
                 </div>
               </div>
 
-              {/* Limite atual */}
+              {/* Limite Atual */}
               <div className="py-6 text-center">
                 <h2 className="text-sm text-white/70">Limite atual</h2>
-                <p className="text-3xl font-bold mt-1">{dados.limite}</p>
+                <p className="text-3xl font-bold mt-1">
+                  {dados?.limite
+                    ? Number(dados.limite).toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      })
+                    : "R$ 0,00"}
+                </p>
               </div>
 
-            {/* RANGE EDITÁVEL */}
-            <div className="pt-2">
-            <label className="block text-xs text-white/70">
-                Alterar Limite
-            </label>
+              {/* RANGE */}
+              <div className="pt-2">
+                <label className="block text-xs text-white/70">
+                  Alterar Limite
+                </label>
 
-            <input
-                type="range"
-                min="0"
-                max="2000000"
-                disabled={!editando}
-                value={limiteNumber}
-                onChange={(e) =>
-                handleChange("limite", maskMoney(e.target.value))
-                }
-                className="w-full mt-3 cursor-pointer"
-                style={{
-                WebkitAppearance: "none",
-                appearance: "none",
-                width: "100%",
-                height: "8px",
-                background: "#026DB1",
-                borderRadius: "9999px",
-                }}
-            />
+                <input
+                  type="range"
+                  min="0"
+                  max="20000"
+                  disabled={!editando}
+                  value={limiteNumber}
+                  onChange={(e) =>
+                    handleChange("limite", Number(e.target.value))
+                  }
+                  className="w-full mt-3 cursor-pointer"
+                  style={{
+                    WebkitAppearance: "none",
+                    appearance: "none",
+                    width: "100%",
+                    height: "8px",
+                    background: "#026DB1",
+                    borderRadius: "9999px",
+                  }}
+                />
 
-            <div className="flex justify-between mt-1">
-                <span className="text-sm">0</span>
-                <span className="text-sm">Máx</span>
-            </div>
+                <div className="flex justify-between mt-1">
+                  <span className="text-sm">0</span>
+                  <span className="text-sm">Máx</span>
+                </div>
 
-            {/* ESTILO DO CURSOR (THUMB) */}
-            <style>
-                {`
-                input[type="range"]::-webkit-slider-thumb {
-                    -webkit-appearance: none;
-                    appearance: none;
-                    width: 18px;
-                    height: 18px;
-                    background: white;   /* Sempre branco */
-                    border-radius: 9999px;
-                    cursor: pointer;
-                }
-
-                input[type="range"]::-moz-range-thumb {
-                    width: 18px;
-                    height: 18px;
-                    background: white;   /* Sempre branco */
-                    border-radius: 9999px;
-                    cursor: pointer;
-                }
-                `}
-            </style>
-            </div>
+                <style>
+                  {`
+                    input[type="range"]::-webkit-slider-thumb {
+                        -webkit-appearance: none;
+                        appearance: none;
+                        width: 18px;
+                        height: 18px;
+                        background: white;
+                        border-radius: 9999px;
+                        cursor: pointer;
+                    }
+                  `}
+                </style>
+              </div>
             </div>
           </>
         ) : (
