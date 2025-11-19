@@ -9,17 +9,14 @@ export default function AberturaConta() {
   const router = useRouter();
   const [step, setStep] = useState<"dados" | "senha">("dados");
   const [senha, setSenha] = useState("");
-  const [agencia, setAgencia] = useState("");
+
   const [CPF, setCPF] = useState("");
   const [confirmacaoAberta, setConfirmacaoAberta] = useState(false);
 
   // Validação e avanço
   const handleNext = () => {
     if (step === "dados") {
-      if (!agencia.trim() || !CPF.trim()) {
-        alert("Por favor, preencha todos os campos antes de continuar.");
-        return;
-      }
+
       setStep("senha");
     } else {
       if (senha === "321") {
@@ -41,15 +38,6 @@ export default function AberturaConta() {
     );
   }
 
-  // Máscara Agência
-  const handleContaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let input = e.target.value.replace(/\D/g, "");
-    if (input.length > 6) input = input.slice(0, 6);
-    if (input.length > 5) {
-      input = input.slice(0, 5) + "-" + input.slice(5);
-    }
-    setAgencia(input);
-  };
 
   // Máscara CPF
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,25 +85,12 @@ export default function AberturaConta() {
         {/* FORMULÁRIO DE DADOS */}
         {step === "dados" && (
           <div className="px-3 mt-8 flex flex-col gap-4 mb-28">
-            {/* CPF */}
-            <div>
-              <label className="block text-sm text-white/70">CPF do cliente</label>
-              <input
-                type="text"
-                value={CPF}
-                maxLength={14}
-                onChange={handleCPFChange}
-                className="w-full bg-transparent border-b border-white/50 text-white outline-none"
-              />
-            </div>
 
-            {/* Agência */}
+            {/* Número da conta */}
             <div>
-              <label className="block text-sm text-white/70">Agência</label>
+              <label className="block text-sm text-white/70">Número da Conta</label>
               <input
                 type="text"
-                value={agencia}
-                onChange={handleContaChange}
                 className="w-full bg-transparent border-b border-white/50 text-white outline-none"
               />
             </div>
@@ -124,20 +99,24 @@ export default function AberturaConta() {
 
         {/* SENHA */}
         {step === "senha" && (
-          <div className="flex justify-center mt-[18px] w-full px-5">
+          <div className="flex justify-center mt-8 w-full px-5">
             <div className="relative w-full max-w-xs">
               <input
                 type="password"
+                id="senha"
+                name="senha"
                 placeholder=" "
+                required
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
                 className="peer w-full bg-transparent border-b border-white/50 p-2 text-white outline-none focus:border-white"
               />
               <label
+                htmlFor="senha"
                 className="absolute left-2 top-2 text-white text-sm transition-all
-                  peer-placeholder-shown:top-2 peer-placeholder-shown:text-white/50 peer-placeholder-shown:text-base
-                  peer-focus:-top-4 peer-focus:text-white peer-focus:text-sm
-                  peer-valid:-top-4 peer-valid:text-white peer-valid:text-sm"
+                           peer-placeholder-shown:top-2 peer-placeholder-shown:text-white/50 peer-placeholder-shown:text-base
+                           peer-focus:-top-4 peer-focus:text-white peer-focus:text-sm
+                           peer-valid:-top-4 peer-valid:text-white peer-valid:text-sm"
               >
                 Senha
               </label>
