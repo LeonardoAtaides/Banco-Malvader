@@ -55,7 +55,7 @@ export async function DELETE(request: NextRequest) {
     if (conta.status !== "ATIVA") return NextResponse.json({ error: "Conta não está ativa ou já foi encerrada" }, { status: 400 });
 
     // SALDO
-    if (Number(conta.saldo) > 0) return NextResponse.json({ error: "Conta possui saldo. Retire o saldo antes de encerrar." }, { status: 400 });
+    if (Number(conta.saldo) > 0) return NextResponse.json({ error: "Conta possui saldo. Não é possível encerra-la." }, { status: 400 });
 
     // DELETE RELACIONADOS
     if (conta.conta_corrente) await prisma.conta_corrente.delete({ where: { id_conta_corrente: conta.conta_corrente.id_conta_corrente } });
