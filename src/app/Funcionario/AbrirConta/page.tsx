@@ -20,7 +20,7 @@ export default function AberturaConta() {
     nome: "",
     nascimento: "",
     tipoConta: "Conta Corrente (CC)",
-    agencia: "",
+    agencia: "Agencia Central",
     cpf: "",
     telefone: "",
     vencimento: "Dia 5",
@@ -252,16 +252,45 @@ export default function AberturaConta() {
               )}
             </div>
 
+
+
             {/* Agência */}
-            <div>
+            <div className="relative">
               <label className="block text-sm text-white/70">Agência</label>
-              <input
-                type="text"
-                required
-                value={agencia}
-                onChange={handleContaChange}
-                className="w-full bg-transparent border-b border-white/50 text-white outline-none"
-              />
+              <div
+                className="w-full border-b border-white/50 flex justify-between items-center cursor-pointer"
+                onClick={() =>
+                  setOpenSelect(openSelect === "agencia" ? null : "agencia")
+                }
+              >
+                <span>{formData.agencia}</span>
+                <ChevronDown
+                  className={`w-4 h-4 text-white transition-transform ${
+                    openSelect === "agencia" ? "rotate-180" : ""
+                  }`}
+                />
+              </div>
+
+              {openSelect === "agencia" && (
+                <div className="absolute z-20 w-full mt-1 bg-[#012E4B] rounded-md shadow-md border border-white/20 overflow-hidden">
+                  {[
+                    "Agencia Central",
+                  ].map((tipo) => (
+                    <div
+                      key={tipo}
+                      onClick={() => handleChange("tipoConta", tipo)}
+                      className={`px-3 py-2 text-sm flex justify-between items-center hover:bg-white/10 cursor-pointer ${
+                        formData.agencia === tipo ? "text-white" : "text-white/80"
+                      }`}
+                    >
+                      <span>{tipo}</span>
+                      {formData.agencia === tipo && (
+                        <Check className="w-4 h-4 text-white" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* CPF */}
