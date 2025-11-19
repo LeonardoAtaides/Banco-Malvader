@@ -63,6 +63,14 @@ const formatarHora = (dataStr?: string) => {
   return `${hora}h`;
 };
 
+
+const ocultarNumeros = (valor: number | string, ocultar: boolean) => {
+  if (!ocultar) return valor;
+  const strValor = String(valor);
+  return "•".repeat(strValor.length);
+};
+
+
   // Rotas
   const AbrirConta = () => router.push("/Funcionario/AbrirConta");
   const ConsultarDados = () => router.push("/Funcionario/ConsultarDados");
@@ -141,7 +149,7 @@ const formatarHora = (dataStr?: string) => {
             <h2 className="text-xs">Contas Abertas</h2>
             <div className="flex justify-between pt-1">
               <User className="w-5 h-5" />
-              <p>{ocultar ? "•••••" : cards.totalContasAbertas}</p>
+              <p>{ocultarNumeros(cards.totalContasAbertas, ocultar)}</p>
             </div>
           </div>
 
@@ -149,7 +157,7 @@ const formatarHora = (dataStr?: string) => {
             <h2 className="text-xs">Movimentação</h2>
             <div className="flex justify-between pt-1">
               <ChartNoAxesCombined className="w-5 h-5" />
-              <p>{ocultar ? "••••" : cards.totalMovimentacoes}</p>
+              <p>{ocultarNumeros(cards.totalMovimentacoes, ocultar)}</p>
             </div>
           </div>
 
@@ -157,7 +165,7 @@ const formatarHora = (dataStr?: string) => {
             <h2 className="text-xs">Funcionários</h2>
             <div className="flex justify-between pt-1">
               <Users className="w-5 h-5" />
-              <p>{ocultar ? "••" : cards.totalFuncionarios}</p>
+              <p>{ocultarNumeros(cards.totalFuncionarios, ocultar)}</p>
             </div>
           </div>
 
