@@ -1,5 +1,4 @@
 "use client";
-
 import { Wrench, MessagesSquare, ChartNoAxesCombined, CirclePlus, PiggyBank, Plus, User, FileChartColumn} from "lucide-react";
 import { ReactElement } from "react";
 
@@ -32,7 +31,6 @@ export default function Titulo({ tipo }: TituloProps) {
     return <h2 className="text-gray-500">Título não encontrado</h2>;
   }
 
-  // Definir cor do texto: branco a partir do tipo 5, caso contrário azul escuro
   const textoCor = tipo == 5 || tipo == 6 ? "text-white" : "text-[#012E4B]";
 
   return (

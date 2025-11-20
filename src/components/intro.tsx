@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 interface IntroProps {
   onFinish: () => void;
@@ -11,10 +10,10 @@ const IntroDesktop: React.FC<IntroProps> = ({ onFinish }) => {
   const [fadeOut, setFadeOut] = useState<boolean>(false);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase(1), 500);   // logo aparece
-    const t2 = setTimeout(() => setPhase(2), 1500);  // logo se desloca, texto aparece
-    const t3 = setTimeout(() => setFadeOut(true), 4500); // fade out
-    const t4 = setTimeout(() => onFinish(), 5200);   // finaliza intro
+    const t1 = setTimeout(() => setPhase(1), 500);   
+    const t2 = setTimeout(() => setPhase(2), 1500); 
+    const t3 = setTimeout(() => setFadeOut(true), 4500);
+    const t4 = setTimeout(() => onFinish(), 5200);   
 
     return () => {
       clearTimeout(t1);
@@ -38,7 +37,7 @@ return (
           }`}
           style={{
             top: "50%",
-            left: phase >= 2 ? "40%" : "50%", // move levemente pro lado
+            left: phase >= 2 ? "40%" : "50%", 
             transform: "translate(-50%, -50%)",
           }}
         >
@@ -56,7 +55,7 @@ return (
           }`}
           style={{
             top: "50%",
-            left: "calc(40% + 150px)", // acompanha o deslocamento da logo
+            left: "calc(40% + 150px)", 
             transform: "translate(0, -50%)",
           }}
         >
@@ -104,7 +103,7 @@ const IntroMobile: React.FC<IntroProps> = ({ onFinish }) => {
           }`}
           style={{
             top: "50%",
-            left: phase >= 2 ? "30%" : "50%", // desloca a logo
+            left: phase >= 2 ? "30%" : "50%", 
             transform: "translate(-50%, -50%)",
           }}
         >
@@ -118,8 +117,8 @@ const IntroMobile: React.FC<IntroProps> = ({ onFinish }) => {
           }`}
           style={{
             top: "50%",
-            left: "calc(10% + 130px)", // acompanha a logo
-            transform: "translate(0, -50%)", // centralizado verticalmente
+            left: "calc(10% + 130px)",
+            transform: "translate(0, -50%)", 
           }}
         >
           <h1 className="text-2xl font-bold tracking-wide uppercase text-white">
@@ -132,7 +131,7 @@ const IntroMobile: React.FC<IntroProps> = ({ onFinish }) => {
   );
 };
 
-// Componente principal que escolhe a versão
+
 const Intro: React.FC<IntroProps> = ({ onFinish }) => {
   const [isMobile, setIsMobile] = useState<boolean>(false);
 

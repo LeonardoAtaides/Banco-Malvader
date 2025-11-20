@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState } from "react";
 import { Search } from "lucide-react";
 
@@ -11,13 +10,10 @@ type Props = {
 const DadosSearch: React.FC<Props> = ({ onSearch, onClear }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
-  // 🔎 Função de busca
   const handleSearch = (term = searchTerm) => {
     if (onSearch) onSearch(term);
     else console.log("Pesquisar:", term);
   };
-
-
 
   return (
     <div className="flex flex-col w-full max-w-lg mx-auto gap-3 pt-5">

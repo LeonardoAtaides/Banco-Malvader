@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useEffect, useState } from "react";
 import { Check } from "lucide-react";
 
@@ -95,7 +94,6 @@ const Confirmacao: React.FC<ConfirmacaoProps> = ({
         </div>
       )}
 
-      {/* Animação do “pop” */}
       <style jsx>{`
         @keyframes pop {
           0% {

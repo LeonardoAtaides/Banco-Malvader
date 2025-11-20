@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState } from "react";
 import { Search } from "lucide-react";
 
@@ -38,7 +37,7 @@ const LimiteSearch: React.FC<Props> = ({ onSearch, onClear }) => {
             type="text"
             placeholder="Número da conta"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)} // 🔥 sem máscara
+            onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={handleKeyDown}
             className="w-full focus:outline-none"
           />

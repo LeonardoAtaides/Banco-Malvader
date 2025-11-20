@@ -1,6 +1,4 @@
-// components/pesquisa.tsx
 "use client";
-
 import React, { useState } from "react";
 import { Search, Funnel, Trash2, Check } from "lucide-react";
 
@@ -27,7 +25,6 @@ const ExtratoSearch: React.FC<Props> = ({ onSearch, onClear }) => {
     else console.log("Pesquisar:", { searchTerm, startDate, endDate });
   };
 
-  // permite buscar ao apertar Enter no campo de texto
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") handleSearch();
   };
@@ -55,7 +52,6 @@ const ExtratoSearch: React.FC<Props> = ({ onSearch, onClear }) => {
         </button>
       </div>
 
-      {/* Filtros de data e botões de ação na mesma linha */}
       {showFilter && (
         <div className="flex items-center gap-2 text-xs">
           <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 flex-1">
@@ -94,7 +90,6 @@ const ExtratoSearch: React.FC<Props> = ({ onSearch, onClear }) => {
         </div>
       )}
 
-      {/* CSS para o ícone do input date (se você já tem, ok) */}
       <style jsx>{`
         input[type="date"]::-webkit-calendar-picker-indicator {
           filter: invert(1);
