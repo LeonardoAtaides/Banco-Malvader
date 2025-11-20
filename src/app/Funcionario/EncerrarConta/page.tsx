@@ -13,7 +13,6 @@ export default function AberturaConta() {
   const [CPF, setCPF] = useState("");
   const [confirmacaoAberta, setConfirmacaoAberta] = useState(false);
 
-  // Validação e requisição
   const handleNext = async () => {
     if (step === "dados") {
       if (!numeroConta) {
@@ -28,7 +27,7 @@ export default function AberturaConta() {
       }
 
       try {
-        const token = localStorage.getItem("token"); // JWT do gerente
+        const token = localStorage.getItem("token"); 
         if (!token) {
           alert("Token não encontrado. Faça login novamente.");
           return;

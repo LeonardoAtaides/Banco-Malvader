@@ -70,19 +70,16 @@ export default function Cliente() {
     },
   ];
 
-  // Filtragem das opções pela busca
   const opcoesFiltradas = opcoes.filter((opcao) =>
     opcao.nome.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Navegação para a rota correspondente
   const handleNavigation = (rota: string) => {
     router.push(rota);
   };
 
   return (
     <main className="bg-white min-h-screen text-[14px] font-bold pb-18">
-      {/* Topo com gradiente e barra de busca */}
       <div className="bg-[#012E4B] pt-0 flex flex-col justify-center px-5 h-[60px] bg-wave bg-no-repeat bg-bottom bg-cover relative z-10">
 
 

@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { X, PencilLine, Save, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import DadosSearch from "@/components/pesquisadados";
-import { usuario_tipo_usuario } from "@prisma/client";
+
 
 const maskTelefone = (v: string) => {
   v = v.replace(/\D/g, "");
@@ -13,7 +13,6 @@ const maskTelefone = (v: string) => {
   return v.slice(0, 15);
 };
 
-// ---------- FUNÇÃO FORMATAR ENDEREÇO PARA UMA LINHA ---------- //
 const formatarEnderecoUnico = (end: any) => {
   if (!end) return "";
   return `${end.rua ?? ""} ${end.numero ?? ""} - ${end.bairro ?? ""}, ${
@@ -21,10 +20,9 @@ const formatarEnderecoUnico = (end: any) => {
   } - ${end.estado ?? ""}`;
 };
 
-// ---------- TRANSFORMAR CAMPO ÚNICO EM CAMPOS SEPARADOS ---------- //
+
 const quebrarEndereco = (texto: string) => {
-  // Exemplo de entrada:
-  // "Rua Azul 123 - Centro, Fortaleza - CE"
+
 
   const [parte1 = "", parte2 = ""] = texto.split(" - ");
   const [ruaNumero = "", bairroCidadeUF = ""] = [parte1, parte2];
@@ -103,7 +101,7 @@ const handleSalvar = async () => {
     const enderecoSeparado = quebrarEndereco(dados.endereco_unico);
 
     const payload = {
-      cpf: dados.cpf, // IMPORTANTE! o backend usa isso!
+      cpf: dados.cpf, 
       nome: dados.nome,
       telefone: dados.telefone,
       data_nascimento: dados.data_nascimento,
@@ -119,7 +117,6 @@ const handleSalvar = async () => {
       body: JSON.stringify(payload),
     });
 
-    // --- TRATAR ERROS DA ROTA --- //
     const resposta = await res.json();
 
     if (!res.ok) {
@@ -127,7 +124,6 @@ const handleSalvar = async () => {
       return;
     }
 
-    // --- SUCESSO --- //
     alert("Dados atualizados com sucesso!");
 
     setBackup(JSON.parse(JSON.stringify(dados)));

@@ -28,7 +28,6 @@ export default function Cliente() {
   const [index, setIndex] = useState(0);
   const [ocultar, setOcultar] = useState(false);
 
-  // Dados do usuário
   const [nomeUsuario, setNomeUsuario] = useState("");
   const [numeroConta, setNumeroConta] = useState<number | null>(null);
   const [saldoConta, setSaldoConta] = useState<number | null>(null);
@@ -37,7 +36,6 @@ export default function Cliente() {
 
   const router = useRouter();
 
-  // Formata valor em BRL
   const formatarBRL = (v: number | null) =>
     (v ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -48,7 +46,6 @@ const gerarBolinhas = (valor: number | null) => {
   return "•".repeat(apenasNumeros.length);
 };
 
-  // PEGAR DADOS DO TOKEN
   useEffect(() => {
     const token = localStorage.getItem("token");
 
@@ -65,7 +62,6 @@ const gerarBolinhas = (valor: number | null) => {
     }
   }, []);
 
-  // BUSCAR SALDO API
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -93,7 +89,6 @@ const gerarBolinhas = (valor: number | null) => {
     fetchSaldo();
   }, []);
 
-  // BUSCAR RESUMO (Saldo total investido + rendimento) API
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -132,7 +127,6 @@ const gerarBolinhas = (valor: number | null) => {
 
   const toggleOcultar = () => setOcultar(!ocultar);
 
-  // Rotas
   const OpenExtrato = () => router.push("/Cliente/Extrato");
   const OpenDepositar = () => router.push("/Cliente/Depositar");
   const OpenSacar = () => router.push("/Cliente/Sacar");

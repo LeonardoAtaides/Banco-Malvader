@@ -13,7 +13,6 @@ export default function AberturaConta() {
   const [confirmacaoAberta, setConfirmacaoAberta] = useState(false);
   const [carregando, setCarregando] = useState(false);
 
-  // Estados para campos dinâmicos
   const [taxaManutencao, setTaxaManutencao] = useState("");
   const [limite, setLimite] = useState("");
   const [taxaRendimento, setTaxaRendimento] = useState("");
@@ -28,7 +27,6 @@ export default function AberturaConta() {
     endereco: "",
   });
 
-  // Refs para os dropdowns
   const tipoContaRef = useRef<HTMLDivElement>(null);
   const vencimentoRef = useRef<HTMLDivElement>(null);
   const perfilRiscoRef = useRef<HTMLDivElement>(null);
@@ -47,28 +45,23 @@ export default function AberturaConta() {
     });
   };
 
-  // Função para lidar com mudanças em campos monetários
   const handleMoedaChange = (valor: string, setter: React.Dispatch<React.SetStateAction<string>>) => {
     const formatado = formatarMoeda(valor);
     setter(formatado);
   };
 
-  // Função para toggle dos selects
   const toggleSelect = (selectName: string) => {
     if (carregando) return;
     setOpenSelect(openSelect === selectName ? null : selectName);
   };
 
-  // Função para selecionar opção
   const handleSelectOption = (name: string, value: string) => {
     handleChange(name, value);
     setOpenSelect(null);
   };
 
-  // Fechar dropdown quando clicar fora - CORRIGIDO
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // Verifica se o clique foi fora de todos os dropdowns
       if (
         tipoContaRef.current && !tipoContaRef.current.contains(event.target as Node) &&
         vencimentoRef.current && !vencimentoRef.current.contains(event.target as Node) &&
@@ -84,7 +77,6 @@ export default function AberturaConta() {
     };
   }, []);
 
-  // Função para abrir conta
   const abrirConta = async () => {
     setCarregando(true);
     try {
@@ -613,7 +605,6 @@ export default function AberturaConta() {
             />
           </div>
 
-          {/* CAMPOS ESPECÍFICOS DINÂMICOS */}
           {renderCamposEspecificos()}
         </div>
       </div>

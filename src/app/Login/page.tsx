@@ -35,8 +35,6 @@ export default function LoginFuncionario() {
     e.target.value = value;
   };
 
-  // LOGIN DO CLIENTE (fetch real)
-
   const handleClienteSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);

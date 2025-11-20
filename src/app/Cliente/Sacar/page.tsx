@@ -9,7 +9,6 @@ import Decimal from "decimal.js";
 const Saque: React.FC = () => {
   const router = useRouter();
 
-  // Agora existem 2 passos
   const [step, setStep] = useState<"valor" | "senha">("valor");
 
   const [valor, setValor] = useState("0,00");

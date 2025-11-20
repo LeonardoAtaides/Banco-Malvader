@@ -5,7 +5,7 @@ import { X, PencilLine, Save, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import LimiteSearch from "@/components/pesquisalimite";
 
-// -------- FORMATADOR SIMPLES (sem mascarar a entrada) -------- //
+
 function formatar(valor: number) {
   return valor.toLocaleString("pt-BR", {
     style: "currency",
@@ -45,7 +45,6 @@ export default function ConsultarDados() {
         return;
       }
 
-      // LIMITE VEM COMO NÚMERO REAL → usa direto
       const limiteReal = data.conta_corrente.limite;
 
       const dadosFormatados = {
@@ -64,19 +63,16 @@ export default function ConsultarDados() {
     }
   };
 
-  // -------- LIMPAR -------- //
   const handleLimpar = () => {
     if (backup) setDados({ ...backup });
     setEditando(false);
   };
 
-  // -------- ALTERAÇÃO DE CAMPOS (SEM MÁSCARA!) -------- //
   const handleChange = (campo: string, valor: number) => {
     if (!dados || !editando) return;
     setDados({ ...dados, [campo]: valor });
   };
 
-  // -------- SALVAR (PUT) -------- //
   const handleSalvar = async () => {
     if (!dados) return;
 
@@ -91,7 +87,7 @@ export default function ConsultarDados() {
         },
         body: JSON.stringify({
           numero_conta: dados.agencia,
-          novo_limite: dados.limite, // 🔥 envia número real
+          novo_limite: dados.limite,
         }),
       });
 

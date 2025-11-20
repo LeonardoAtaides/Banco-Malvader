@@ -20,10 +20,10 @@ export default function Cliente() {
   const OpenSobre = () => router.push("/Cliente/Devs");
   const OpenTermos = () => router.push("/Termos");
 
-  // Função corrigida para formatar a data corretamente DD/MM/AA
+
   const formatarData = (dataStr?: string) => {
     if (!dataStr) return "-";
-    const partes = dataStr.split("T")[0].split("-"); // "2005-11-03" => ["2005","11","03"]
+    const partes = dataStr.split("T")[0].split("-");  ["2005","11","03"]
     const dia = partes[2];
     const mes = partes[1];
     const ano = partes[0];
@@ -33,10 +33,8 @@ export default function Cliente() {
     const formatarCPF = (cpf?: string) => {
   if (!cpf) return "-";
   
-  // Remove qualquer caractere que não seja número
   const cpfLimpo = cpf.replace(/\D/g, "");
   
-  // Aplica a formatação: XXX.XXX.XXX-XX
   return cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
 };
   useEffect(() => {
@@ -55,7 +53,6 @@ export default function Cliente() {
 
         const data = await res.json();
 
-        // Preenche dados diretamente
         setNomeUsuario(data.nome || " ");
         setCpf(formatarCPF(data.cpf || " "));
         setTelefone(data.telefone || " ");

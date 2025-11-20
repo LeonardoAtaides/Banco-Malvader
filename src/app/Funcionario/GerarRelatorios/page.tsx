@@ -35,7 +35,6 @@ export default function GerarRelatorio() {
     }
   };
 
-  // ----------------------------- REQUISIÇÕES -----------------------------
   const buscarResumoContas = async () => {
     try {
       const res = await fetch("/api/funcionario/relatorio", {
@@ -68,7 +67,7 @@ export default function GerarRelatorio() {
         tipoRelatorio: "movimentacoes",
         dataInicio: formData.dataInicio,
         dataFim: formData.dataFim,
-        tipoTransacao: "", // Sempre envia undefined para a API
+        tipoTransacao: "", 
       };
 
       const res = await fetch("/api/funcionario/relatorio", {
@@ -81,7 +80,7 @@ export default function GerarRelatorio() {
       if (data.sucesso) {
         let transacoes = data.data;
 
-        // ------------------ FILTRO DE TIPO DE TRANSAÇÃO ------------------
+     
         if (formData.transacao !== "Todas") {
           transacoes = transacoes.filter(
             (t: any) => t.tipo.toLowerCase() === formData.transacao.toLowerCase()
@@ -92,7 +91,7 @@ export default function GerarRelatorio() {
         const volumeTotal = transacoes.reduce((acc: number, t: any) => acc + t.valor, 0);
         const media = totalTransacoes > 0 ? volumeTotal / totalTransacoes : 0;
 
-        // ------------------ FORMATANDO PARA O PDF ------------------
+
         const formatado = [
           ["Total de Transações", totalTransacoes],
           ["Volume Total Movimentado", `R$ ${volumeTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}`],
@@ -107,7 +106,6 @@ export default function GerarRelatorio() {
     }
   };
 
-  // ----------------------------- GERAR PDF -----------------------------
   const gerarPDFResumo = () => {
     const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
     doc.setFont("Helvetica", "normal");
@@ -132,7 +130,7 @@ export default function GerarRelatorio() {
     autoTable(doc, {
       startY: 80,
       head: [["Indicador", "Valor"]],
-      body: dadosMovimentacoes, // já vem como array de arrays
+      body: dadosMovimentacoes, 
       styles: { textColor: [0, 0, 0], lineColor: [180, 180, 180], lineWidth: 0.5, fontSize: 11 },
       headStyles: { fillColor: [230, 230, 230] },
       alternateRowStyles: { fillColor: [245, 245, 245] },
@@ -140,7 +138,6 @@ export default function GerarRelatorio() {
     doc.save("movimentacoes.pdf");
   };
 
-  // ----------------------------- VALIDAR CAMPOS -----------------------------
   const validarCampos = () => {
     if (formData.tipoRelatorio === "Resumo de Contas") return true;
     if (!formData.dataInicio || !formData.dataFim) {
@@ -150,7 +147,6 @@ export default function GerarRelatorio() {
     return true;
   };
 
-  // ----------------------------- BOTÃO GERAR -----------------------------
   const gerarRelatorio = () => {
     if (!validarCampos()) return;
     if (formData.tipoRelatorio === "Resumo de Contas") {
@@ -160,7 +156,7 @@ export default function GerarRelatorio() {
     }
   };
 
-  // ----------------------------- RENDER -----------------------------
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#012E4B] to-[#064F75] text-white flex flex-col relative">
       {/* Header */}

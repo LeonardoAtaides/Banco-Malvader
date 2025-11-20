@@ -20,11 +20,9 @@ export default function NovoFuncionario() {
     endereco: "",
   });
 
-  // Função para cadastrar funcionário
   const cadastrarFuncionario = async () => {
     setCarregando(true);
     try {
-      // Obter token do localStorage
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       
       if (!token) {
@@ -32,8 +30,6 @@ export default function NovoFuncionario() {
         router.push('/login');
         return;
       }
-
-      // Preparar dados para API
       const dadosParaAPI = {
         nome: formData.nome.trim(),
         data_nascimento: formData.nascimento,
@@ -43,7 +39,6 @@ export default function NovoFuncionario() {
         cargo: formData.Cargo
       };
 
-      // Validar CPF
       if (dadosParaAPI.cpf.length !== 11) {
         alert('CPF inválido. Deve conter 11 dígitos.');
         setCarregando(false);
@@ -97,21 +92,19 @@ export default function NovoFuncionario() {
       return;
     }
 
-    // Validar CPF
     const cpfLimpo = CPF.replace(/\D/g, "");
     if (cpfLimpo.length !== 11) {
       alert("CPF inválido. Deve conter 11 dígitos.");
       return;
     }
 
-    // Validar telefone
+  
     const telefoneLimpo = telefone.replace(/\D/g, "");
     if (telefoneLimpo.length < 10 || telefoneLimpo.length > 11) {
       alert("Telefone inválido. Deve conter 10 ou 11 dígitos.");
       return;
     }
 
-    // Chama diretamente a função de cadastro
     cadastrarFuncionario();
   };
 
@@ -126,7 +119,6 @@ export default function NovoFuncionario() {
     );
   }
 
-  // Máscara CPF
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, "");
 
@@ -141,7 +133,6 @@ export default function NovoFuncionario() {
     setCPF(value);
   };
 
-  // Máscara Telefone
   const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, "");
 

@@ -11,7 +11,6 @@ interface Dev {
   foto: string; 
 }
 
-
 const devs: Dev[] = [
   {
     nome: "Ataídes",

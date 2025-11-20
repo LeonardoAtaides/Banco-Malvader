@@ -1,4 +1,3 @@
-// app/cliente/extrato.tsx
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
@@ -84,12 +83,11 @@ const Extrato: React.FC = () => {
     });
   }, [filters, transacoes]);
 
-  // Define quantos itens mostrar
   const mostrarLista = useMemo(() => {
     if (filters.searchTerm || filters.startDate || filters.endDate) {
-      return filtered; // mostrar todos se há filtro
+      return filtered; 
     }
-    return filtered.slice(0, 7); // apenas 7 por padrão
+    return filtered.slice(0, 7); 
   }, [filtered, filters]);
 
   const getIconAndColor = (tipo: string) => {

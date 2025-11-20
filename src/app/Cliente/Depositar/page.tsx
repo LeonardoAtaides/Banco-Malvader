@@ -23,7 +23,6 @@ const Depositar: React.FC = () => {
     }
   };
 
-  // Formata o valor com milhar e vírgula
   const formatarValor = (numero: number) => {
     return numero.toLocaleString("pt-BR", {
       minimumFractionDigits: 2,
@@ -32,11 +31,9 @@ const Depositar: React.FC = () => {
   };
 
   const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Remove tudo que não for número
     let input = e.target.value.replace(/\D/g, "");
     if (!input) input = "0";
 
-    // Converte para número com duas casas decimais
     const numero = parseInt(input, 10) / 100;
     setValor(formatarValor(numero));
   };
@@ -46,7 +43,6 @@ const Depositar: React.FC = () => {
   };
 
   const handleNext = async () => {
-    // Converte "1.207,50" -> 1207.50
     const valorNumerico = parseFloat( valor.replace(/\./g, "").replace(",", ".")
     );
 

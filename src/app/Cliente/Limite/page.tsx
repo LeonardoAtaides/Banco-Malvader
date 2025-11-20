@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 const Limite: React.FC = () => {
   const router = useRouter();
 
-  // Estados para armazenar os dados da API
   const [limiteTotal, setLimiteTotal] = useState<number | null>(null);
   const [limiteDisponivel, setLimiteDisponivel] = useState<number | null>(null);
   const [limiteUtilizado, setLimiteUtilizado] = useState<number | null>(null);
