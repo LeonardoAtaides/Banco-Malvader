@@ -36,7 +36,7 @@ const LimiteSearch: React.FC<Props> = ({ onSearch, onClear }) => {
 
           <input
             type="text"
-            placeholder="Número da agência"
+            placeholder="Número da conta"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)} // 🔥 sem máscara
             onKeyDown={handleKeyDown}
