@@ -30,6 +30,15 @@ export default function Cliente() {
     return `${dia}/${mes}/${ano}`;
   };
 
+    const formatarCPF = (cpf?: string) => {
+  if (!cpf) return "-";
+  
+  // Remove qualquer caractere que não seja número
+  const cpfLimpo = cpf.replace(/\D/g, "");
+  
+  // Aplica a formatação: XXX.XXX.XXX-XX
+  return cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+};
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -48,7 +57,7 @@ export default function Cliente() {
 
         // Preenche dados diretamente
         setNomeUsuario(data.nome || " ");
-        setCpf(data.cpf || " ");
+        setCpf(formatarCPF(data.cpf || " "));
         setTelefone(data.telefone || " ");
         setDataNascimento(formatarData(data.data_nascimento));
         setNumeroConta(data.numero_conta || " ");

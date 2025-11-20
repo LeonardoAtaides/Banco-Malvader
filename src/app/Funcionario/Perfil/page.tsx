@@ -23,6 +23,17 @@ export default function FuncionarioPerfil() {
     return `${partes[2]}/${partes[1]}/${partes[0]}`;
   };
 
+
+  const formatarCPF = (cpf?: string) => {
+  if (!cpf) return "-";
+  
+  // Remove qualquer caractere que não seja número
+  const cpfLimpo = cpf.replace(/\D/g, "");
+  
+  // Aplica a formatação: XXX.XXX.XXX-XX
+  return cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+};
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -41,7 +52,7 @@ export default function FuncionarioPerfil() {
         const data = await res.json();
 
         setNomeFuncionario(data.nome || "");
-        setCpf(data.cpf || "");
+        setCpf(formatarCPF(data.cpf || ""));
         setTelefone(data.telefone || "");
         setCargo(data.cargo || "");
         setDataNascimento(formatarData(data.data_nascimento));
