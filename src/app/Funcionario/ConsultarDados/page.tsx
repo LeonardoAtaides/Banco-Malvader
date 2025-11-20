@@ -1,18 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  X,
-  ChevronDown,
-  Check,
-  PencilLine,
-  Save,
-  RotateCcw,
-} from "lucide-react";
+import { X, PencilLine, Save, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import DadosSearch from "@/components/pesquisadados";
+import { usuario_tipo_usuario } from "@prisma/client";
 
-// ----------- Máscaras -----------
 const maskTelefone = (v: string) => {
   v = v.replace(/\D/g, "");
   v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
@@ -20,264 +13,176 @@ const maskTelefone = (v: string) => {
   return v.slice(0, 15);
 };
 
-const maskMoney = (v: string) => {
-  v = v.replace(/\D/g, "");
-  v = (Number(v) / 100).toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
-  return v;
+// ---------- FUNÇÃO FORMATAR ENDEREÇO PARA UMA LINHA ---------- //
+const formatarEnderecoUnico = (end: any) => {
+  if (!end) return "";
+  return `${end.rua ?? ""} ${end.numero ?? ""} - ${end.bairro ?? ""}, ${
+    end.cidade ?? ""
+  } - ${end.estado ?? ""}`;
+};
+
+// ---------- TRANSFORMAR CAMPO ÚNICO EM CAMPOS SEPARADOS ---------- //
+const quebrarEndereco = (texto: string) => {
+  // Exemplo de entrada:
+  // "Rua Azul 123 - Centro, Fortaleza - CE"
+
+  const [parte1 = "", parte2 = ""] = texto.split(" - ");
+  const [ruaNumero = "", bairroCidadeUF = ""] = [parte1, parte2];
+
+  const ruaMatch = ruaNumero.trim().split(" ");
+  const numero = ruaMatch.pop();
+  const rua = ruaMatch.join(" ");
+
+  const [bairro = "", cidadeUF = ""] = bairroCidadeUF.split(",");
+  const [cidade = "", estado = ""] = cidadeUF.split(" - ");
+
+  return {
+    rua: rua.trim(),
+    numero: numero?.trim() ?? "",
+    bairro: bairro.trim(),
+    cidade: cidade.trim(),
+    estado: estado.trim(),
+    complemento: "",
+  };
 };
 
 export default function ConsultarDados() {
   const router = useRouter();
   const [cpfBusca, setCpfBusca] = useState("");
-  const [tipoSelecionado, setTipoSelecionado] = useState<
-    "conta" | "cliente" | "funcionario" | ""
-  >("");
   const [dados, setDados] = useState<any | null>(null);
   const [backup, setBackup] = useState<any | null>(null);
   const [editando, setEditando] = useState(false);
-  const [openSelect, setOpenSelect] = useState<string | null>(null);
 
-  // --------- Dados Fake ---------
-  const contasFake = [
-    {
-      cpf: "000.000.000-00",
-      tipoConta: "Conta Corrente (CC)",
-      numeroConta: "1234-5",
-      titular: "José Antonio Marcos",
-      saldo: "R$ 1.200,00",
-      limite: "R$ 5.000,00",
-      vencimento: "Dia 5",
-      status: "Ativa",
-      abertura: "15/01/2025",
-    },
-  ];
-
-  const clientesFake = [
-    {
-      cpf: "000.000.000-01",
-      nome: "Carlos Pereira",
-      nascimento: "1998-03-12",
-      telefone: "(61) 99999-8888",
-      endereco: "Rua das Flores, 120",
-    },
-  ];
-
-  const funcionariosFake = [
-    {
-      codigo: "F001",
-      cargo: "Atendente",
-      nome: "Maria Santos",
-      cpf: "000.000.000-02",
-      nascimento: "1995-08-05",
-      telefone: "(61) 98888-7777",
-      endereco: "Av. Central, 45",
-      agencia: "Agência 001",
-    },
-  ];
-
-  // --------- Busca Dinâmica ---------
-  const handleSearch = (term: string, tipo: string) => {
+  // -------- BUSCA -------- //
+  const handleSearch = async (term: string) => {
     setCpfBusca(term);
+    if (!term) return setDados(null);
 
-    // remove acento e normaliza tipo
-    const tipoLower = tipo
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
-    setTipoSelecionado(tipoLower as any);
+    try {
+      const token = localStorage.getItem("token");
 
-    if (!term) {
+      const res = await fetch(`/api/funcionario/consultardados?cpf=${term}`, {
+        method: "GET",
+        headers: { Authorization: token ? `Bearer ${token}` : "" },
+      });
+
+      if (!res.ok) throw new Error();
+
+      const data = await res.json();
+
+      const formatado = {
+        nome: data.nome,
+        cpf: data.cpf,
+        telefone: data.telefone,
+        data_nascimento: data.data_nascimento?.substring(0, 10),
+        tipo_usuario: data.tipo_usuario,
+        endereco_unico: data.endereco
+          ? formatarEnderecoUnico(data.endereco)
+          : "",
+        endereco_original: data.endereco || null,
+      };
+
+      setDados(formatado);
+      setBackup(formatado);
+    } catch {
       setDados(null);
-      return;
     }
-
-    let encontrada: any = null;
-
-    if (tipoLower === "conta")
-      encontrada = contasFake.find((c) => c.cpf === term);
-    else if (tipoLower === "cliente")
-      encontrada = clientesFake.find((c) => c.cpf === term);
-    else if (tipoLower === "funcionario")
-      encontrada = funcionariosFake.find((c) => c.cpf === term);
-
-    if (encontrada) {
-      setDados({ ...encontrada });
-      setBackup({ ...encontrada });
-    } else {
-      setDados(null);
-    }
-  };
-
-  // --------- Manipulação ---------
-  const handleChange = (campo: string, valor: string) => {
-    if (!dados || !editando) return;
-    setDados({ ...dados, [campo]: valor });
   };
 
   const handleBack = () => router.back();
 
   const handleLimpar = () => {
-    if (backup) setDados({ ...backup });
+    if (backup) setDados(JSON.parse(JSON.stringify(backup)));
     setEditando(false);
-    setOpenSelect(null);
   };
 
-  const handleSalvar = () => {
-    console.log("Dados salvos:", dados);
-    setBackup({ ...dados });
-    setEditando(false);
-    setOpenSelect(null);
-  };
+const handleSalvar = async () => {
+  try {
+    const token = localStorage.getItem("token");
 
-  // --------- Renderização ---------
+    const enderecoSeparado = quebrarEndereco(dados.endereco_unico);
+
+    const payload = {
+      cpf: dados.cpf, // IMPORTANTE! o backend usa isso!
+      nome: dados.nome,
+      telefone: dados.telefone,
+      data_nascimento: dados.data_nascimento,
+      endereco: enderecoSeparado,
+    };
+
+    const res = await fetch("/api/funcionario/consultardados", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token ? `Bearer ${token}` : "",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    // --- TRATAR ERROS DA ROTA --- //
+    const resposta = await res.json();
+
+    if (!res.ok) {
+      alert(resposta.error || "Erro ao atualizar os dados.");
+      return;
+    }
+
+    // --- SUCESSO --- //
+    alert("Dados atualizados com sucesso!");
+
+    setBackup(JSON.parse(JSON.stringify(dados)));
+    setEditando(false);
+
+  } catch (err) {
+    console.error(err);
+    alert("Erro inesperado ao tentar atualizar!");
+  }
+};
+
   const renderFormulario = () => {
     if (!dados) return null;
 
-    // -------- CONTA --------
-    if (tipoSelecionado === "conta") {
-      return (
-        <>
-          <Campo label="Tipo de Conta" valor={dados.tipoConta} />
-          <Campo label="Número da Conta" valor={dados.numeroConta} />
-          <Campo label="Nome do Titular" valor={dados.titular} />
-          <Campo label="CPF" valor={dados.cpf} />
-          <Campo label="Saldo Atual" valor={dados.saldo} />
-          <CampoEditavel
-            label="Limite Disponível"
-            valor={dados.limite}
-            editando={editando}
-            onChange={(v) => handleChange("limite", maskMoney(v))}
-          />
-
-          {/* Select de vencimento */}
-          <div className="relative">
-            <label className="block text-sm text-white/70">Data de Vencimento</label>
-            <div
-              className={`w-full border-b border-white/30 flex justify-between items-center text-sm transition ${
-                editando
-                  ? "cursor-pointer text-white"
-                  : "text-white/70 cursor-not-allowed"
-              }`}
-              onClick={() =>
-                editando &&
-                setOpenSelect(openSelect === "vencimento" ? null : "vencimento")
-              }
-            >
-              <span>{dados.vencimento}</span>
-              <ChevronDown
-                className={`w-3 h-3 transition-transform ${
-                  openSelect === "vencimento" ? "rotate-180" : ""
-                }`}
-              />
-            </div>
-
-            {openSelect === "vencimento" && editando && (
-              <div className="absolute z-20 w-full mt-1 bg-[#012E4B] rounded-md shadow-md border border-white/20 overflow-hidden text-sm">
-                {["Dia 5", "Dia 10", "Dia 15"].map((dia) => (
-                  <div
-                    key={dia}
-                    onClick={() => {
-                      handleChange("vencimento", dia);
-                      setOpenSelect(null);
-                    }}
-                    className={`px-2 py-1 flex justify-between items-center hover:bg-white/10 cursor-pointer ${
-                      dados.vencimento === dia ? "text-white" : "text-white/80"
-                    }`}
-                  >
-                    <span>{dia}</span>
-                    {dados.vencimento === dia && (
-                      <Check className="w-3 h-3 text-white" />
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
+    return (
+      <>
 
           <Campo
-            label="Status"
-            valor={dados.status}
-            color={dados.status === "Ativa" ? "#42D23A" : "red"}
-          />
-          <Campo label="Data de Abertura" valor={dados.abertura} />
-        </>
-      );
-    }
+          label="Tipo de Usuário"
+          valor={dados.tipo_usuario}
+        />
+        <CampoEditavel
+          label="Nome Completo"
+          valor={dados.nome}
+          editando={editando}
+          onChange={(v) => setDados({ ...dados, nome: v })}
+        />
 
-    // -------- CLIENTE --------
-    if (tipoSelecionado === "cliente") {
-      return (
-        <>
-          <CampoEditavel
-            label="Nome Completo"
-            valor={dados.nome}
-            editando={editando}
-            onChange={(v) => handleChange("nome", v)}
-          />
-          <Campo label="CPF" valor={dados.cpf} />
-          <CampoDate
-            label="Data de Nascimento"
-            valor={dados.nascimento}
-            editando={editando}
-            onChange={(v) => handleChange("nascimento", v)}
-          />
-          <CampoEditavel
-            label="Telefone"
-            valor={dados.telefone}
-            editando={editando}
-            onChange={(v) => handleChange("telefone", maskTelefone(v))}
-          />
-          <CampoEditavel
-            label="Endereço"
-            valor={dados.endereco}
-            editando={editando}
-            onChange={(v) => handleChange("endereco", v)}
-          />
-        </>
-      );
-    }
+        <Campo label="CPF" valor={dados.cpf} />
 
-    // -------- FUNCIONÁRIO --------
-    if (tipoSelecionado === "funcionario") {
-      return (
-        <>
-          <Campo label="Código do Funcionário" valor={dados.codigo} />
-          <Campo label="Cargo" valor={dados.cargo} />
-          <CampoEditavel
-            label="Nome Completo"
-            valor={dados.nome}
-            editando={editando}
-            onChange={(v) => handleChange("nome", v)}
-          />
-          <Campo label="CPF" valor={dados.cpf} />
-          <CampoDate
-            label="Data de Nascimento"
-            valor={dados.nascimento}
-            editando={editando}
-            onChange={(v) => handleChange("nascimento", v)}
-          />
-          <CampoEditavel
-            label="Telefone"
-            valor={dados.telefone}
-            editando={editando}
-            onChange={(v) => handleChange("telefone", maskTelefone(v))}
-          />
-          <CampoEditavel
-            label="Endereço"
-            valor={dados.endereco}
-            editando={editando}
-            onChange={(v) => handleChange("endereco", v)}
-          />
-          <Campo label="Agência" valor={dados.agencia} />
-        </>
-      );
-    }
+        <CampoDate
+          label="Data de Nascimento"
+          valor={dados.data_nascimento}
+          editando={editando}
+          onChange={(v) => setDados({ ...dados, data_nascimento: v })}
+        />
 
-    return null;
+        <CampoEditavel
+          label="Telefone"
+          valor={dados.telefone}
+          editando={editando}
+          onChange={(v) => setDados({ ...dados, telefone: maskTelefone(v) })}
+        />
+
+        {/* ----------- ENDEREÇO EM UM ÚNICO CAMPO ----------- */}
+        <CampoEditavel
+          label="Endereço Completo"
+          valor={dados.endereco_unico}
+          editando={editando}
+          onChange={(v) => setDados({ ...dados, endereco_unico: v })}
+        />
+
+       
+      </>
+    );
   };
 
   return (
@@ -304,15 +209,8 @@ export default function ConsultarDados() {
                   color: "#fff",
                 }}
               >
-                {editando ? (
-                  <>
-                    <Save className="w-4 h-4" /> Salvar
-                  </>
-                ) : (
-                  <>
-                    <PencilLine className="w-4 h-4" /> Editar
-                  </>
-                )}
+                {editando ? <Save className="w-4 h-4" /> : <PencilLine className="w-4 h-4" />}
+                {editando ? "Salvar" : "Editar"}
               </button>
 
               <button
@@ -344,24 +242,14 @@ export default function ConsultarDados() {
   );
 }
 
-/* ---------- COMPONENTES AUXILIARES ---------- */
-const Campo = ({
-  label,
-  valor,
-  color,
-}: {
-  label: string;
-  valor: string;
-  color?: string;
-}) => (
+const Campo = ({ label, valor }: { label: string; valor: string }) => (
   <div>
     <label className="block text-sm text-white/70">{label}</label>
     <input
       type="text"
       disabled
       value={valor}
-      className="w-full bg-transparent border-b border-white/30 outline-none text-sm"
-      style={{ color: color || "rgba(255,255,255,0.7)" }}
+      className="w-full bg-transparent border-b border-white/30 outline-none text-sm text-white/70"
     />
   </div>
 );
@@ -371,28 +259,23 @@ const CampoEditavel = ({
   valor,
   editando,
   onChange,
-  prefixo,
 }: {
   label: string;
-  valor: string;
+  valor: any;
   editando: boolean;
   onChange: (valor: string) => void;
-  prefixo?: string;
 }) => (
   <div>
     <label className="block text-sm text-white/70">{label}</label>
-    <div className="flex items-center border-b border-white/30">
-      {prefixo && <span className="text-white/70 mr-1">{prefixo}</span>}
-      <input
-        type="text"
-        disabled={!editando}
-        value={valor}
-        onChange={(e) => onChange(e.target.value)}
-        className={`w-full  bg-transparent outline-none text-sm transition ${
-          editando ? "text-white" : "text-white/70"
-        }`}
-      />
-    </div>
+    <input
+      type="text"
+      disabled={!editando}
+      value={valor || ""}
+      onChange={(e) => onChange(e.target.value)}
+      className={`w-full bg-transparent border-b border-white/30 outline-none text-sm ${
+        editando ? "text-white" : "text-white/70"
+      }`}
+    />
   </div>
 );
 
@@ -412,7 +295,7 @@ const CampoDate = ({
     <input
       type="date"
       disabled={!editando}
-      value={valor}
+      value={valor || ""}
       onChange={(e) => onChange(e.target.value)}
       className={`w-full border-b text-sm border-white/50 outline-none bg-transparent ${
         editando ? "text-white" : "text-white/70"
