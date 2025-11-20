@@ -1,4 +1,3 @@
-// file: /app/api/funcionario/relatorio/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
@@ -7,12 +6,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { tipoRelatorio, clienteId, dataInicio, dataFim, tipoTransacao } = body;
 
-    // -------------------- RELATÓRIO DE RESUMO DE CONTAS --------------------
     if (tipoRelatorio === "resumo_contas") {
       const where: any = {};
       if (clienteId) where.id_cliente = Number(clienteId);
-
-      // Pega todas as contas (ativas)
+      
       const contas = await prisma.conta.findMany({
         where,
         include: {
@@ -20,7 +17,6 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Agrupa os dados
       const totalContas = contas.length;
       const totalPorTipo: Record<string, number> = {};
       let saldoTotal = 0;
@@ -45,20 +41,17 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // -------------------- RELATÓRIO DE MOVIMENTAÇÕES --------------------
     if (tipoRelatorio === "movimentacoes") {
       const where: any = {};
 
       if (clienteId) where.id_conta_origem = Number(clienteId);
 
-      // Mapeamento dos tipos do front-end para o banco
       const tipoMap: Record<string, string> = {
         "Depósito": "deposito",
         "Saque": "saque",
         "Transferência": "transferencia",
       };
 
-      // Aplica filtro somente se não for "Todas"
       if (tipoTransacao && tipoTransacao !== "Todas") {
         where.tipo_transacao = tipoMap[tipoTransacao];
       }

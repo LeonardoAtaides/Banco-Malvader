@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
 
-// ============================
-// 🔍 GET - Buscar dados e limite de uma conta (Gerente)
-// ============================
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get("authorization");
@@ -47,7 +44,7 @@ export async function GET(request: NextRequest) {
         cliente: {
           select: { usuario: { select: { nome: true } } },
         },
-        conta_corrente: true, // Inclui todos os campos do conta_corrente
+        conta_corrente: true, 
       },
     });
 
@@ -62,9 +59,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// ============================
-// ✏️ PUT - Editar limite da conta (Gerente)
-// ============================
 export async function PUT(request: NextRequest) {
   try {
     const authHeader = request.headers.get("authorization");
@@ -81,7 +75,6 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
-    // Apenas gerente pode editar
     const funcionario = await prisma.funcionario.findFirst({
       where: { id_usuario: payload.id_usuario },
     });
@@ -97,7 +90,6 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Número da conta e novo limite são obrigatórios" }, { status: 400 });
     }
 
-    // Busca a conta e a conta_corrente
     const conta = await prisma.conta.findFirst({
       where: { numero_conta },
       select: { id_conta: true },
@@ -116,7 +108,6 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Conta corrente não encontrada" }, { status: 404 });
     }
 
-    // Atualiza o limite
     const updated = await prisma.conta_corrente.update({
       where: { id_conta_corrente: contaCorrente.id_conta_corrente },
       data: { limite: novo_limite },

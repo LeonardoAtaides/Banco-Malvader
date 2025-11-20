@@ -25,7 +25,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Agora usando o nome certo da FK: id_cliente
     const conta = await prisma.conta.findFirst({
       where: { id_cliente: payload.id_usuario },
       select: {

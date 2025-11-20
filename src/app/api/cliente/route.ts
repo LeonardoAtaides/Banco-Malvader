@@ -2,10 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { clienteSchema } from "@/lib/validations";
 
-/**
- * GET /api/cliente
- * Lista todos os clientes
- */
 export async function GET() {
   try {
     const clientes = await prisma.cliente.findMany({
@@ -39,10 +35,6 @@ export async function GET() {
   }
 }
 
-/**
- * POST /api/cliente
- * Cadastra um novo cliente
- */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -56,8 +48,6 @@ export async function POST(request: NextRequest) {
     }
 
     const { id_usuario, score_credito } = validation.data;
-
-    // Verificar se usuário existe e é do tipo CLIENTE
     const usuario = await prisma.usuario.findUnique({
       where: { id_usuario },
     });

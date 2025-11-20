@@ -1,5 +1,3 @@
-// DELETE - excluir conta
-// file: /app/api/funcionario/excluirconta/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
@@ -20,7 +18,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
-    // FUNCIONÁRIO
     const funcionario = await prisma.funcionario.findFirst({
       where: { id_usuario: payload.id_usuario },
       include: { usuario: true },
@@ -37,7 +34,6 @@ export async function DELETE(request: NextRequest) {
     const senhaValida = await bcrypt.compare(senha, funcionario.usuario.senha_hash);
     if (!senhaValida) return NextResponse.json({ error: "Senha incorreta" }, { status: 401 });
 
-    // BUSCA CONTA
     const conta = await prisma.conta.findFirst({
       where: { numero_conta: numeroConta },
       include: {
@@ -54,10 +50,9 @@ export async function DELETE(request: NextRequest) {
     if (!conta) return NextResponse.json({ error: "Conta não encontrada" }, { status: 404 });
     if (conta.status !== "ATIVA") return NextResponse.json({ error: "Conta não está ativa ou já foi encerrada" }, { status: 400 });
 
-    // SALDO
     if (Number(conta.saldo) > 0) return NextResponse.json({ error: "Conta possui saldo. Não é possível encerra-la." }, { status: 400 });
 
-    // DELETE RELACIONADOS
+
     if (conta.conta_corrente) await prisma.conta_corrente.delete({ where: { id_conta_corrente: conta.conta_corrente.id_conta_corrente } });
     if (conta.conta_poupanca) await prisma.conta_poupanca.delete({ where: { id_conta_poupanca: conta.conta_poupanca.id_conta_poupanca } });
     if (conta.conta_investimento) await prisma.conta_investimento.delete({ where: { id_conta_investimento: conta.conta_investimento.id_conta_investimento } });
@@ -67,7 +62,6 @@ export async function DELETE(request: NextRequest) {
     if (conta.transacao_transacao_id_conta_origemToconta.length > 0) await prisma.transacao.deleteMany({ where: { id_conta_origem: conta.id_conta } });
     if (conta.transacao_transacao_id_conta_destinoToconta.length > 0) await prisma.transacao.deleteMany({ where: { id_conta_destino: conta.id_conta } });
 
-    // DELETE CONTA
     await prisma.conta.delete({ where: { id_conta: conta.id_conta } });
 
     return NextResponse.json({ sucesso: true, mensagem: "Conta excluída com sucesso", nome_cliente: conta.cliente.usuario.nome });

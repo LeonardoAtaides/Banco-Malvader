@@ -25,7 +25,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Primeiro busca o cliente relacionado ao usuário
     const cliente = await prisma.cliente.findFirst({
       where: { id_usuario: payload.id_usuario },
       select: { id_cliente: true },
@@ -38,7 +37,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    //busca a conta corrente do cliente
     const contaCorrente = await prisma.conta.findFirst({
       where: { id_cliente: cliente.id_cliente, tipo_conta: "CORRENTE" },
       select: {

@@ -1,4 +1,3 @@
-// file: /app/api/cliente/perfil/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
@@ -19,16 +18,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
-    // Buscar cliente pelo id_usuario
     const cliente = await prisma.cliente.findFirst({
       where: { id_usuario: payload.id_usuario },
       include: {
         usuario: {
           include: {
-            endereco_usuario: true, // pega todos os endereços do usuário
+            endereco_usuario: true, 
           },
         },
-        conta: true, // pega todas as contas do cliente
+        conta: true, 
       },
     });
 
@@ -36,7 +34,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
     }
 
-    // Pega o primeiro endereço do usuário
     const endereco = cliente.usuario.endereco_usuario[0] || null;
 
     const perfil = {

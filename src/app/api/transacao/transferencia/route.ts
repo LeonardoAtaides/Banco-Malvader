@@ -1,4 +1,3 @@
-// file: /app/api/transacao/transferencia/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
@@ -14,7 +13,6 @@ const transferenciaSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    // Autenticação
     const authHeader = request.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return NextResponse.json({ error: "Token não fornecido" }, { status: 401 });
@@ -41,7 +39,6 @@ export async function POST(request: NextRequest) {
 
     const { numero_conta_destino, valor, senha } = validation.data;
 
-    // Buscar usuário logado
     const usuario = await prisma.usuario.findUnique({
       where: { id_usuario: payload.id_usuario },
       select: {
@@ -57,12 +54,10 @@ export async function POST(request: NextRequest) {
     if (!usuario)
       return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
 
-    // Validar senha
     const senhaOk = await bcrypt.compare(senha, usuario.senha_hash);
     if (!senhaOk)
       return NextResponse.json({ error: "Senha incorreta" }, { status: 401 });
 
-    // Verificar cliente e conta ativa
     const cliente = usuario.cliente?.[0];
     if (!cliente)
       return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
@@ -92,7 +87,7 @@ export async function POST(request: NextRequest) {
     const valorDecimal = new Decimal(valor);
     const taxa = valorDecimal.gt(5000) ? new Decimal(10) : new Decimal(0);
 
-    const totalDebito = valorDecimal.plus(taxa); // o que sai da conta de origem
+    const totalDebito = valorDecimal.plus(taxa);
 
     const saldoOrigem = new Decimal(contaOrigem.saldo);
 
@@ -107,21 +102,18 @@ export async function POST(request: NextRequest) {
     const novoSaldoDestino = new Decimal(contaDestino.saldo).plus(valorDecimal);
   
 
-    // Transação Prisma
     const resultado = await prisma.$transaction(async (tx) => {
-      // Atualizar origem
+
       await tx.conta.update({
         where: { id_conta: contaOrigem.id_conta },
         data: { saldo: novoSaldoOrigem },
       });
 
-      // Atualizar destino
       await tx.conta.update({
         where: { id_conta: contaDestino.id_conta },
         data: { saldo: novoSaldoDestino },
       });
 
-      // Registro da transferência enviada
       const envio = await tx.transacao.create({
         data: {
           id_conta_origem: contaOrigem.id_conta,
@@ -132,7 +124,6 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Registro da transferência recebida
       const recebimento = await tx.transacao.create({
         data: {
           id_conta_origem: contaOrigem.id_conta,
@@ -143,7 +134,6 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Registro da taxa (caso exista)
       let taxaRegistro = null;
       if (taxa.gt(0)) {
         taxaRegistro = await tx.transacao.create({

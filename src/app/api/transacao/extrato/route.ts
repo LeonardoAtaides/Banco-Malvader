@@ -3,9 +3,6 @@ import prisma from "@/lib/prisma";
 import { verificarToken } from "@/lib/auth";
 import { z } from "zod";
 
-/**
- * Schema de validação para extrato (query params)
- */
 const extratoQuerySchema = z.object({
   numero_conta: z.string().min(1, "Número da conta é obrigatório"),
   limite: z.coerce.number().int().positive().max(100).optional().default(50),
@@ -13,13 +10,9 @@ const extratoQuerySchema = z.object({
   tipo_transacao: z.enum(["DEPOSITO", "SAQUE", "TRANSFERENCIA", "TAXA", "RENDIMENTO"]).optional(),
 });
 
-/**
- * GET /api/transacao/extrato?numero_conta=XXX&limite=50&pagina=1&tipo_transacao=DEPOSITO
- * Retorna o extrato de transações de uma conta
- */
+
 export async function GET(request: NextRequest) {
   try {
-    //  Validar autenticação
     const authHeader = request.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return NextResponse.json(
@@ -38,7 +31,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    //  Validar parâmetros da URL
     const { searchParams } = new URL(request.url);
     const queryParams = {
       numero_conta: searchParams.get("numero_conta"),
@@ -61,7 +53,6 @@ export async function GET(request: NextRequest) {
 
     const { numero_conta, limite, pagina, tipo_transacao } = validation.data;
 
-    //  Buscar conta
     const conta = await prisma.conta.findUnique({
       where: { numero_conta },
       select: {
@@ -80,10 +71,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    //  Buscar transações da conta
     const skip = (pagina - 1) * limite;
 
-    // Filtro base: transações onde a conta é origem OU destino
     const whereClause: any = {
       OR: [
         { id_conta_origem: conta.id_conta },
@@ -91,12 +80,10 @@ export async function GET(request: NextRequest) {
       ],
     };
 
-    // Adicionar filtro por tipo de transação se fornecido
     if (tipo_transacao) {
       whereClause.tipo_transacao = tipo_transacao;
     }
 
-    // Buscar transações com paginação
     const [transacoes, total] = await Promise.all([
       prisma.transacao.findMany({
         where: whereClause,
@@ -128,7 +115,6 @@ export async function GET(request: NextRequest) {
       prisma.transacao.count({ where: whereClause }),
     ]);
 
-    //  Formatar transações para exibição
     const transacoesFormatadas = transacoes.map((t) => {
       const isDebito = t.id_conta_origem === conta.id_conta;
       const isCredito = t.id_conta_destino === conta.id_conta;
@@ -145,7 +131,6 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    //  Retornar extrato
     return NextResponse.json(
       {
         sucesso: true,

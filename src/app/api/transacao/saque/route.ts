@@ -1,4 +1,3 @@
-// file: /app/api/transacao/saque/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
@@ -13,7 +12,7 @@ const saqueSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    // Verifica token
+
     const authHeader = request.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return NextResponse.json({ error: "Token não fornecido" }, { status: 401 });
@@ -27,7 +26,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
-    // Valida body
     const body = await request.json();
     const validation = saqueSchema.safeParse(body);
     if (!validation.success) {
@@ -39,7 +37,6 @@ export async function POST(request: NextRequest) {
 
     const { valor, senha } = validation.data;
 
-    // Busca usuário e conta
     const usuario = await prisma.usuario.findUnique({
       where: { id_usuario: payload.id_usuario },
       select: {
@@ -55,7 +52,6 @@ export async function POST(request: NextRequest) {
     if (!usuario)
       return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
 
-    // 🔐 Verifica senha igual rota depósito
     const senhaValida = await bcrypt.compare(senha, usuario.senha_hash);
     if (!senhaValida)
       return NextResponse.json({ error: "Senha incorreta" }, { status: 401 });
@@ -68,7 +64,6 @@ export async function POST(request: NextRequest) {
     if (!conta)
       return NextResponse.json({ error: "Conta ativa não encontrada" }, { status: 404 });
 
-    // Cálculo valor + taxa
     const valorDecimal = new Decimal(valor);
     const TAXA_SAQUE = new Decimal(5);
 

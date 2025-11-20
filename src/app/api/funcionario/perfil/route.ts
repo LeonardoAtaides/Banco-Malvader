@@ -1,4 +1,3 @@
-// /api/funcionario/perfil
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
@@ -22,7 +21,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
-    // Buscar funcionário pelo id_usuario
     const funcionario = await prisma.funcionario.findFirst({
       where: { id_usuario: payload.id_usuario },
       include: {
@@ -41,7 +39,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Pega o primeiro endereço encontrado
     const endereco = funcionario.usuario.endereco_usuario[0] || null;
 
     const perfil = {
@@ -49,7 +46,7 @@ export async function GET(request: NextRequest) {
       cpf: funcionario.usuario.cpf,
       telefone: funcionario.usuario.telefone,
       data_nascimento: funcionario.usuario.data_nascimento,
-      cargo: funcionario.cargo, // DIFERENÇA AQUI
+      cargo: funcionario.cargo, 
       endereco: endereco
         ? {
             cep: endereco.cep,

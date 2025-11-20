@@ -1,10 +1,9 @@
 "use server";
-
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { loginSchema } from "@/lib/validations";
 import jwt from "jsonwebtoken";
-import { verificarSenha } from "@/lib/auth"; // bcrypt correto
+import { verificarSenha } from "@/lib/auth"; 
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,7 +38,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Usa bcrypt
     const senhaValida = await verificarSenha(senha, usuario.senha_hash);
     if (!senhaValida) {
       return NextResponse.json(
@@ -48,7 +46,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Payload seguro
     const payload = {
       id_usuario: usuario.id_usuario,
       nome: usuario.nome,

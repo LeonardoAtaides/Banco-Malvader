@@ -1,11 +1,9 @@
-// file: /app/api/cliente/transacoes/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
 
 export async function GET(request: NextRequest) {
   try {
-    // Pegar token do header
     const authHeader = request.headers.get("authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return NextResponse.json({ error: "Token não fornecido" }, { status: 401 });
@@ -20,7 +18,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
-    // Buscar cliente pelo id_usuario do token
     const cliente = await prisma.cliente.findFirst({
       where: { id_usuario: payload.id_usuario },
       select: { id_cliente: true },
@@ -30,7 +27,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
     }
 
-    // Buscar transações da conta do cliente
     const transacoes = await prisma.transacao.findMany({
       where: {
         OR: [

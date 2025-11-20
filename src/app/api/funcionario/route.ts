@@ -1,4 +1,3 @@
-// /api/funcionario/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
@@ -22,9 +21,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
-    // =============================================
-    // 🔍 BUSCAR FUNCIONÁRIO + USUÁRIO
-    // =============================================
     const funcionario = await prisma.funcionario.findFirst({
       where: { id_usuario: payload.id_usuario },
       include: {
@@ -43,16 +39,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // =============================================
-    // 📊 CARDS
-    // =============================================
     const totalContasAbertas = await prisma.conta.count();
     const totalMovimentacoes = await prisma.transacao.count();
     const totalFuncionarios = await prisma.funcionario.count();
 
-    // =============================================
-    // 🆕 ÚLTIMAS CONTAS ABERTAS (tipoconta + numero)
-    // =============================================
     const ultimasContas = await prisma.conta.findMany({
       orderBy: { data_abertura: "desc" },
       take: 5,
@@ -68,9 +58,6 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // =============================================
-    // 📝 ATIVIDADES RECENTES
-    // =============================================
     const atividadesRecentes = await prisma.transacao.findMany({
       orderBy: { data_hora: "desc" },
       take: 5,
@@ -89,9 +76,6 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // =============================================
-    // 📦 RETORNO FINAL
-    // =============================================
     const perfil = {
       nome: funcionario.usuario.nome,
       cargo: funcionario.cargo,

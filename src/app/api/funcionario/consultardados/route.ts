@@ -1,12 +1,7 @@
-// /api/funcionario/consultardados
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
-import { usuario_tipo_usuario } from "@prisma/client";
 
-// ============================
-// GET → Consultar dados do cliente por CPF
-// ============================
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get("authorization");
@@ -67,9 +62,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// =====================================================
-//  PUT → Atualizar dados do usuário (VERSÃO CORRIGIDA)
-// =====================================================
 export async function PUT(request: NextRequest) {
   try {
     const authHeader = request.headers.get("authorization");
@@ -93,7 +85,6 @@ export async function PUT(request: NextRequest) {
 
     const cpfLimpo = cpf.replace(/\D/g, "");
 
-    // Buscar usuário garantindo que temos o id_usuario
     const usuario = await prisma.usuario.findUnique({
       where: { cpf: cpfLimpo },
       select: {
@@ -112,7 +103,6 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
     }
 
-    // Verificar se id_usuario existe
     if (!usuario.id_usuario) {
       return NextResponse.json(
         { error: "ID do usuário não encontrado" },
@@ -120,7 +110,6 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Atualizar dados básicos
     await prisma.usuario.update({
       where: { cpf: cpfLimpo },
       data: {
@@ -130,9 +119,7 @@ export async function PUT(request: NextRequest) {
       },
     });
 
-    // ---------------------------------------------
-    // ENDEREÇO - VERSÃO SEGURA
-    // ---------------------------------------------
+
     if (endereco) {
       const existeEndereco = usuario.endereco_usuario?.length > 0;
 
@@ -157,14 +144,13 @@ export async function PUT(request: NextRequest) {
         } else {
           await prisma.endereco_usuario.create({
             data: {
-              id_usuario: usuario.id_usuario, // ← AGORA GARANTIDO
+              id_usuario: usuario.id_usuario, 
               ...dadosEndereco
             },
           });
         }
       } catch (error) {
         console.error("Erro ao processar endereço:", error);
-        // Não retornar erro 500 aqui, apenas logar
       }
     }
 
@@ -176,7 +162,6 @@ export async function PUT(request: NextRequest) {
   } catch (error) {
     console.error("Erro detalhado ao atualizar dados:", error);
     
-    // Mensagem de erro mais específica
     let errorMessage = "Erro interno ao atualizar dados";
     if (error instanceof Error) {
       errorMessage = error.message;

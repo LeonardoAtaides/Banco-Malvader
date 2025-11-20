@@ -5,7 +5,6 @@ import bcrypt from "bcryptjs";
 
 export async function POST(request: NextRequest) {
   try {
-    // 🔐 Verificar autenticação
     const authHeader = request.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return NextResponse.json({ error: "Token não fornecido" }, { status: 401 });
@@ -20,7 +19,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
-    // 👨‍💼 Verificar se é funcionário
     const funcionarioAutenticado = await prisma.funcionario.findFirst({
       where: { id_usuario: payload.id_usuario },
       include: { usuario: true },
@@ -56,11 +54,9 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // 🧹 Limpar dados
     const cpfLimpo = cpf.replace(/\D/g, "");
     const telefoneLimpo = telefone.replace(/\D/g, "");
     
-    // 🔍 Verificar se CPF já existe
     const usuarioExistente = await prisma.usuario.findUnique({
       where: { cpf: cpfLimpo }
     });
@@ -71,10 +67,8 @@ export async function POST(request: NextRequest) {
       }, { status: 409 });
     }
 
-    // 🏦 Iniciar transação
     const resultado = await prisma.$transaction(async (tx) => {
       try {
-        // 1. MAPEAR TIPO DE CONTA para o ENUM do banco
         const tipoContaMap: { [key: string]: "CORRENTE" | "POUPANCA" | "INVESTIMENTO" } = {
           "Conta Corrente (CC)": "CORRENTE",
           "Conta Poupança (CP)": "POUPANCA", 
@@ -84,7 +78,6 @@ export async function POST(request: NextRequest) {
         const tipoContaBanco = tipoContaMap[tipoConta] || "CORRENTE";
         console.log('🎯 Tipo de conta mapeado:', tipoContaBanco);
 
-        // 2. BUSCAR AGÊNCIA (usa a agência do funcionário autenticado)
         const agencia = await tx.agencia.findFirst({
           where: { id_agencia: funcionarioAutenticado.id_agencia }
         });
@@ -94,17 +87,16 @@ export async function POST(request: NextRequest) {
         }
         console.log('🏦 Agência encontrada:', agencia.id_agencia);
 
-        // 3. GERAR NÚMERO DA CONTA ÚNICO
+
         const gerarNumeroConta = () => {
           const timestamp = Date.now().toString();
           const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-          return `${timestamp}${random}`.slice(-15); // Garante 15 dígitos
+          return `${timestamp}${random}`.slice(-15); 
         };
 
         const numeroConta = gerarNumeroConta();
         console.log('🔢 Número da conta gerado:', numeroConta);
 
-        // 4. CRIAR USUÁRIO
         const novoUsuario = await tx.usuario.create({
           data: {
             nome: nome.trim(),
@@ -112,12 +104,12 @@ export async function POST(request: NextRequest) {
             data_nascimento: new Date(data_nascimento),
             telefone: telefoneLimpo,
             tipo_usuario: "CLIENTE",
-            senha_hash: await bcrypt.hash("123456", 10) // Senha temporária
+            senha_hash: await bcrypt.hash("123456", 10) 
           }
         });
         console.log('👤 Usuário criado:', novoUsuario.id_usuario);
 
-        // 5. CRIAR CLIENTE
+
         const novoCliente = await tx.cliente.create({
           data: {
             id_usuario: novoUsuario.id_usuario,
@@ -126,7 +118,6 @@ export async function POST(request: NextRequest) {
         });
         console.log('👥 Cliente criado:', novoCliente.id_cliente);
 
-        // 6. CRIAR CONTA
         const novaConta = await tx.conta.create({
           data: {
             numero_conta: numeroConta,
@@ -139,9 +130,7 @@ export async function POST(request: NextRequest) {
         });
         console.log('💳 Conta criada:', novaConta.id_conta, 'Número:', novaConta.numero_conta);
 
-        // 7. CRIAR CONTA ESPECÍFICA
         if (tipoContaBanco === "CORRENTE") {
-          // Converter valores monetários
           const converterParaDecimal = (valor: string): number => {
             if (!valor || typeof valor !== 'string') return 0;
             try {
@@ -154,15 +143,12 @@ export async function POST(request: NextRequest) {
 
           const taxaLimpa = converterParaDecimal(taxa || "R$ 25,00");
           const limiteLimpo = converterParaDecimal(limite || "R$ 1000,00");
-          
-          // Extrair dia do vencimento
+
           const diaVencimento = vencimento ? parseInt(vencimento.replace("Dia ", "")) || 5 : 5;
-          
-          // Calcular data de vencimento (próximo dia X do mês)
+
           const hoje = new Date();
           let dataVencimento = new Date(hoje.getFullYear(), hoje.getMonth() + 1, diaVencimento);
           
-          // Se o dia já passou neste mês, vai para o próximo mês
           if (hoje.getDate() > diaVencimento) {
             dataVencimento = new Date(hoje.getFullYear(), hoje.getMonth() + 2, diaVencimento);
           }
@@ -215,23 +201,21 @@ export async function POST(request: NextRequest) {
           console.log('📈 Conta investimento criada');
         }
 
-        // 8. CRIAR ENDEREÇO (se fornecido)
         if (endereco && endereco.trim() !== "") {
           await tx.endereco_usuario.create({
             data: {
               id_usuario: novoUsuario.id_usuario,
-              cep: "00000000", // Padrão
+              cep: "00000000",
               local: endereco,
-              numero_casa: 0, // Padrão
-              bairro: "Centro", // Padrão
-              cidade: "Cidade", // Padrão
-              estado: "SP" // Padrão
+              numero_casa: 0, 
+              bairro: "", 
+              cidade: "", 
+              estado: "" 
             }
           });
           console.log('🏠 Endereço criado');
         }
 
-        // 9. REGISTRAR AUDITORIA
         await tx.auditoria_abertura_conta.create({
           data: {
             id_conta: novaConta.id_conta,
@@ -278,8 +262,7 @@ export async function POST(request: NextRequest) {
     console.error("📋 Stack trace:", error.stack);
     console.error("🔍 Código do erro:", error.code);
     console.error("📝 Meta do erro:", error.meta);
-    
-    // Erro de CPF duplicado
+
     if (error.code === "P2002") {
       if (error.meta?.target?.includes("cpf")) {
         return NextResponse.json({ 
@@ -293,14 +276,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Erro de validação do Prisma
     if (error.code === "P2003") {
       return NextResponse.json({ 
         error: "Erro de referência no banco de dados. Verifique as relações." 
       }, { status: 500 });
     }
 
-    // Erro de constraint
     if (error.code === "P2011") {
       return NextResponse.json({ 
         error: "Campo obrigatório não preenchido." 

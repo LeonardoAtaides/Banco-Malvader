@@ -24,8 +24,6 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       );
     }
-
-    // Busca o cliente vinculado ao usuário
     const cliente = await prisma.cliente.findFirst({
       where: { id_usuario: payload.id_usuario },
       select: { id_cliente: true },
@@ -51,14 +49,13 @@ export async function GET(request: NextRequest) {
         data_abertura: true,
         conta_poupanca: {
           select: {
-            taxa_rendimento: true,      // OK
-            ultimo_rendimento: true,    // OK
+            taxa_rendimento: true,     
+            ultimo_rendimento: true,    
           },
         },
       },
     });
 
-    // 🟢 Conta Investimento
     const contaInvestimento = await prisma.conta.findFirst({
       where: { 
         id_cliente: cliente.id_cliente, 
@@ -73,7 +70,7 @@ export async function GET(request: NextRequest) {
           select: {
             perfil_risco: true,
             valor_minimo: true,
-            taxa_rendimento_base: true,   // 🔥 Nome correto!
+            taxa_rendimento_base: true, 
           },
         },
       },

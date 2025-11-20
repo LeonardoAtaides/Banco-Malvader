@@ -1,4 +1,3 @@
-// file: /app/api/deposito/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
@@ -13,7 +12,6 @@ const depositoSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    // Verifica token
     const authHeader = request.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return NextResponse.json({ error: "Token não fornecido" }, { status: 401 });
@@ -27,7 +25,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
-    // Valida body
     const body = await request.json();
     const validation = depositoSchema.safeParse(body);
     if (!validation.success) {
@@ -54,28 +51,24 @@ export async function POST(request: NextRequest) {
 
     if (!usuario) return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
 
-    // Verifica senha
     const senhaValida = await bcrypt.compare(senha, usuario.senha_hash);
     if (!senhaValida) return NextResponse.json({ error: "Senha incorreta" }, { status: 401 });
 
-    // Pega cliente e conta ativa
     const cliente = usuario.cliente?.[0];
     if (!cliente) return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
 
     const conta = cliente.conta.find(c => c.status === "ATIVA");
     if (!conta) return NextResponse.json({ error: "Conta ativa não encontrada" }, { status: 404 });
 
-    // ✅ CORREÇÃO: Usa Decimal.js mantendo precisão
     const saldoAnterior = new Decimal(conta.saldo.toString());
     const valorDeposito = new Decimal(valor);
     const novoSaldo = saldoAnterior.plus(valorDeposito);
 
     const resultado = await prisma.$transaction(async (tx) => {
-      // ✅ CORREÇÃO: Mantém como Decimal, não converte para number
       const contaAtualizada = await tx.conta.update({
         where: { id_conta: conta.id_conta },
         data: { 
-          saldo: novoSaldo // ← Mantém como Decimal
+          saldo: novoSaldo 
         },
       });
 
@@ -83,7 +76,7 @@ export async function POST(request: NextRequest) {
         data: {
           id_conta_destino: conta.id_conta,
           tipo_transacao: "DEPOSITO",
-          valor: valorDeposito, // ← Mantém como Decimal
+          valor: valorDeposito, 
           descricao: `Depósito na conta do usuário`,
         },
       });
@@ -96,9 +89,9 @@ export async function POST(request: NextRequest) {
       mensagem: "Depósito realizado com sucesso",
       dados: {
         numero_conta: resultado.contaAtualizada.numero_conta,
-        saldo_anterior: saldoAnterior.toNumber(), // Apenas para exibição
-        valor_depositado: valorDeposito.toNumber(), // Apenas para exibição
-        saldo_atual: novoSaldo.toNumber(), // Apenas para exibição
+        saldo_anterior: saldoAnterior.toNumber(),
+        valor_depositado: valorDeposito.toNumber(), 
+        saldo_atual: novoSaldo.toNumber(), 
         id_transacao: resultado.transacao.id_transacao,
         data_hora: resultado.transacao.data_hora,
       },
