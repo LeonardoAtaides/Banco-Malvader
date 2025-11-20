@@ -15,6 +15,13 @@ Sistema bancário completo desenvolvido com arquitetura moderna, focado em segur
 
 O **Banco Malvader** é uma aplicação web Fullstack que utiliza o poder do **Next.js 14 (App Router)** integrado ao **MySQL** via **Prisma ORM**. O sistema gerencia autenticação segura via JWT, múltiplos tipos de contas bancárias (Corrente, Poupança, Investimento) e hierarquia de usuários.
 
+## Observações
+
+O **Banco Malvader** foi desenvolvido com foco em dispositivos móveis. Para garantir a melhor experiência ao utilizar o sistema, recomendamos acessar através de um simulador de smartphone, seja Android ou iPhone.
+
+Uma boa opção é utilizar a extensão do Chrome que simula telas mobile:  
+[Mobile Simulator Responsivo](https://chromewebstore.google.com/detail/mobile-simulator-responsi/ckejmhbmlajgoklhgbapkiccekfoccmk?hl=pt)
+
 ##  Tecnologias Utilizadas
 
 - **Frontend:** Next.js 14, React, TypeScript, Tailwind CSS (se aplicável)
