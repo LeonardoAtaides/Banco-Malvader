@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { X, Check, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Confirmacaof from "@/components/confirmacao";
@@ -28,6 +28,11 @@ export default function AberturaConta() {
     endereco: "",
   });
 
+  // Refs para os dropdowns
+  const tipoContaRef = useRef<HTMLDivElement>(null);
+  const vencimentoRef = useRef<HTMLDivElement>(null);
+  const perfilRiscoRef = useRef<HTMLDivElement>(null);
+
   // Função para formatar valores monetários
   const formatarMoeda = (valor: string): string => {
     let value = valor.replace(/\D/g, "");
@@ -48,11 +53,41 @@ export default function AberturaConta() {
     setter(formatado);
   };
 
-  // Função para abrir conta - VERSÃO OTIMIZADA
+  // Função para toggle dos selects
+  const toggleSelect = (selectName: string) => {
+    if (carregando) return;
+    setOpenSelect(openSelect === selectName ? null : selectName);
+  };
+
+  // Função para selecionar opção
+  const handleSelectOption = (name: string, value: string) => {
+    handleChange(name, value);
+    setOpenSelect(null);
+  };
+
+  // Fechar dropdown quando clicar fora - CORRIGIDO
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Verifica se o clique foi fora de todos os dropdowns
+      if (
+        tipoContaRef.current && !tipoContaRef.current.contains(event.target as Node) &&
+        vencimentoRef.current && !vencimentoRef.current.contains(event.target as Node) &&
+        perfilRiscoRef.current && !perfilRiscoRef.current.contains(event.target as Node)
+      ) {
+        setOpenSelect(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Função para abrir conta
   const abrirConta = async () => {
     setCarregando(true);
     try {
-      // Obter token do localStorage
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       
       if (!token) {
@@ -61,7 +96,6 @@ export default function AberturaConta() {
         return;
       }
 
-      // Preparar dados para API baseados no tipo de conta
       const dadosBase = {
         nome: formData.nome.trim(),
         data_nascimento: formData.nascimento,
@@ -72,7 +106,6 @@ export default function AberturaConta() {
         vencimento: formData.vencimento,
       };
 
-      // Adicionar campos específicos por tipo de conta - CORRIGIDO
       let dadosEspecificos: any = {};
       
       switch (formData.tipoConta) {
@@ -92,7 +125,7 @@ export default function AberturaConta() {
         case "Conta Investimento (CI)":
           dadosEspecificos = {
             valorMinimo: valorMinimo || "R$ 100,00",
-            taxaRendimento: taxaRendimento || "0.08", // CORREÇÃO: usa taxaRendimento em vez de taxaRendimentoBase
+            taxaRendimento: taxaRendimento || "0.08",
             perfilRisco: perfilRisco
           };
           break;
@@ -100,7 +133,6 @@ export default function AberturaConta() {
 
       const dadosParaAPI = { ...dadosBase, ...dadosEspecificos };
 
-      // Validações finais
       const cpfLimpo = CPF.replace(/\D/g, "");
       if (cpfLimpo.length !== 11) {
         alert('CPF inválido. Deve conter 11 dígitos.');
@@ -120,15 +152,13 @@ export default function AberturaConta() {
       });
 
       const resultado = await response.json();
-      console.log('📥 Resposta da API:', resultado);
 
       if (response.ok) {
-        console.log('✅ Conta aberta com sucesso:', resultado);
+        console.log('Conta aberta com sucesso:', resultado);
         setConfirmacaoAberta(true);
       } else {
-        console.error('❌ Erro na API:', resultado);
+        console.error('Erro na API:', resultado);
         
-        // Tratamento específico de erros
         if (response.status === 409) {
           alert("CPF já cadastrado no sistema. Verifique os dados.");
         } else if (response.status === 401) {
@@ -143,7 +173,7 @@ export default function AberturaConta() {
         }
       }
     } catch (error) {
-      console.error('❌ Erro na requisição:', error);
+      console.error('Erro na requisição:', error);
       alert('Erro ao conectar com o servidor. Tente novamente.');
     } finally {
       setCarregando(false);
@@ -152,9 +182,7 @@ export default function AberturaConta() {
 
   const handleChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
-    setOpenSelect(null);
     
-    // Resetar campos específicos quando mudar o tipo de conta
     if (name === "tipoConta") {
       setTaxaManutencao("");
       setLimite("");
@@ -165,7 +193,6 @@ export default function AberturaConta() {
   };
 
   const handleConfirmar = () => {
-    // Validações básicas
     if (
       !formData.nome.trim() ||
       !formData.nascimento ||
@@ -178,7 +205,6 @@ export default function AberturaConta() {
       return;
     }
 
-    // Validações específicas por tipo de conta
     switch (formData.tipoConta) {
       case "Conta Corrente (CC)":
         if (!taxaManutencao) {
@@ -210,21 +236,18 @@ export default function AberturaConta() {
         break;
     }
 
-    // Validar CPF
     const cpfLimpo = CPF.replace(/\D/g, "");
     if (cpfLimpo.length !== 11) {
       alert("CPF inválido. Deve conter 11 dígitos.");
       return;
     }
 
-    // Validar telefone
     const telefoneLimpo = telefone.replace(/\D/g, "");
     if (telefoneLimpo.length < 10 || telefoneLimpo.length > 11) {
       alert("Telefone inválido. Deve conter 10 ou 11 dígitos.");
       return;
     }
 
-    // Validar data de nascimento
     const dataNascimento = new Date(formData.nascimento);
     const hoje = new Date();
     const idade = hoje.getFullYear() - dataNascimento.getFullYear();
@@ -241,11 +264,9 @@ export default function AberturaConta() {
       return;
     }
 
-    // Chama diretamente a função de abertura de conta
     abrirConta();
   };
 
-  // Renderizar campos específicos baseados no tipo de conta
   const renderCamposEspecificos = () => {
     switch (formData.tipoConta) {
       case "Conta Corrente (CC)":
@@ -253,7 +274,7 @@ export default function AberturaConta() {
           <>
             {/* Limite */}
             <div>
-              <label className="block text-sm text-white/70 mb-1">Limite da Conta *</label>
+              <label className="block text-sm text-white/70 mb-1">Limite da Conta</label>
               <input
                 type="text"
                 value={limite}
@@ -262,15 +283,14 @@ export default function AberturaConta() {
                 placeholder="R$ 1.000,00"
                 disabled={carregando}
               />
-              <p className="text-xs text-white/50 mt-1">Valor do limite do cheque especial</p>
             </div>
 
             {/* Vencimento */}
-            <div className="relative">
+            <div className="relative" ref={vencimentoRef}>
               <label className="block text-sm text-white/70 mb-1">Data de Vencimento *</label>
               <div
                 className="w-full border-b border-white/50 flex justify-between items-center cursor-pointer py-1"
-                onClick={() => !carregando && setOpenSelect(openSelect === "vencimento" ? null : "vencimento")}
+                onClick={() => toggleSelect("vencimento")}
               >
                 <span>{formData.vencimento}</span>
                 <ChevronDown
@@ -281,29 +301,28 @@ export default function AberturaConta() {
               </div>
 
               {openSelect === "vencimento" && (
-                <div className="absolute z-20 w-full mt-1 bg-[#012E4B] rounded-md shadow-lg border border-white/20 overflow-hidden">
+                <div className="absolute z-20 w-full mt-1 bg-[#012E4B] border border-white/20 rounded-md shadow-md">
                   {["Dia 5", "Dia 10", "Dia 15", "Dia 20"].map((dia) => (
                     <div
                       key={dia}
-                      onClick={() => handleChange("vencimento", dia)}
+                      onClick={() => handleSelectOption("vencimento", dia)}
                       className={`px-3 py-2 text-sm flex justify-between items-center hover:bg-white/10 cursor-pointer transition-colors ${
-                        formData.vencimento === dia ? "text-white bg-white/20" : "text-white/80"
+                        formData.vencimento === dia ? "text-white" : "text-white/80"
                       }`}
                     >
                       <span>{dia}</span>
                       {formData.vencimento === dia && (
-                        <Check className="w-4 h-4 text-white" />
+                        <Check className="w-4 h-4" />
                       )}
                     </div>
                   ))}
                 </div>
               )}
-              <p className="text-xs text-white/50 mt-1">Dia do vencimento da fatura</p>
             </div>
 
             {/* Taxa de Manutenção */}
             <div>
-              <label className="block text-sm text-white/70 mb-1">Taxa de Manutenção *</label>
+              <label className="block text-sm text-white/70 mb-1">Taxa de Manutenção</label>
               <input
                 type="text"
                 value={taxaManutencao}
@@ -312,7 +331,6 @@ export default function AberturaConta() {
                 placeholder="R$ 25,00"
                 disabled={carregando}
               />
-              <p className="text-xs text-white/50 mt-1">Taxa mensal de manutenção da conta</p>
             </div>
           </>
         );
@@ -322,7 +340,7 @@ export default function AberturaConta() {
           <>
             {/* Taxa de Rendimento */}
             <div>
-              <label className="block text-sm text-white/70 mb-1">Taxa de Rendimento (% ao ano) *</label>
+              <label className="block text-sm text-white/70 mb-1">Taxa de Rendimento (% ao ano)</label>
               <input
                 type="number"
                 step="0.01"
@@ -334,7 +352,6 @@ export default function AberturaConta() {
                 placeholder="5.00"
                 disabled={carregando}
               />
-              <p className="text-xs text-white/50 mt-1">Taxa de rendimento anual da poupança</p>
             </div>
           </>
         );
@@ -343,16 +360,16 @@ export default function AberturaConta() {
         return (
           <>
             {/* Perfil de Risco */}
-            <div className="relative">
-              <label className="block text-sm text-white/70 mb-1">Perfil de Risco *</label>
+            <div className="relative" ref={perfilRiscoRef}>
+              <label className="block text-sm text-white/70 mb-1">Perfil de Risco</label>
               <div
                 className="w-full border-b border-white/50 flex justify-between items-center cursor-pointer py-1"
-                onClick={() => !carregando && setOpenSelect(openSelect === "perfilRisco" ? null : "perfilRisco")}
+                onClick={() => toggleSelect("perfilRisco")}
               >
                 <span>
-                  {perfilRisco === "BAIXO" && "🟢 Baixo"}
-                  {perfilRisco === "MEDIO" && "🟡 Médio"}
-                  {perfilRisco === "ALTO" && "🔴 Alto"}
+                  {perfilRisco === "BAIXO" && "Baixo"}
+                  {perfilRisco === "MEDIO" && "Médio"}
+                  {perfilRisco === "ALTO" && "Alto"}
                 </span>
                 <ChevronDown
                   className={`w-4 h-4 text-white transition-transform ${
@@ -362,31 +379,38 @@ export default function AberturaConta() {
               </div>
 
               {openSelect === "perfilRisco" && (
-                <div className="absolute z-20 w-full mt-1 bg-[#012E4B] rounded-md shadow-lg border border-white/20 overflow-hidden">
+                <div className="absolute z-20 w-full mt-1 bg-[#012E4B] border border-white/20 rounded-md shadow-md">
                   {[
-                    { value: "BAIXO", label: "🟢 Baixo", desc: "Rendimentos menores, mais segurança" },
-                    { value: "MEDIO", label: "🟡 Médio", desc: "Equilíbrio entre risco e retorno" },
-                    { value: "ALTO", label: "🔴 Alto", desc: "Maiores riscos, potenciais ganhos altos" }
+                    { value: "BAIXO", label: " Baixo" },
+                    { value: "MEDIO", label: "Médio"},
+                    { value: "ALTO", label: "Alto" }
                   ].map((perfil) => (
                     <div
                       key={perfil.value}
-                      onClick={() => setPerfilRisco(perfil.value)}
+                      onClick={() => {
+                        setPerfilRisco(perfil.value);
+                        setOpenSelect(null);
+                      }}
                       className={`px-3 py-2 hover:bg-white/10 cursor-pointer transition-colors ${
-                        perfilRisco === perfil.value ? "text-white bg-white/20" : "text-white/80"
+                        perfilRisco === perfil.value ? "text-white" : "text-white/80"
                       }`}
                     >
-                      <div className="text-sm font-medium">{perfil.label}</div>
-                      <div className="text-xs text-white/60">{perfil.desc}</div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">{perfil.label}</span>
+                      {perfilRisco === perfil.value && (
+                        <Check className="w-4 h-4 text-white" />
+                      )}
+                    </div>
+
                     </div>
                   ))}
                 </div>
               )}
-              <p className="text-xs text-white/50 mt-1">Define a estratégia de investimento</p>
             </div>
 
             {/* Valor Mínimo */}
             <div>
-              <label className="block text-sm text-white/70 mb-1">Valor Mínimo para Investimento *</label>
+              <label className="block text-sm text-white/70 mb-1">Valor Mínimo para Investimento</label>
               <input
                 type="text"
                 value={valorMinimo}
@@ -395,12 +419,11 @@ export default function AberturaConta() {
                 placeholder="R$ 100,00"
                 disabled={carregando}
               />
-              <p className="text-xs text-white/50 mt-1">Valor mínimo para aplicar em investimentos</p>
             </div>
 
             {/* Taxa de Rendimento */}
             <div>
-              <label className="block text-sm text-white/70 mb-1">Taxa de Rendimento Base (% ao ano) *</label>
+              <label className="block text-sm text-white/70 mb-1">Taxa de Rendimento Base (% ao ano)</label>
               <input
                 type="number"
                 step="0.01"
@@ -412,7 +435,6 @@ export default function AberturaConta() {
                 placeholder="8.00"
                 disabled={carregando}
               />
-              <p className="text-xs text-white/50 mt-1">Taxa de rendimento anual base</p>
             </div>
           </>
         );
@@ -426,7 +448,6 @@ export default function AberturaConta() {
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, ""); 
 
-    // Aplica a máscara
     if (value.length > 9) {
       value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2}).*/, "$1.$2.$3-$4");
     } else if (value.length > 6) {
@@ -442,7 +463,6 @@ export default function AberturaConta() {
   const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, "");
 
-    // Aplica a máscara dinamicamente
     if (value.length > 10) {
       value = value.replace(/^(\d{2})(\d{5})(\d{4}).*/, "($1) $2-$3");
     } else if (value.length > 6) {
@@ -456,18 +476,6 @@ export default function AberturaConta() {
 
     setTelefone(value);
   };
-
-  // Fechar dropdown quando clicar fora
-  React.useEffect(() => {
-    const handleClickOutside = () => {
-      setOpenSelect(null);
-    };
-
-    document.addEventListener('click', handleClickOutside);
-    return () => {
-      document.removeEventListener('click', handleClickOutside);
-    };
-  }, []);
 
   if (confirmacaoAberta) {
     return (
@@ -500,7 +508,7 @@ export default function AberturaConta() {
         <div className="px-3 mt-8 flex flex-col gap-6 mb-28">
           {/* Nome */}
           <div>
-            <label className="block text-sm text-white/70 mb-1">Nome Completo *</label>
+            <label className="block text-sm text-white/70 mb-1">Nome Completo</label>
             <input
               type="text"
               value={formData.nome}
@@ -513,7 +521,7 @@ export default function AberturaConta() {
 
           {/* Data de nascimento */}
           <div>
-            <label className="block text-sm text-white/70 mb-1">Data de Nascimento *</label>
+            <label className="block text-sm text-white/70 mb-1">Data de Nascimento</label>
             <input
               type="date"
               value={formData.nascimento}
@@ -526,14 +534,11 @@ export default function AberturaConta() {
           </div>
 
           {/* Tipo de conta */}
-          <div className="relative">
-            <label className="block text-sm text-white/70 mb-1">Tipo de Conta *</label>
+          <div className="relative" ref={tipoContaRef}>
+            <label className="block text-sm text-white/70 mb-1">Tipo de Conta </label>
             <div
               className="w-full border-b border-white/50 flex justify-between items-center cursor-pointer py-1"
-              onClick={(e) => {
-                e.stopPropagation();
-                !carregando && setOpenSelect(openSelect === "tipoConta" ? null : "tipoConta");
-              }}
+              onClick={() => toggleSelect("tipoConta")}
             >
               <span>{formData.tipoConta}</span>
               <ChevronDown
@@ -544,30 +549,31 @@ export default function AberturaConta() {
             </div>
 
             {openSelect === "tipoConta" && (
-              <div className="absolute z-20 w-full mt-1 bg-[#012E4B] rounded-md shadow-lg border border-white/20 overflow-hidden">
+              <div className="absolute z-20 w-full mt-1 bg-[#012E4B] border border-white/20 rounded-md shadow-md">
                 {[
-                  { value: "Conta Corrente (CC)", desc: "Para transações diárias" },
-                  { value: "Conta Poupança (CP)", desc: "Para economizar com rendimento" },
-                  { value: "Conta Investimento (CI)", desc: "Para aplicar em investimentos" }
+                  { value: "Conta Corrente (CC)"},
+                  { value: "Conta Poupança (CP)",},
+                  { value: "Conta Investimento (CI)"}
                 ].map((tipo) => (
                   <div
                     key={tipo.value}
-                    onClick={() => handleChange("tipoConta", tipo.value)}
-                    className={`px-3 py-2 hover:bg-white/10 cursor-pointer transition-colors ${
-                      formData.tipoConta === tipo.value ? "text-white bg-white/20" : "text-white/80"
+                    onClick={() => handleSelectOption("tipoConta", tipo.value)}
+                    className={`px-3 py-2 text-sm flex justify-between cursor-pointer  ${
+                      formData.tipoConta === tipo.value ? "text-white" : "text-white/80"
                     }`}
                   >
-                    <div className="text-sm font-medium">{tipo.value}</div>
-                    <div className="text-xs text-white/60">{tipo.desc}</div>
+                    <span className="text-sm font-medium">{tipo.value}</span>
+                     {formData.tipoConta === tipo.value && (<Check className="w-4 h-4" />)}
                   </div>
                 ))}
               </div>
             )}
+
           </div>
 
           {/* CPF */}
           <div>
-            <label className="block text-sm text-white/70 mb-1">CPF *</label>
+            <label className="block text-sm text-white/70 mb-1">CPF</label>
             <input
               type="text"
               required
@@ -582,7 +588,7 @@ export default function AberturaConta() {
 
           {/* Telefone */}
           <div>
-            <label className="block text-sm text-white/70 mb-1">Telefone *</label>
+            <label className="block text-sm text-white/70 mb-1">Telefone </label>
             <input
               type="text"
               required
@@ -596,7 +602,7 @@ export default function AberturaConta() {
 
           {/* Endereço */}
           <div>
-            <label className="block text-sm text-white/70 mb-1">Endereço Completo *</label>
+            <label className="block text-sm text-white/70 mb-1">Endereço Completo</label>
             <input
               type="text"
               placeholder="Rua, número, complemento..."
@@ -614,7 +620,7 @@ export default function AberturaConta() {
 
       {/* Botão flutuante */}
       <button
-        className="fixed bottom-6 right-6 bg-white/10 border border-white/50 rounded-full p-3 hover:bg-white/20 transition disabled:opacity-50 disabled:cursor-not-allowed z-10 backdrop-blur-sm"
+        className="absolute bottom-3 right-6 border border-white rounded-full p-3 hover:bg-white/10 transition disabled:opacity-50 disabled:cursor-not-allowed"
         onClick={handleConfirmar}
         disabled={carregando}
       >
